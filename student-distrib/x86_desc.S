@@ -35,6 +35,17 @@ _tss:
 tss_bottom:
 
     .align  16
+
+# descriptor pointer to load GDTR
+.align 16
+gdt_desc:
+    # 16 bit table limit
+    .word gdt_bottom - gdt - 1
+    .long gdt
+
+    # align GDT below
+    .align  16
+
 gdt:
 _gdt:
 
@@ -82,17 +93,20 @@ tss_desc_ptr:
 ldt_desc_ptr:
     .quad 0
 
-gdt_bottom:
-
-    .align 16
 ldt:
     .rept 4
     .quad 0
     .endr
 ldt_bottom:
 
-.align 4
+    .align 4
+
+gdt_bottom:
+
+    .align 16
     .word 0 # Padding
+
+
 idt_desc_ptr:
     .word idt_bottom - idt - 1
     .long idt
@@ -103,6 +117,8 @@ idt:
 _idt:
     .rept NUM_VEC
     .quad 0
+    # first entry of idt used
+    
     .endr
 
 idt_bottom:
