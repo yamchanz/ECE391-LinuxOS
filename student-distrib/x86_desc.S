@@ -117,7 +117,6 @@ idt:
 _idt:
     .rept NUM_VEC
     .quad 0
-    # first entry of idt used
     
     .endr
 
