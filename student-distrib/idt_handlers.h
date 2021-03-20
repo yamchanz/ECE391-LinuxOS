@@ -6,6 +6,8 @@
 #define EX_ARR_SIZE 20
 #define EXCEPTION_15 14
 
+#define SYS_CALL_IDX 0x80
+
 // initialize IDT at bootup
 extern void initialize_idt();
 

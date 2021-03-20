@@ -2,7 +2,7 @@
 #include "x86_desc.h"
 #include "lib.h"
 
-/* Array of exception functions */
+/* Array of exception functions (0x00 to 0x14) */
 void divide_error_ex();
 void debug_ex();
 void nmi_interrupt_ex();
@@ -24,6 +24,8 @@ void align_check_ex();
 void machine_check_ex();
 void simd_fp_ex();
 
+void sys_call_handler();
+
 void (*exception_arr[20])() = {divide_error_ex, debug_ex, nmi_interrupt_ex, breakpoint_ex, overflow_ex,
                                 bound_range_ex, invalid_opcode_ex, device_not_avail_ex, double_fault_ex, coprocess_seg_ex,
                                 invalid_tss_ex, seg_not_pres_ex, stack_fault_ex, gen_prot_ex, page_fault_ex, NULL,
@@ -37,14 +39,16 @@ void initialize_idt() {
         if(i == EXCEPTION_15) {
             continue;
         }
-        install_interrupt_handler(i, exception_arr[i]);
+        install_interrupt_handler(i, exception_arr[i], 0);
     }
 
-    // // load IDT using desc pointer containing base address
+    // system call handler (0x80)
+    install_interrupt_handler(SYS_CALL_IDX, sys_call_handler, 1);
+
+    // load IDT using desc pointer containing base address
     lidt(idt_desc_ptr);
 
 }
-
 
 
 
@@ -75,7 +79,7 @@ void install_task_handler(int idt_offset, void (*handler)) {
 }
 
 /* TYPE 2: Interrupt-gate descriptor */
-void install_interrupt_handler(int idt_offset, void (*handler)) {
+void install_interrupt_handler(int idt_offset, void (*handler), int sys_call) {
     // set values of idt_descriptor struct
 
     // set gate type - 32 bit interrupt gate
@@ -90,7 +94,12 @@ void install_interrupt_handler(int idt_offset, void (*handler)) {
     idt[idt_offset].present = 1;
     idt[idt_offset].size = 1;
     // set DPL to 0 for hardware handlers to prevent callings with int
-    idt[idt_offset].dpl = 0;
+    if(!sys_call) {
+        idt[idt_offset].dpl = 0;
+    } else {
+        // accessible from use space space via int
+        idt[idt_offset].dpl = 3;
+    }
 
     // write the 
     SET_IDT_ENTRY(idt[idt_offset], handler);
@@ -120,6 +129,10 @@ void install_trap_handler(int idt_offset, void (*handler)) {
     SET_IDT_ENTRY(idt[idt_offset], handler);
 
     return;
+}
+
+void sys_call_handler() {
+    printf("System call was handled");
 }
 
 /* Exception handler functions */
