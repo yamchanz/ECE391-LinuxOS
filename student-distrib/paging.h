@@ -21,6 +21,8 @@
 // #define NUM_PROCESSES     6
 #define MAX_PAGE_NUMBER   1024
 #define BYTES_TO_ALIGN    4096
+#define VIDEO_MEM_PAGE_ADDR  0  // need to fix
+#define KERNEL_PAGE_ADDR     1
 
 /* PDE: page table
  * |  31  :  12  | 11:8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |

@@ -1,17 +1,11 @@
 #include "paging.h"
 
 // linker issue?
-#define VIDEO_MEM_PAGE_ADDR  0
-#define PAGE_TABLE_ADDR      0
-#define PAGE_DIREC_ADDR      0
-#define KERNEL_PAGE_ADDR     0
-// CR3_ADDR_MASK     0xFFFFF000
-// CR4_PAE           0x00000010
-// CR0_PG            0x80000000
-
 page_directory pd __attribute__((aligned(BYTES_TO_ALIGN)));
+page_directory* pd_ptr = &pd;
 page_table pt __attribute__((aligned(BYTES_TO_ALIGN)));
-int pd_addr;
+page_table* pt_ptr = &pt;
+
 
 /* init_paging - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
@@ -22,11 +16,12 @@ int pd_addr;
  */
 void init_paging(void) {
     int i, j;
+
     for(i = 0; i < MAX_PAGE_NUMBER; i++) {
         /* initalize first 4MB and video memory page (must be 4KB) */
         if(i == 0) {
             for(j = 0; j < MAX_PAGE_NUMBER; j++) {
-                if(1) { // video memory portion
+                if(j == VIDEO_MEM_PAGE_ADDR) { // need to fix
                     pt.entry[j].page.present = 1;
                     pt.entry[j].page.read_write = 0;
                     pt.entry[j].page.user_sup = 0;
@@ -51,7 +46,9 @@ void init_paging(void) {
             pd.entry[i].table.pcd = 0;
             pd.entry[i].table.accessed = 0;
             pd.entry[i].table.ignored1 = 0;
-            pd.entry[i].table.pt_addr = PAGE_TABLE_ADDR;
+            pd.entry[i].table.ps = 0;
+            pd.entry[i].table.ignored4 = 0;
+            pd.entry[i].table.pt_addr = (unsigned) pt_ptr >> 12;
         }
         /* initialize 4MB kernel page */
         else if(i == 1) {
@@ -63,7 +60,7 @@ void init_paging(void) {
             pd.entry[i].page.accessed = 0;
             pd.entry[i].page.dirty = 0;
             pd.entry[i].page.ps = 1;
-            pd.entry[i].page.glob = 1;
+            pd.entry[i].page.glob = 0;
             pd.entry[i].page.ignored3 = 0;
             pd.entry[i].page.pat = 0;
             pd.entry[i].page.exaddr = 0;
@@ -82,7 +79,7 @@ void init_paging(void) {
     // - set CR4.PAE bit
     // - set CR0.PG bit
     asm volatile ("                                               \n\
-        movl $pd_addr, %%eax                                      \n\
+        movl $pd_ptr, %%eax                                           \n\
         andl $0xFFFFF000, %%eax                                   \n\
         movl %%eax, %%cr3                                         \n\
         movl $0x00000010, %%eax                                   \n\
