@@ -1,6 +1,10 @@
 #include "idt_handlers.h"
+#include "int_asm_link.h"
 #include "x86_desc.h"
+#include "i8259.h"
 #include "lib.h"
+#include "rtc.h"
+#include "keyboard.h"
 
 /* Array of exception functions (0x00 to 0x14) */
 void divide_error_ex();
@@ -19,6 +23,7 @@ void stack_fault_ex();
 void gen_prot_ex();
 void page_fault_ex();
 // 15 reserved by intel
+void reserved();
 void fpu_fp_ex();
 void align_check_ex();
 void machine_check_ex();
@@ -28,65 +33,38 @@ void sys_call_handler();
 
 void (*exception_arr[20])() = {divide_error_ex, debug_ex, nmi_interrupt_ex, breakpoint_ex, overflow_ex,
                                 bound_range_ex, invalid_opcode_ex, device_not_avail_ex, double_fault_ex, coprocess_seg_ex,
-                                invalid_tss_ex, seg_not_pres_ex, stack_fault_ex, gen_prot_ex, page_fault_ex, NULL,
+                                invalid_tss_ex, seg_not_pres_ex, stack_fault_ex, gen_prot_ex, page_fault_ex, reserved,
                                 fpu_fp_ex, align_check_ex, machine_check_ex, simd_fp_ex};
 
 /* Initialize the IDT */
 void initialize_idt() {
     int i;
     for(i = 0; i < EX_ARR_SIZE; i++) {
-        // skip intel reserved interrupt 15
-        if(i == EXCEPTION_15) {
-            continue;
-        }
-        install_interrupt_handler(i, exception_arr[i], 0);
+        install_interrupt_handler(i, exception_arr[i], 1, 0);
     }
 
+    // install RTC (IRQ8)
+    install_interrupt_handler(0x28, rtc_handler_link, 0, 0);
+
+    // install_interrupt_handler(0x21, keyboard_handler_link, 0, 0);
+
     // system call handler (0x80)
-    install_interrupt_handler(SYS_CALL_IDX, sys_call_handler, 1);
+    install_interrupt_handler(SYS_CALL_IDX, sys_call_handler_link, 0, 1);
 
     // load IDT using desc pointer containing base address
     lidt(idt_desc_ptr);
 
 }
 
-
-
-/* TYPE 1: Task-gate descriptor */
-void install_task_handler(int idt_offset, void (*handler)) {
-    // pass in pointer to handler function
-
-    // set DPL to 0 for hardware handlers to prevent callings with int
-    idt[idt_offset].dpl = 0;
-    // set gate type - 32 bit task gate
-    idt[idt_offset].reserved0 = 1;
-    idt[idt_offset].reserved1 = 0;
-    idt[idt_offset].reserved2 = 1;
-    idt[idt_offset].reserved3 = 0;
-    idt[idt_offset].reserved4 = 0;
-    // kernel selector
-    idt[idt_offset].seg_selector = KERNEL_CS;
-    // set to 1 for used interrupts
-    idt[idt_offset].present = 1;
-    idt[idt_offset].size = 1;
-    // set DPL to 0 for hardware handlers to prevent callings with int
-    idt[idt_offset].dpl = 0;
-
-    // write the 
-    SET_IDT_ENTRY(idt[idt_offset], handler);
-
-    return;
-}
-
 /* TYPE 2: Interrupt-gate descriptor */
-void install_interrupt_handler(int idt_offset, void (*handler), int sys_call) {
+void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sys_call) {
     // set values of idt_descriptor struct
 
     // set gate type - 32 bit interrupt gate
     idt[idt_offset].reserved0 = 0;
     idt[idt_offset].reserved1 = 1;
     idt[idt_offset].reserved2 = 1;
-    idt[idt_offset].reserved3 = 1;
+    idt[idt_offset].reserved3 = trap;
     idt[idt_offset].reserved4 = 0;
     // kernel selector
     idt[idt_offset].seg_selector = KERNEL_CS;
@@ -101,34 +79,23 @@ void install_interrupt_handler(int idt_offset, void (*handler), int sys_call) {
         idt[idt_offset].dpl = 3;
     }
 
-    // write the 
     SET_IDT_ENTRY(idt[idt_offset], handler);
 
     return;
 }
 
-/* TYPE 3: Trap-gate descriptor */
-void install_trap_handler(int idt_offset, void (*handler)) {
-    // set values of idt_descriptor struct
-
-    // set gate type - 32 bit trap gate
-    idt[idt_offset].reserved0 = 1;
-    idt[idt_offset].reserved1 = 1;
-    idt[idt_offset].reserved2 = 1;
-    idt[idt_offset].reserved3 = 1;
-    idt[idt_offset].reserved4 = 1;
-    // kernel selector
-    idt[idt_offset].seg_selector = KERNEL_CS;
-    // set to 1 for used interrupts
-    idt[idt_offset].present = 1;
-    idt[idt_offset].size = 1;
-    // set DPL to 0 for hardware handlers to prevent callings with int
-    idt[idt_offset].dpl = 0;
-
-    // write the 
-    SET_IDT_ENTRY(idt[idt_offset], handler);
-
-    return;
+void rtc_handler() {
+    // disable interrupts to set registers
+    cli();
+    /* read from register C - if not then interrupt will not happen again.
+        We select, read from reg C and then throw away the contents immediately.  */
+    outb(0x0C, 0x70);
+    inb(0x71);
+    sti();
+    // rtc test
+	test_interrupts();
+    // issue EOI to PIC at end of interrupt
+    send_eoi(8);
 }
 
 void sys_call_handler() {
@@ -268,6 +235,15 @@ void page_fault_ex() {
     // freeze with while loop
     while(1) {
 
+    }
+}
+
+void reserved(){
+    clear();
+    printf("Reserved by Intel");
+    // freeze with while looop
+    while(1) {
+        
     }
 }
 

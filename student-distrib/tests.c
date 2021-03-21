@@ -67,7 +67,7 @@ int divide_error() {
 
 /* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("idt_test", idt_test());
+	// TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
-	divide_error();
+	// divide_error();
 }
