@@ -171,6 +171,15 @@ void putc(uint8_t c) {
     if(c == '\n' || c == '\r') {
         screen_y++;
         screen_x = 0;
+    // in case of backspace
+    } else if(c == '\b') {
+        if (screen_x) --screen_x; 
+        else {
+            --screen_y;
+            screen_x = NUM_COLS - 1;
+        }
+        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = 0;
+        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ATTRIB;
     } else {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
