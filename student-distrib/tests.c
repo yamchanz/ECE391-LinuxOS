@@ -48,9 +48,9 @@ int idt_test(){
 // add more tests here
 int keyboard_test() {
 	TEST_HEADER;
-
-	
+	return PASS;
 }
+
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */

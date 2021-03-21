@@ -37,5 +37,4 @@ uint32_t keyboard_buf_idx;
 extern void keyboard_init(void);
 extern void keyboard_handler(void);
 
-
 #endif
