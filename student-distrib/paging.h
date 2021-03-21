@@ -22,9 +22,6 @@
 #define MAX_PAGE_NUMBER   1024
 #define BYTES_TO_ALIGN    4096
 
-extern page_directory pd __attribute__((aligned(BYTES_TO_ALIGN)));
-extern page_table pt __attribute__((aligned(BYTES_TO_ALIGN)));
-
 /* PDE: page table
  * |  31  :  12  | 11:8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
  *   addr of PT    xxxx   0   x   A  PCD PWT U/S R/W  1
@@ -124,6 +121,9 @@ typedef struct page_directory {
 typedef struct page_table {
     pte entry[MAX_PAGE_NUMBER];
 } page_table;
+
+extern page_directory pd __attribute__((aligned(BYTES_TO_ALIGN)));
+extern page_table pt __attribute__((aligned(BYTES_TO_ALIGN)));
 
 /* initializes pages */
 extern void init_paging(void);
