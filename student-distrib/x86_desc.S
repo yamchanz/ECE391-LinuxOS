@@ -26,6 +26,11 @@ ldt_desc:
     .word KERNEL_LDT
     .long ldt
 
+.align 16
+gdt_desc:   # loads the address and the size of the GDT
+    .word gdt_bottom - gdt - 1
+    .long gdt
+
     .align 4
 tss:
 _tss:
