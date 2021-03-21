@@ -11,9 +11,12 @@ uint8_t slave_mask = 0xFF;  /* IRQs 8-15 */
 
 /* Initialize the 8259 PIC */
 void i8259_init(void) {
+<<<<<<< HEAD
     outb(master_mask, MASTER_8259_DATA); 
     outb(slave_mask, SLAVE_8259_DATA);
 
+=======
+>>>>>>> hyunjun
     outb(ICW1,MASTER_8259_PORT);
     outb(ICW1,SLAVE_8259_PORT);
 
@@ -26,7 +29,10 @@ void i8259_init(void) {
     outb(ICW4,MASTER_8259_DATA);
     outb(ICW4,SLAVE_8259_DATA);
 
+<<<<<<< HEAD
     enable_irq(2);
+=======
+>>>>>>> hyunjun
 }
 
 /* Enable (unmask) the specified IRQ */
