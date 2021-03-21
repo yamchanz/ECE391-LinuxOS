@@ -39,6 +39,12 @@ _tss:
     .endr
 tss_bottom:
 
+.align 4
+    .word 0 # Padding
+gdt_desc:
+    .word gdt_bottom - gdt - 1
+    .long gdt
+
     .align  16
 
 # descriptor pointer to load GDTR
