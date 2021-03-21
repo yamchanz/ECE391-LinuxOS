@@ -138,16 +138,19 @@ void keyboard_handler(void) {
                 (keyboard_flag & ~CAPS_LOCK_MASK) : (keyboard_flag | CAPS_LOCK_MASK);
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case L_SHIFT_PRS:
         case R_SHIFT_PRS:
             keyboard_flag |= SHIFT_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case L_SHIFT_REL:
         case R_SHIFT_REL:
             keyboard_flag &= ~SHIFT_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case ALT_PRS:
             keyboard_flag |= ALT_MASK;
             send_eoi(KEYBOARD_IRQ);
@@ -156,6 +159,7 @@ void keyboard_handler(void) {
             keyboard_flag &= ~ALT_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case CTRL_PRS:
             keyboard_flag |= CTRL_MASK;
             send_eoi(KEYBOARD_IRQ);
@@ -164,17 +168,21 @@ void keyboard_handler(void) {
             keyboard_flag &= ~CTRL_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case ENTER_PRS:
             // implement this
             break;
+
         case CAPS_LOCK_REL:
         case ENTER_REL:
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case BACKSPACE_PRS:
             // implement this
             send_eoi(KEYBOARD_IRQ);
             return;
+            
         default: 
             key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
     }
