@@ -1,20 +1,16 @@
 #include "paging.h"
 
-// linker issue?
-page_directory pd __attribute__((aligned(BYTES_TO_ALIGN)));
 page_directory* pd_ptr = &pd;
-page_table pt __attribute__((aligned(BYTES_TO_ALIGN)));
 page_table* pt_ptr = &pt;
 
-
-/* init_paging - CP1
+/* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
  * the first 4MB page, the 4MB Kernal page, as well as 1022 "not present"
  * 4MB pages.
  * parameter - none
  * return - none
  */
-void init_paging(void) {
+void paging_init(void) {
     int i, j;
 
     for(i = 0; i < MAX_PAGE_NUMBER; i++) {
@@ -77,9 +73,10 @@ void init_paging(void) {
     // to turn on paging:
     // - set CR3
     // - set CR4.PAE bit
+    // - set CR4.PSE bit ?
     // - set CR0.PG bit
     asm volatile ("                                               \n\
-        movl $pd_ptr, %%eax                                           \n\
+        movl $pd_ptr, %%eax                                       \n\
         andl $0xFFFFF000, %%eax                                   \n\
         movl %%eax, %%cr3                                         \n\
         movl $0x00000010, %%eax                                   \n\
