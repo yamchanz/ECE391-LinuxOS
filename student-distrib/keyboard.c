@@ -120,10 +120,22 @@ uint8_t scan_code_to_ascii[4][128] = {{
 }};
 
 // MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul
+<<<<<<< HEAD
 uint8_t keyboard_flag;
 
 void keyboard_init(void) {
     keyboard_flag = 0x00;
+=======
+static uint8_t keyboard_flag;
+
+void keyboard_init(void) {
+    int i;
+
+    keyboard_flag = 0x00;
+    for (i = 0; i < KEY_BUF_SIZE; ++i) 
+        keyboard_buf[i] = 0;
+    keyboard_buf_idx = 0;
+>>>>>>> kevin
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -131,7 +143,11 @@ void keyboard_handler(void) {
     uint8_t scan_code, key_ascii;
 
     scan_code = inb(KEYBOARD_PORT);
+<<<<<<< HEAD
     // check if flag related
+=======
+    // check special cases
+>>>>>>> kevin
     switch(scan_code) {
         case CAPS_LOCK_PRS:
             keyboard_flag = (keyboard_flag & CAPS_LOCK_MASK) ? 
@@ -170,8 +186,9 @@ void keyboard_handler(void) {
             return;
 
         case ENTER_PRS:
-            // implement this
-            break;
+            // putc('\n');
+            send_eoi(KEYBOARD_IRQ);
+            return;
 
         case CAPS_LOCK_REL:
         case ENTER_REL:
@@ -179,7 +196,10 @@ void keyboard_handler(void) {
             return;
 
         case BACKSPACE_PRS:
-            // implement this
+            if (keyboard_buf_idx) {
+                keyboard_buf[keyboard_buf_idx--] = 0;
+                putc('\b');
+            }
             send_eoi(KEYBOARD_IRQ);
             return;
             
@@ -193,8 +213,9 @@ void keyboard_handler(void) {
         return;
     } 
 
-    // print otherwise
-    if (key_ascii) {
-        // implement this
+    // print unless reached the buffer size limit
+    if (key_ascii && keyboard_buf_idx != KEY_BUF_SIZE - 1) {
+        keyboard_buf[keyboard_buf_idx++] = key_ascii;
+        putc(key_ascii);
     }
 }
