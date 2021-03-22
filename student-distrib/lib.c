@@ -171,7 +171,7 @@ void putc(uint8_t c) {
     if(c == '\n' || c == '\r') {
         screen_y++;
         screen_x = 0;
-    // in case of backspace: move back a x or y if x == 0
+    // in case of backspace
     } else if(c == '\b') {
         if (screen_x)
             --screen_x; 
