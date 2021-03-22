@@ -58,6 +58,7 @@ int divide_error() {
 }
 
 // add more tests here
+<<<<<<< HEAD
 int keyboard_test() {
 	TEST_HEADER;
 	return PASS;
@@ -70,6 +71,13 @@ int not_present_paging_test() {
 	TEST_HEADER;
 } */
 
+=======
+// int keyboard_test() {
+// 	TEST_HEADER;
+
+	
+// }
+>>>>>>> 5fcbfcaddac5f3b4a9af3e34464cad271b38cdf4
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
