@@ -67,7 +67,7 @@ int keyboard_test() {
 int video_mem_paging_test() {
 	TEST_HEADER;
 
-	int* ptr = (int*)0xB8000; // test at video memory address
+	int* ptr = (int*) 0xB8000; // test at video memory address
 	int deref;
 	deref = *ptr;
 	return PASS;
