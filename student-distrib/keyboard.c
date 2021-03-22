@@ -5,7 +5,7 @@
 // format copied from https://stackoverflow.com/questions/61124564/convert-scancodes-to-ascii
 // 0: none 1: caps_lock 2: shift 3: caps_lock && shift
 uint8_t scan_code_to_ascii[4][128] = {{
-    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0, 
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', 0, 
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*',
@@ -33,7 +33,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* F12 Key */
     0,  /* All other keys are undefined */
 }, {
-    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', 0,
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0, 
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0, '\\',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 0, '*',
@@ -61,7 +61,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* F12 Key */
     0,  /* All other keys are undefined */
 }, {
-    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
+    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', 0,
     'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|', 
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 
@@ -90,7 +90,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* All other keys are undefined */
 }, {
     
-    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
+    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', 0,
     'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0, 0, 
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0, '|', 
     'z', 'x', 'c', 'v', 'b', 'n', 'm', '<', '>', '?', 0, '*', 
@@ -126,9 +126,6 @@ void keyboard_init(void) {
     int i;
 
     keyboard_flag = 0x00;
-    for (i = 0; i < KEY_BUF_SIZE; ++i) 
-        keyboard_buf[i] = 0;
-    keyboard_buf_idx = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -183,28 +180,18 @@ void keyboard_handler(void) {
         case ENTER_REL:
             send_eoi(KEYBOARD_IRQ);
             return;
-
-        case BACKSPACE_PRS:
-            if (keyboard_buf_idx) {
-                keyboard_buf[keyboard_buf_idx--] = 0;
-                putc('\b');
-            }
-            send_eoi(KEYBOARD_IRQ);
-            return;
             
         default: 
             key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
     }
 
-    // check for ctrl + L
-    if ((keyboard_flag & CTRL_MASK) && key_ascii == 'L') {
-        // clear the screen and put the cursor at the top
-        return;
-    } 
-
-    // print unless reached the buffer size limit
-    if (key_ascii && keyboard_buf_idx != KEY_BUF_SIZE - 1) {
-        keyboard_buf[keyboard_buf_idx++] = key_ascii;
+    // print otherwise
+    if (key_ascii) {
         putc(key_ascii);
+        send_eoi(KEYBOARD_IRQ);
+        return;
     }
+    // never reaches here
+    send_eoi(KEYBOARD_IRQ);
+    return;
 }

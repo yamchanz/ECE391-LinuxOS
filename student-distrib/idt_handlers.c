@@ -46,7 +46,7 @@ void initialize_idt() {
     // install RTC (IRQ8)
     install_interrupt_handler(0x28, rtc_handler_link, 0, 0);
 
-    // install_interrupt_handler(0x21, keyboard_handler_link, 0, 0);
+    install_interrupt_handler(0x21, keyboard_handler_link, 0, 0);
 
     // system call handler (0x80)
     install_interrupt_handler(SYS_CALL_IDX, sys_call_handler_link, 0, 1);
@@ -94,7 +94,7 @@ void rtc_handler() {
     // sti();
 
     // rtc test
-	test_interrupts();
+	// test_interrupts();
 
     // issue EOI to PIC at end of interrupt
     send_eoi(8);
