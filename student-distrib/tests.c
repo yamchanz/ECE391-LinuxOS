@@ -45,7 +45,23 @@ int idt_test(){
 	return result;
 }
 
+int divide_error() {
+	TEST_HEADER;
+	int num = 2;
+	int denom = 0;
+
+	num /= denom;
+
+	denom = num;
+
+	return PASS;
+}
+
 // add more tests here
+int keyboard_test() {
+	TEST_HEADER;
+	return PASS;
+}
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
@@ -55,6 +71,7 @@ int idt_test(){
 
 /* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("idt_test", idt_test());
+	// TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
+	// divide_error();
 }
