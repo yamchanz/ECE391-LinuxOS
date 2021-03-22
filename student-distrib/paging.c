@@ -2,8 +2,6 @@
 
 //page_directory* pd_ptr = &pd;
 //page_table* pt_ptr = &pt;
-//int pd_ptr = pd;
-//int pt_ptr = pt;
 
 /* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
@@ -13,44 +11,34 @@
  * return - none
  */
 void paging_init(void) {
-    int i;
-    // go thru all pages in directory/table and set them to initial value
-    for(i = 0; i < MAX_PAGE_NUMBER; i++) {
-        pd[i] = 0;
-        pt[i] = 0;
-    }
-
-
-
-
-/* void paging_init(void) {
     int i, j;
+
+    //  init page table
+    for(j = 0; j < MAX_PAGE_NUMBER; j++) {
+        if(j == VIDEO_MEM_PAGE_ADDR) {
+            pt[j].page.present = 1;
+            pt[j].page.read_write = 1;
+            pt[j].page.user_sup = 0;
+            pt[j].page.pwt = 0;
+            pt[j].page.pcd = 0;
+            pt[j].page.accessed = 0;
+            pt[j].page.dirty = 0;
+            pt[j].page.pat = 0;
+            pt[j].page.glob = 0;
+            pt[j].page.ignored3 = 0;
+            pt[j].page.page_addr = VIDEO_MEM_PAGE_ADDR;
+          }
+        else {
+            pt[j].not_present.present = 0;
+            pt[j].not_present.ignored31 = 0;
+        }
+    }
 
     for(i = 0; i < MAX_PAGE_NUMBER; i++) {
         // initalize first 4MB and video memory page (must be 4KB)
         if(i == 0) {
-            for(j = 0; j < MAX_PAGE_NUMBER; j++) {
-                if(j == VIDEO_MEM_PAGE_ADDR) {
-                  // .entry[j]
-                    pt[j].page.present = 1;
-                    pt[j].page.read_write = 0;
-                    pt[j].page.user_sup = 0;
-                    pt[j].page.pwt = 0;
-                    pt[j].page.pcd = 0;
-                    pt[j].page.accessed = 0;
-                    pt[j].page.dirty = 0;
-                    pt[j].page.pat = 0;
-                    pt[j].page.glob = 0;
-                    pt[j].page.ignored3 = 0;
-                    pt[j].page.page_addr = VIDEO_MEM_PAGE_ADDR;
-                  }
-                else {
-                    pt[j].not_present.present = 0;
-                    pt[j].not_present.ignored31 = 0;
-                }
-            }
             pd[i].table.present = 1;
-            pd[i].table.read_write = 0;
+            pd[i].table.read_write = 1;
             pd[i].table.user_sup = 0;
             pd[i].table.pwt = 0;
             pd[i].table.pcd = 0;
@@ -58,12 +46,12 @@ void paging_init(void) {
             pd[i].table.ignored1 = 0;
             pd[i].table.ps = 0;
             pd[i].table.ignored4 = 0;
-            pd[i].table.pt_addr = (unsigned long) pt_ptr >> 12;
+            pd[i].table.pt_addr = (unsigned long) pt >> 12;
         }
         // initialize 4MB kernel page
         else if(i == 1) {
             pd[i].page.present = 1;
-            pd[i].page.read_write = 0;
+            pd[i].page.read_write = 1;
             pd[i].page.user_sup = 0;
             pd[i].page.pwt = 0;
             pd[i].page.pcd = 0;
@@ -82,7 +70,7 @@ void paging_init(void) {
             pd[i].not_present.present = 0;
             pd[i].not_present.ignored31 = 0;
         }
-    } */
+    }
 
     // to turn on paging:
     // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
@@ -91,7 +79,6 @@ void paging_init(void) {
     // - set CR0.PG bit, CR0.PE bit?
     asm volatile ("                                               \n\
         movl $pd, %%eax                                           \n\
-        andl $0xFFFFFC00, %%eax                                   \n\
         movl %%eax, %%cr3                                         \n\
         movl %%cr4, %%eax                                         \n\
         orl  $0x00000010, %%eax                                   \n\
@@ -102,7 +89,7 @@ void paging_init(void) {
         "                                                           \
         : /* no outputs */                                          \
         : /* no inputs */                                           \
-        : "eax", "cc"                                               \
+        : "eax"                                                     \
     );
 }
 

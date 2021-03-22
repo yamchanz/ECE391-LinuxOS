@@ -67,7 +67,7 @@ int keyboard_test() {
 int video_mem_paging_test() {
 	TEST_HEADER;
 
-	int* ptr = (int*) 0xB8000; // test at video memory address
+	int* ptr = (int*) 0x000B8000; // test at video memory address
 	int deref;
 	deref = *ptr;
 	return PASS;
@@ -76,7 +76,7 @@ int video_mem_paging_test() {
 int kernel_paging_test() {
 	TEST_HEADER;
 
-	int* ptr = (int*) 0x400000; // test at kernel address
+	int* ptr = (int*) 0x00400000; // test at kernel address
 	int deref;
 	deref = *ptr;
 	return PASS;
@@ -101,7 +101,10 @@ int not_present_paging_test() {
 
 /* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
+	//TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
+	//TEST_OUTPUT("kernel_paging_test", kernel_paging_test());
+	//TEST_OUTPUT("video_mem_paging_test", video_mem_paging_test());
+
 	// launch your tests here
 	// divide_error();
 }
