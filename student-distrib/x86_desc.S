@@ -26,7 +26,6 @@ ldt_desc:
     .word KERNEL_LDT
     .long ldt
 
-    .align 4
 tss:
 _tss:
     .rept 104
@@ -34,8 +33,8 @@ _tss:
     .endr
 tss_bottom:
 
-.align 4
-    .word 0 # Padding
+# descriptor pointer to load GDTR
+
 .align 16
 
 gdt_desc:
