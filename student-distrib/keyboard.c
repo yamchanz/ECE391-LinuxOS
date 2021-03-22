@@ -120,12 +120,6 @@ uint8_t scan_code_to_ascii[4][128] = {{
 }};
 
 // MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul
-<<<<<<< HEAD
-uint8_t keyboard_flag;
-
-void keyboard_init(void) {
-    keyboard_flag = 0x00;
-=======
 static uint8_t keyboard_flag;
 
 void keyboard_init(void) {
@@ -135,7 +129,6 @@ void keyboard_init(void) {
     for (i = 0; i < KEY_BUF_SIZE; ++i) 
         keyboard_buf[i] = 0;
     keyboard_buf_idx = 0;
->>>>>>> kevin
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -143,11 +136,7 @@ void keyboard_handler(void) {
     uint8_t scan_code, key_ascii;
 
     scan_code = inb(KEYBOARD_PORT);
-<<<<<<< HEAD
-    // check if flag related
-=======
     // check special cases
->>>>>>> kevin
     switch(scan_code) {
         case CAPS_LOCK_PRS:
             keyboard_flag = (keyboard_flag & CAPS_LOCK_MASK) ? 
