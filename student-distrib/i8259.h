@@ -15,6 +15,8 @@
 #define MASTER_8259_DATA    MASTER_8259_PORT+1
 #define SLAVE_8259_COMMAND  SLAVE_8259_PORT
 #define SLAVE_8259_DATA     SLAVE_8259_PORT+1
+#define MAX_PIN             8
+#define SLAVE               2
 
 /* Initialization control words to init each PIC.
  * See the Intel manuals for details on the meaning

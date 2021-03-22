@@ -4,9 +4,11 @@
 #include "lib.h"
 #include "i8259.h"
 
+// IRQ and port
 #define KEYBOARD_IRQ    1
 #define KEYBOARD_PORT   0x60
 
+// macros for the special input
 #define REL_MASK        0x80
 #define CAPS_LOCK_PRS   0x3A
 #define CAPS_LOCK_REL   (CAPS_LOCK_PRS | REL_MASK)
@@ -29,12 +31,9 @@
 #define CTRL_MASK       0x10
 #define ENTER_MASK      0x08
 
-// temporary terminal display buffer
-#define KEY_BUF_SIZE    128
-uint8_t keyboard_buf[KEY_BUF_SIZE];
-uint32_t keyboard_buf_idx; 
-
+// initializes keyboard by setting the default flag and enabling on the PIC
 extern void keyboard_init(void);
+// installs the interrupt handler for the RTC
 extern void keyboard_handler(void);
 
 #endif

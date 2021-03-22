@@ -112,3 +112,5 @@ dkms.conf
 *.qcow
 source/
 
+student-distrib/bootimg
+student-distrib/Makefile.dep

@@ -2,29 +2,35 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "i8259.h"
+#include "rtc.h"
 
-int rtc_int_flag;
-
+/* initialize_rtc
+    DESCRIPTION: initializes RTC by setting the default frequency and enabling on the PIC
+    INPUTS: none
+    OUTPUTS: enables IRQ8 on the PIC, writes to the RTC registers
+    RETURN VALUE: none
+    SIDE EFFECTS: none
+*/
 void initialize_rtc() {
     // turn on IRQ8 - default 1024 Hz periodic frequency
-
-    // enable RTC on PIC
-    enable_irq(8);
     // cli();
     //disable NMI interrupt and select Register B
-    outb(0x8B, 0x70);
-    // outb(0x8A, 0x70);
+    outb(NMI_REG_B, SELECT_REG);
+    // outb(NMI_REG_A, SELECT_REG);
     // read last char from Register B
-    char prev = inb(0x71);
+    char prev = inb(DATA_REG);
     // set index again  
-    outb(0x8B, 0x70);	
-    // write previous value OR 0x40
-    outb(prev | 0x40, 0x71);
+    outb(NMI_REG_B, SELECT_REG);	
+    // OR to turn on 6th bit of register B
+    outb(prev | 0x40, DATA_REG);
 
-    // outb(0x8A, 0x70);
-    // outb(0x20, 0x71);	
+    // outb(NMI_REG_A, SELECT_REG);
+    // outb(0x2F, DATA_REG);	
 
     // sti();
+
+    // enable RTC on PIC
+    enable_irq(IRQ_RTC);
 
     return;
     
