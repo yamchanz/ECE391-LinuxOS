@@ -30,6 +30,8 @@ void machine_check_ex();
 void simd_fp_ex();
 // 0x80 system call handler
 void sys_call_handler();
+// undefined general handler
+void undefined_handler();
 
 void (*exception_arr[20])() = {divide_error_ex, debug_ex, nmi_interrupt_ex, breakpoint_ex, overflow_ex,
                                 bound_range_ex, invalid_opcode_ex, device_not_avail_ex, double_fault_ex, coprocess_seg_ex,
@@ -44,9 +46,15 @@ void (*exception_arr[20])() = {divide_error_ex, debug_ex, nmi_interrupt_ex, brea
     SIDE EFFECTS: none
 */
 void initialize_idt() {
+    // install first 20 intel exceptions
     int i;
     for(i = 0; i < EX_ARR_SIZE; i++) {
         install_interrupt_handler(i, exception_arr[i], 0, 0);
+    }
+    // initialize the rest of IDT table with a general handler, later installs will install over this
+    int j;
+    for(j = EX_ARR_SIZE; j < NUM_VEC; j++) {
+        install_interrupt_handler(j, &undefined_handler, 0, 0);
     }
 
     // install RTC (IRQ8)
@@ -117,7 +125,7 @@ void rtc_handler() {
     // sti();
 
     // rtc test
-	test_interrupts();
+	// test_interrupts();
 
     // issue EOI to PIC at end of interrupt
     send_eoi(IRQ_RTC);
@@ -131,7 +139,12 @@ void rtc_handler() {
     SIDE EFFECTS: none
 */
 void sys_call_handler() {
+    clear();
     printf("System call was handled");
+    // freeze with while loop
+    while(1) {
+
+    }
 }
 
 /* Exception handler functions
@@ -315,6 +328,21 @@ void machine_check_ex() {
 void simd_fp_ex() {
     clear();
     printf("SIMD Floating-Point Exception (#XF)");
+    // freeze with while loop
+    while(1) {
+
+    }
+}
+/* undefined_handler
+    DESCRIPTION: handler function for interrupts not yet defined otherwise
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
+void undefined_handler() {
+    clear();
+    printf("General handler implemented");
     // freeze with while loop
     while(1) {
 

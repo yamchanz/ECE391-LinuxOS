@@ -44,20 +44,49 @@ int idt_test(){
 
 	return result;
 }
-
+/* divide_error()
+    DESCRIPTION: attempts to divide 2 by 0, handled by interrupt 0x00
+    INPUTS: none
+    OUTPUTS: PASS if successful, interrupt handler if not
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes screen with handler message
+*/
 int divide_error() {
 	TEST_HEADER;
 	int num = 2;
 	int denom = 0;
-
 	num /= denom;
-
 	denom = num;
 
 	return PASS;
 }
+/* opcode_error
+    DESCRIPTION: attempts to move from a non-existent register
+    INPUTS: none
+    OUTPUTS: PASS if successful, interrupt handler if not
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes screen with handler message
+*/
+int opcode_error() {
+	TEST_HEADER;
+	asm volatile ("movl %cr6, %eax");
 
-// add more tests here
+	return PASS;
+}
+/* opcode_error
+    DESCRIPTION: calls the system call handler at index 0x80 of IDT
+    INPUTS: none
+    OUTPUTS: PASS if successful, interrupt handler if not
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes screen with handler message
+*/
+int sys_call_test() {
+	TEST_HEADER;
+	asm volatile ("int $0x80");
+
+	return PASS;
+}
+
 // int keyboard_test() {
 // 	TEST_HEADER;
 
@@ -71,7 +100,9 @@ int divide_error() {
 
 /* Test suite entry point */
 void launch_tests(){
-	// TEST_OUTPUT("idt_test", idt_test());
+	TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
 	// divide_error();
+	// opcode_error();
+	// sys_call_test();
 }
