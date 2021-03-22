@@ -58,26 +58,41 @@ int divide_error() {
 }
 
 // add more tests here
-<<<<<<< HEAD
+
 int keyboard_test() {
 	TEST_HEADER;
 	return PASS;
 }
 
-/* int paging_exists() {
+int video_mem_paging_test() {
+	TEST_HEADER;
+
+	int* ptr = (int*)0xB8000; // test at video memory address
+	int deref;
+	deref = *ptr;
+	return PASS;
+}
+
+int kernel_paging_test() {
+	TEST_HEADER;
+
+	int* ptr = (int*) 0x400000; // test at kernel address
+	int deref;
+	deref = *ptr;
+	return PASS;
 }
 
 int not_present_paging_test() {
 	TEST_HEADER;
-} */
 
-=======
-// int keyboard_test() {
-// 	TEST_HEADER;
+	int* ptr = (int*) 0x1000000; // test at 16MB - nothing should be there
+	int deref;
+	deref = *ptr; // should cause exception
+	return FAIL;
+}
 
-	
-// }
->>>>>>> 5fcbfcaddac5f3b4a9af3e34464cad271b38cdf4
+
+
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -86,7 +101,7 @@ int not_present_paging_test() {
 
 /* Test suite entry point */
 void launch_tests(){
-	// TEST_OUTPUT("idt_test", idt_test());
+	TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
 	// launch your tests here
 	// divide_error();
 }
