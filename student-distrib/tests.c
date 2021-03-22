@@ -87,11 +87,6 @@ int sys_call_test() {
 	return PASS;
 }
 
-// int keyboard_test() {
-// 	TEST_HEADER;
-
-	
-// }
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
