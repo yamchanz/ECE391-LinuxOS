@@ -1,7 +1,5 @@
 #include "keyboard.h"
 
-// local functions
-
 // format copied from https://stackoverflow.com/questions/61124564/convert-scancodes-to-ascii
 // 0: none 1: caps_lock 2: shift 3: caps_lock && shift
 uint8_t scan_code_to_ascii[4][128] = {{
@@ -122,8 +120,18 @@ uint8_t scan_code_to_ascii[4][128] = {{
 // MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul
 static uint8_t keyboard_flag;
 
+/* keyboard_init
+    DESCRIPTION: initializes keyboard by setting the default flag and enabling on the PIC
+    INPUTS: none
+    OUTPUTS: enables KEYBOARD_IRQ(1) on the PIC, writes to the RTC registers
+    RETURN VALUE: none
+    SIDE EFFECTS: none
+*/
 void keyboard_init(void) {
+<<<<<<< HEAD
     int i;
+=======
+>>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
     keyboard_flag = 0x00;
     for (i = 0; i < KEY_BUF_SIZE; ++i) 
         keyboard_buf[i] = 0;
@@ -131,8 +139,15 @@ void keyboard_init(void) {
     enable_irq(KEYBOARD_IRQ);
 }
 
+/* keyboard_handler
+    DESCRIPTION: installs the interrupt handler for the RTC
+    INPUTS: none
+    OUTPUTS: change keyboard flag or echo key based on the input
+    RETURN VALUE: none
+    SIDE EFFECTS: modifies terminal
+*/
 void keyboard_handler(void) {
-    uint8_t scan_code, key_ascii;
+    uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
 
     scan_code = inb(KEYBOARD_PORT);
     // check special cases
@@ -159,6 +174,7 @@ void keyboard_handler(void) {
             keyboard_flag |= ALT_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case ALT_REL:
             keyboard_flag &= ~ALT_MASK;
             send_eoi(KEYBOARD_IRQ);
@@ -168,13 +184,14 @@ void keyboard_handler(void) {
             keyboard_flag |= CTRL_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case CTRL_REL:
             keyboard_flag &= ~CTRL_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
 
+        // not implemented yet
         case ENTER_PRS:
-            // putc('\n');
             send_eoi(KEYBOARD_IRQ);
             return;
 
@@ -182,6 +199,7 @@ void keyboard_handler(void) {
         case ENTER_REL:
             send_eoi(KEYBOARD_IRQ);
             return;
+<<<<<<< HEAD
 
         case BACKSPACE_PRS:
             if (keyboard_buf_idx) {
@@ -191,13 +209,24 @@ void keyboard_handler(void) {
             send_eoi(KEYBOARD_IRQ);
             return;
             
+=======
+        
+        // if not special, get the ascii character based on the flag status
+>>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
         default: 
             key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
     }
 
+<<<<<<< HEAD
     // check for ctrl + L
     if ((keyboard_flag & CTRL_MASK) && key_ascii == 'L') {
         // clear the screen and put the cursor at the top
+=======
+    // echo the ascii character
+    if (key_ascii) {
+        putc(key_ascii);
+        send_eoi(KEYBOARD_IRQ);
+>>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
         return;
     } 
 
@@ -206,4 +235,10 @@ void keyboard_handler(void) {
         keyboard_buf[keyboard_buf_idx++] = key_ascii;
         putc(key_ascii);
     }
+<<<<<<< HEAD
+=======
+    // never reaches here (implement return error later)
+    send_eoi(KEYBOARD_IRQ);
+    return;
+>>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
 }
