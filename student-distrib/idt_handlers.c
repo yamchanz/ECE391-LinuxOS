@@ -40,7 +40,7 @@ void (*exception_arr[20])() = {divide_error_ex, debug_ex, nmi_interrupt_ex, brea
 void initialize_idt() {
     int i;
     for(i = 0; i < EX_ARR_SIZE; i++) {
-        install_interrupt_handler(i, exception_arr[i], 1, 0);
+        install_interrupt_handler(i, exception_arr[i], 0, 0);
     }
 
     // install RTC (IRQ8)
@@ -86,17 +86,20 @@ void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sy
 
 void rtc_handler() {
     // disable interrupts to set registers
-    cli();
+    // cli();
     /* read from register C - if not then interrupt will not happen again.
         We select, read from reg C and then throw away the contents immediately.  */
     outb(0x0C, 0x70);
     inb(0x71);
-    sti();
+    // sti();
+
     // rtc test
 	test_interrupts();
+
     // issue EOI to PIC at end of interrupt
     send_eoi(8);
 }
+
 
 void sys_call_handler() {
     printf("System call was handled");
