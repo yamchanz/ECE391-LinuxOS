@@ -26,7 +26,6 @@ ldt_desc:
     .word KERNEL_LDT
     .long ldt
 
-    .align 4
 tss:
 _tss:
     .rept 104
@@ -34,10 +33,10 @@ _tss:
     .endr
 tss_bottom:
 
-    .align  16
-
 # descriptor pointer to load GDTR
+
 .align 16
+
 gdt_desc:
     # 16 bit table limit
     .word gdt_bottom - gdt - 1
@@ -116,7 +115,7 @@ idt:
 _idt:
     .rept NUM_VEC
     .quad 0
-    
+
     .endr
 
 idt_bottom:
