@@ -128,10 +128,7 @@ static uint8_t keyboard_flag;
     SIDE EFFECTS: none
 */
 void keyboard_init(void) {
-<<<<<<< HEAD
     int i;
-=======
->>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
     keyboard_flag = 0x00;
     for (i = 0; i < KEY_BUF_SIZE; ++i) 
         keyboard_buf[i] = 0;
@@ -199,7 +196,6 @@ void keyboard_handler(void) {
         case ENTER_REL:
             send_eoi(KEYBOARD_IRQ);
             return;
-<<<<<<< HEAD
 
         case BACKSPACE_PRS:
             if (keyboard_buf_idx) {
@@ -209,24 +205,16 @@ void keyboard_handler(void) {
             send_eoi(KEYBOARD_IRQ);
             return;
             
-=======
         
         // if not special, get the ascii character based on the flag status
->>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
         default: 
             key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
     }
 
-<<<<<<< HEAD
-    // check for ctrl + L
-    if ((keyboard_flag & CTRL_MASK) && key_ascii == 'L') {
-        // clear the screen and put the cursor at the top
-=======
     // echo the ascii character
     if (key_ascii) {
         putc(key_ascii);
         send_eoi(KEYBOARD_IRQ);
->>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
         return;
     } 
 
@@ -235,10 +223,7 @@ void keyboard_handler(void) {
         keyboard_buf[keyboard_buf_idx++] = key_ascii;
         putc(key_ascii);
     }
-<<<<<<< HEAD
-=======
     // never reaches here (implement return error later)
     send_eoi(KEYBOARD_IRQ);
     return;
->>>>>>> 553156ccfa6732da100f10eee5cae963d250a1e0
 }

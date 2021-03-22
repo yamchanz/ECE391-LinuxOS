@@ -31,11 +31,6 @@
 #define CTRL_MASK       0x10
 #define ENTER_MASK      0x08
 
-// temporary terminal display buffer
-#define KEY_BUF_SIZE    128
-uint8_t keyboard_buf[KEY_BUF_SIZE];
-uint32_t keyboard_buf_idx; 
-
 // initializes keyboard by setting the default flag and enabling on the PIC
 extern void keyboard_init(void);
 // installs the interrupt handler for the RTC
