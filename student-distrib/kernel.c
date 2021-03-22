@@ -10,10 +10,10 @@
 #include "tests.h"
 #include "rtc.h"
 #include "keyboard.h"
-
 #include "idt_handlers.h"
+#include "paging.h"
 
-#define RUN_TESTS
+#define RUN_TESTS 1
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -143,20 +143,21 @@ void entry(unsigned long magic, unsigned long addr) {
     initialize_idt();
 
     /* Init the PIC */
-    i8259_init();
+    //i8259_init();
 
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
-
     // keyboard_init();
-    initialize_rtc();
+    //paging_init();
+    // initialize_rtc();
 
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
      * without showing you any output */
-    printf("Enabling Interrupts\n");
-    sti();
+    //printf("Enabling Interrupts\n");
+
+    //sti();
 
 #ifdef RUN_TESTS
     /* Run tests */

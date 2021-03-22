@@ -101,7 +101,11 @@ int kernel_paging_test() {
  * INPUTS: none
  * OUTPUTS: none
  * RETURN VALUE: none
+<<<<<<< HEAD
  * SIDE EFFECTS: none
+=======
+ * SIDE EFFECTS: Should cause a page fault exception to be printed to screen.
+>>>>>>> nick2
  */
 int not_present_paging_test() {
 	TEST_HEADER;
@@ -111,8 +115,11 @@ int not_present_paging_test() {
 	deref = *ptr; // should cause exception
 	return FAIL;
 }
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> nick2
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
