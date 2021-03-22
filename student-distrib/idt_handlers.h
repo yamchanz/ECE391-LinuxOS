@@ -4,9 +4,9 @@
 #include "x86_desc.h"
 
 #define EX_ARR_SIZE 20
-#define EXCEPTION_15 14
-
 #define SYS_CALL_IDX 0x80
+#define RTC_IDX 0x28
+#define KEYBOARD_IDX 0x21
 
 // initialize IDT at bootup
 extern void initialize_idt();

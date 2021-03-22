@@ -123,7 +123,6 @@ uint8_t scan_code_to_ascii[4][128] = {{
 static uint8_t keyboard_flag;
 
 void keyboard_init(void) {
-    int i;
 
     keyboard_flag = 0x00;
     enable_irq(KEYBOARD_IRQ);
