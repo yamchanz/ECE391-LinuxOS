@@ -64,6 +64,13 @@ int keyboard_test() {
 	return PASS;
 }
 
+/* video_mem_paging_test - CP1
+ * DESCRIPTION: dereferences the video memory portion of virtual memory.
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: none
+ * SIDE EFFECTS: none
+ */
 int video_mem_paging_test() {
 	TEST_HEADER;
 
@@ -73,6 +80,13 @@ int video_mem_paging_test() {
 	return PASS;
 }
 
+/* kernel_paging_test - CP1
+ * DESCRIPTION: dereferences the kernel memory portion of virtual memory.
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: none
+ * SIDE EFFECTS: none
+ */
 int kernel_paging_test() {
 	TEST_HEADER;
 
@@ -82,6 +96,13 @@ int kernel_paging_test() {
 	return PASS;
 }
 
+/* not_present_paging_test - CP1
+ * DESCRIPTION: dereferences the memory portion not present in virtual memory.
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: none
+ * SIDE EFFECTS: Should cause a page fault exception to be printed to screen.
+ */
 int not_present_paging_test() {
 	TEST_HEADER;
 
@@ -90,8 +111,6 @@ int not_present_paging_test() {
 	deref = *ptr; // should cause exception
 	return FAIL;
 }
-
-
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
