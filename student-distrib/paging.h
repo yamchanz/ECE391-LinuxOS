@@ -24,6 +24,12 @@
 #define VIDEO_MEM_PAGE_ADDR  184
 #define KERNEL_PAGE_ADDR       1
 
+#define CR3_MASK      0xFFFFFC00
+#define CR4_PSE       0x00000010
+#define CR0_PG        0x80000000
+
+
+
 /* initializes pages */
 extern void paging_init(void);
 

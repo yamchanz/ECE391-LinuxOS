@@ -73,15 +73,19 @@ void paging_init(void) {
     // to turn on paging:
     // - set CR3
     // - set CR4.PAE bit
-    // - set CR4.PSE bit ?
+    // - set CR4.PSE bit ? (for both 4KB and 4MB)
     // - set CR0.PG bit
     asm volatile ("                                               \n\
         movl $pd_ptr, %%eax                                       \n\
-        andl $0xFFFFF000, %%eax                                   \n\
+        andl $(CR3_MASK), %%eax                                   \n\
         movl %%eax, %%cr3                                         \n\
-        movl $0x00000010, %%eax                                   \n\
+
+        movl %%cr4, %%eax                                         \n\
+        orl  $(CR4_PSE), %%eax                                    \n\
         movl %%eax, %%cr4                                         \n\
-        movl $0x80000000, %%eax                                   \n\
+
+        movl %%cr0, %%eax                                         \n\
+        orl  $(CR0_PG), %%eax                                     \n\
         movl %%eax, %%cr0                                         \n\
         "                                                           \
         : /* no outputs */                                          \

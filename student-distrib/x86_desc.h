@@ -119,8 +119,7 @@ typedef struct __attribute__((packed)) tss_t {
  * |  31  :  12  | 11:8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
  *   addr of PT    xxxx   0   x   A  PCD PWT U/S R/W  1
  */
-typedef union pde_PT {
-    uint32_t val;
+typedef struct pde_PT {
     struct {
         uint32_t present : 1;    // 0 present. must be 1 to reference page table
         uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
@@ -139,8 +138,7 @@ typedef union pde_PT {
  * | 31:22 | 21:17 | 16:13 | 12 | 11:9 |8|7|6|5|4|3|2|1|0|
  *   addr  reserved ex-addr PAT   xxx   G 1 D A p p u r 1
  */
-typedef union pde_4MB {
-    uint32_t val;
+typedef struct pde_4MB {
     struct {
         uint32_t present : 1;    // 0 present. must be 1 to map 4MB page
         uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
@@ -163,8 +161,7 @@ typedef union pde_4MB {
  * |  31  :  12  |11:9| 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
  *      addr       xx   G  PAT  D   A  PCD PWT U/S R/W  1
  */
-typedef union pte_4KB {
-    uint32_t val;
+typedef struct pte_4KB {
     struct {
         uint32_t present : 1;    // 0 present. must be 1 to map 4KB page
         uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
@@ -184,8 +181,7 @@ typedef union pte_4KB {
  * |  31           :             1 | 0 |
  *  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  0
  */
-typedef union pe_NA {
-    uint32_t val;
+typedef struct pe_NA {
     struct {
         uint32_t present : 1;    // 0 present. 0 means page not there
         uint32_t ignored31 : 31; // 1:31 ignored
