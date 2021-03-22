@@ -45,22 +45,30 @@ int idt_test(){
 	return result;
 }
 
+int divide_error() {
+	TEST_HEADER;
+	int num = 2;
+	int denom = 0;
+
+	num /= denom;
+
+	denom = num;
+
+	return PASS;
+}
+
 // add more tests here
+int keyboard_test() {
+	TEST_HEADER;
+	return PASS;
+}
 
-// test if allocation of paging exists
-
-/*
-int paging_exists() {
-	if()
+/* int paging_exists() {
 }
 
 int not_present_paging_test() {
 	TEST_HEADER;
-
-
-}
-
-int */
+} */
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
@@ -70,6 +78,7 @@ int */
 
 /* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("idt_test", idt_test());
+	// TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
+	// divide_error();
 }

@@ -21,8 +21,8 @@
 #include "types.h"
 #include "x86_desc.h"
 
-#define VIDEO_MEM_PAGE_ADDR  0  // need to fix
-#define KERNEL_PAGE_ADDR     1
+#define VIDEO_MEM_PAGE_ADDR  184
+#define KERNEL_PAGE_ADDR       1
 
 /* initializes pages */
 extern void paging_init(void);

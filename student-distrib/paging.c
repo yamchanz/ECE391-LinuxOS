@@ -17,7 +17,7 @@ void paging_init(void) {
         /* initalize first 4MB and video memory page (must be 4KB) */
         if(i == 0) {
             for(j = 0; j < MAX_PAGE_NUMBER; j++) {
-                if(j == VIDEO_MEM_PAGE_ADDR) { // need to fix
+                if(j == VIDEO_MEM_PAGE_ADDR) {
                     pt.entry[j].page.present = 1;
                     pt.entry[j].page.read_write = 0;
                     pt.entry[j].page.user_sup = 0;
@@ -44,7 +44,7 @@ void paging_init(void) {
             pd.entry[i].table.ignored1 = 0;
             pd.entry[i].table.ps = 0;
             pd.entry[i].table.ignored4 = 0;
-            pd.entry[i].table.pt_addr = (unsigned) pt_ptr >> 12;
+            pd.entry[i].table.pt_addr = (unsigned long) pt_ptr >> 12;
         }
         /* initialize 4MB kernel page */
         else if(i == 1) {
