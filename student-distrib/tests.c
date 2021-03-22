@@ -44,18 +44,49 @@ int idt_test(){
 
 	return result;
 }
-
+/* divide_error()
+    DESCRIPTION: attempts to divide 2 by 0, handled by interrupt 0x00
+    INPUTS: none
+    OUTPUTS: PASS if successful, interrupt handler if not
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes screen with handler message
+*/
 int divide_error() {
 	TEST_HEADER;
 	int num = 2;
 	int denom = 0;
-
 	num /= denom;
-
 	denom = num;
 
 	return PASS;
 }
+/* opcode_error
+    DESCRIPTION: attempts to move from a non-existent register
+    INPUTS: none
+    OUTPUTS: PASS if successful, interrupt handler if not
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes screen with handler message
+*/
+int opcode_error() {
+	TEST_HEADER;
+	asm volatile ("movl %cr6, %eax");
+
+	return PASS;
+}
+/* opcode_error
+    DESCRIPTION: calls the system call handler at index 0x80 of IDT
+    INPUTS: none
+    OUTPUTS: PASS if successful, interrupt handler if not
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes screen with handler message
+*/
+int sys_call_test() {
+	TEST_HEADER;
+	asm volatile ("int $0x80");
+
+	return PASS;
+}
+
 
 // add more tests here
 
@@ -101,11 +132,7 @@ int kernel_paging_test() {
  * INPUTS: none
  * OUTPUTS: none
  * RETURN VALUE: none
-<<<<<<< HEAD
- * SIDE EFFECTS: none
-=======
  * SIDE EFFECTS: Should cause a page fault exception to be printed to screen.
->>>>>>> nick2
  */
 int not_present_paging_test() {
 	TEST_HEADER;
@@ -115,11 +142,8 @@ int not_present_paging_test() {
 	deref = *ptr; // should cause exception
 	return FAIL;
 }
-<<<<<<< HEAD
 
 
-=======
->>>>>>> nick2
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
@@ -129,10 +153,14 @@ int not_present_paging_test() {
 
 /* Test suite entry point */
 void launch_tests(){
-	//TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
-	//TEST_OUTPUT("kernel_paging_test", kernel_paging_test());
-	//TEST_OUTPUT("video_mem_paging_test", video_mem_paging_test());
+	// TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
+	// TEST_OUTPUT("kernel_paging_test", kernel_paging_test());
+	// TEST_OUTPUT("video_mem_paging_test", video_mem_paging_test());
 
 	// launch your tests here
 	// divide_error();
+	// opcode_error();
+	// sys_call_test();
+
+
 }
