@@ -24,6 +24,11 @@ void clear(void) {
     }
 }
 
+void reset_terminal(void) {
+    clear();
+    screen_x = 0, screen_y = 0;
+}
+
 /* Standard printf().
  * Only supports the following format strings:
  * %%  - print a literal '%' character
@@ -171,7 +176,7 @@ void putc(uint8_t c) {
     if(c == '\n' || c == '\r') {
         screen_y++;
         screen_x = 0;
-    // in case of backspace: move back a x or y if x == 0
+    // in case of backspace: move back a x or y if x == 0`
     } else if(c == '\b') {
         if (screen_x)
             --screen_x; 
