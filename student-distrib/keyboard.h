@@ -3,6 +3,7 @@
 
 #include "lib.h"
 #include "i8259.h"
+#include "terminal.h"
 
 // IRQ and port
 #define KEYBOARD_IRQ    1

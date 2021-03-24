@@ -8,7 +8,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*',
     0,  /* Alt */
-    0,  /* Space bar */
+    ' ',  /* Space bar */
     0,  /* Caps lock */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 59 - F1 ~ F10 */
     0,  /* 69 - Num lock*/
@@ -36,7 +36,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0, '\\',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 0, '*',
     0,  /* Alt */
-    0,  /* Space bar */
+    ' ',  /* Space bar */
     0,  /* Caps lock */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 59 - F1 ~ F10 */
     0,  /* 69 - Num lock*/
@@ -64,7 +64,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|', 
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 
     0,  /* Alt */
-    0,  /* Space bar */
+    ' ',  /* Space bar */
     0,  /* Caps lock */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 59 - F1 ~ F10 */
     0,  /* 69 - Num lock*/
@@ -93,7 +93,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0, '|', 
     'z', 'x', 'c', 'v', 'b', 'n', 'm', '<', '>', '?', 0, '*', 
     0,  /* Alt */
-    0,  /* Space bar */
+    ' ',  /* Space bar */
     0,  /* Caps lock */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 59 - F1 ~ F10 */
     0,  /* 69 - Num lock*/
@@ -119,27 +119,24 @@ uint8_t scan_code_to_ascii[4][128] = {{
 
 // MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul
 static uint8_t keyboard_flag;
-
-/* keyboard_init
-    DESCRIPTION: initializes keyboard by setting the default flag and enabling on the PIC
-    INPUTS: none
-    OUTPUTS: enables KEYBOARD_IRQ(1) on the PIC, writes to the RTC registers
-    RETURN VALUE: none
-    SIDE EFFECTS: none
-*/
+ 
+/*  keyboard_init
+ *  DESCRIPTION: initializes keyboard by setting the default flag and enabling on the PIC
+ *  INPUTS: none
+ *  OUTPUTS: enables KEYBOARD_IRQ(1) on the PIC, writes to the RTC registers
+ *  RETURN VALUE: none
+ *  SIDE EFFECTS: none */
 void keyboard_init(void) {
-
     keyboard_flag = 0x00;
     enable_irq(KEYBOARD_IRQ);
 }
 
-/* keyboard_handler
-    DESCRIPTION: installs the interrupt handler for the RTC
-    INPUTS: none
-    OUTPUTS: change keyboard flag or echo key based on the input
-    RETURN VALUE: none
-    SIDE EFFECTS: modifies terminal
-*/
+/*  keyboard_handler
+ *  DESCRIPTION: installs the interrupt handler for the RTC
+ *  INPUTS: none
+ *  OUTPUTS: change keyboard flag or echo key based on the input
+ *  RETURN VALUE: none
+ *  SIDE EFFECTS: modifies terminal */
 void keyboard_handler(void) {
     uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
 
@@ -168,6 +165,7 @@ void keyboard_handler(void) {
             keyboard_flag |= ALT_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+
         case ALT_REL:
             keyboard_flag &= ~ALT_MASK;
             send_eoi(KEYBOARD_IRQ);
@@ -177,6 +175,7 @@ void keyboard_handler(void) {
             keyboard_flag |= CTRL_MASK;
             send_eoi(KEYBOARD_IRQ);
             return;
+            
         case CTRL_REL:
             keyboard_flag &= ~CTRL_MASK;
             send_eoi(KEYBOARD_IRQ);
@@ -184,11 +183,8 @@ void keyboard_handler(void) {
 
         // not implemented yet
         case ENTER_PRS:
-            send_eoi(KEYBOARD_IRQ);
-            return;
-
-        case CAPS_LOCK_REL:
-        case ENTER_REL:
+            read_terminal(NULL);
+            putc('\n');
             send_eoi(KEYBOARD_IRQ);
             return;
 
@@ -203,13 +199,12 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         return;
     }
-    // echo the ascii character
-    if (key_ascii && scan_code < REL_MASK) {
+    // if not release, update the line buffer and echo the ascii character
+    if (key_ascii && scan_code < REL_MASK && t.buffer_idx < BUF_SIZE - 2) {
+        t.buffer[t.buffer_idx++] = key_ascii;
+        t.buffer[t.buffer_idx] = 0x10;          // line limiter
         putc(key_ascii);
-        send_eoi(KEYBOARD_IRQ);
-        return;
     }
-    // never reaches here (implement return error later)
     send_eoi(KEYBOARD_IRQ);
     return;
 }
