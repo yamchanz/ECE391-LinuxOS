@@ -161,18 +161,19 @@ int rtc_freq_test() {
 	// temp value to store result of rtc command
 	int rtc_cmd;
 
-	uint32_t freq[1];
+	uint16_t freq[1];
 	// set start frequency to 2
 	*freq = 2;
 	while(*freq <= HIGH_LIMIT_FREQ) {
 		clear();
 		// error checking for NULL case or non-log2 number
-		if(rtc_write(rtc, freq, 4) != 0) {
+		if(rtc_write(rtc, freq, INT_BYTES) < 0) {
 			return FAIL;
 		}
 		int read_int;
 		for(read_int = 0; read_int < NUM_READ_INTS; read_int++) {
-			printf("%d", *freq);
+			printf("1");
+			// printf("%d", *freq);
 			// wait for interrupt
 			rtc_cmd = rtc_read(rtc, 0, 0);
 		}

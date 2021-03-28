@@ -5,7 +5,7 @@
 #include "rtc.h"
 
 // flag to set if interrupt has been received - used for reading only after interrupt
-int rtc_int_received;
+volatile int rtc_int_received;
 
 /* initialize_rtc
     DESCRIPTION: initializes RTC by setting the default frequency and enabling on the PIC
@@ -16,7 +16,7 @@ int rtc_int_received;
 */
 void initialize_rtc() {
     // turn on IRQ8 - default 1024 Hz periodic frequency
-    // cli();
+    cli();
     // disable NMI interrupt and select Registers
     outb(NMI_REG_B, SELECT_REG);
     outb(NMI_REG_A, SELECT_REG);
@@ -26,10 +26,10 @@ void initialize_rtc() {
     outb(NMI_REG_B, SELECT_REG);	
     // OR to turn on 6th bit of register B
     outb(prev | BIT_6_MASK, DATA_REG);
-
-    // sti();
-
+    // set interrupt flag to 0  
     rtc_int_received = 0;
+
+    sti();
 
     // enable RTC on PIC
     enable_irq(IRQ_RTC);
@@ -48,11 +48,16 @@ void initialize_rtc() {
 int32_t rtc_open(const uint8_t* filename) {
     initialize_rtc();
 
+    // disable interrupts to set registers
+    cli();
+
     outb(NMI_REG_A, SELECT_REG);
     char prev = inb(DATA_REG);
-    // set frequency to 2Hz
     outb(NMI_REG_A, SELECT_REG);
+    // set frequency to 2Hz
     outb((prev & HIGH_BIT_MASK) | TWO_HZ_FREQ, DATA_REG);
+
+    sti();
 
     return 0;
 }
@@ -68,6 +73,7 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
     while(!rtc_int_received) {
         // block until the next interrupt
     }
+    // reset interrupt flag after read
     rtc_int_received = 0;
 
     return 0;
@@ -78,12 +84,13 @@ int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
     INPUTS: fd (unused)
             buf - buffer that contains desired frequency
             nbytes - needs to accept 4 byte rate
-    OUTPUTS: enables IRQ8 on the PIC, writes to the RTC registers
+    OUTPUTS: writes to the RTC registers
     RETURN VALUE: number of bytes written, -1 on fail
     SIDE EFFECTS: none
 */
 int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
-    uint32_t freq = *(const uint32_t*)buf;
+    uint16_t freq = *(const uint16_t*)buf;
+    // error checking
     if(freq == NULL) {
         return -1;
     }
@@ -92,14 +99,15 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
     if(freq && (!(freq & (freq - 1))) == 0) {
         return -1;
     }
-    // sys call only accepts 4 byte int
+    // sys call only accepts 4 byte int - Appendix B
     if(nbytes == INT_BYTES && freq <= HIGH_LIMIT_FREQ) {
         // count power of 2 by finding where the 1 bit is
         int pow = 0;
         while(freq >>= 1) { 
             ++pow;
         }
-        // write new frequency into Register A
+        // write new frequency into Register A - block interrupts while writing
+        cli();
         // disable NMI interrupt and select Register A
         outb(NMI_REG_A, SELECT_REG);
         char prev = inb(DATA_REG);
@@ -107,6 +115,8 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
         outb(NMI_REG_A, SELECT_REG);
         // set rate based on offset from 2Hz rate
         outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow - 1), DATA_REG);
+
+        sti();
     } else {
         return -1;
     }
@@ -123,6 +133,10 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
     SIDE EFFECTS: none
 */
 int32_t rtc_close(int32_t fd) {
+    // error handling invalid fd
+    if(fd == NULL) {
+        return -1;
+    }
     return 0;
 }
 

@@ -16,7 +16,7 @@
 #define HIGH_LIMIT_FREQ 1024
 #define NUM_READ_INTS  20
 
-extern int rtc_int_received;
+volatile int rtc_int_received;
 
 void initialize_rtc();
 

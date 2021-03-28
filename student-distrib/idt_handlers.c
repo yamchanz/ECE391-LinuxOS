@@ -116,17 +116,19 @@ void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sy
     SIDE EFFECTS: none
 */
 void rtc_handler() {
-    // disable interrupts to set registers
-    // cli();
+    // disable interrupts to set registers and flags
+    cli();
     /* read from register C - if not then interrupt will not happen again.
         We select, read from reg C and then throw away the contents immediately.  */
     outb(REG_C, SELECT_REG);
     inb(DATA_REG);
-    // sti();
 
+    // update volatile flag while interrupts disabled
     if(!rtc_int_received) {
         rtc_int_received = 1;
     }
+    // re-enable interrupts
+    sti();
 
     // rtc test for CP1
 	// test_interrupts();
