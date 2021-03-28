@@ -37,12 +37,18 @@ void reset_terminal(void) {
  * Function: update the cursor position
  * function implementation copied from https://wiki.osdev.org/Text_Mode_Cursor */
 void update_cursor(void) {
+    uint8_t position = t.screen_y * NUM_COLS + t.screen_x;
     outb(0x0F, 0x3D4);
-    outb((uint8_t)(t.screen_x & 0xFF), 0x3D5);
+    outb((uint8_t)(position & 0xFF), 0x3D5);
     outb(0x0E, 0x3D4);
-    outb((uint8_t)(t.screen_y & 0xFF), 0x3D5);
+    outb((uint8_t)((position >> 8) & 0xFF), 0x3D5);
 }
 
+/* void read_terminal(void);
+ * Inputs: void
+ * Outputs: out_buffer -- buffer to store the line buffer copy
+ * Return Value: none
+ * Function: read (copy) the content of the line buffer to the given buffer */
 void read_terminal(void* out_buffer) {
     int32_t i;
 
@@ -53,4 +59,34 @@ void read_terminal(void* out_buffer) {
         }
     }
     clear_buffer();
+}
+
+/* void write_terminal(void);
+ * Inputs: in_buffer -- buffer to be written on the terminal
+ * Return Value: none
+ * Function: write the content of the given buffer on the terminal */
+void write_terminal(void* in_buffer) {
+    int32_t i;
+
+    for (i = 0; i < BUF_SIZE && i < strlen(in_buffer); ++i) {
+        if (i == NUM_COLS) 
+            putc('\n');
+        putc(((uint8_t *)in_buffer)[i]);
+    }
+    putc('\n');
+    clear_buffer();
+}
+
+/* void scroll_up(void);
+ * Inputs: void
+ * Return Value: none
+ * Function: delete the first line and move everything up a line */
+void scroll_up(void) {
+    int32_t i;
+
+    memmove(t.video_mem, t.video_mem + NUM_COLS * 2, NUM_COLS * (NUM_ROWS - 1) * 2);
+    for (i = (NUM_ROWS - 1) * NUM_COLS; i < NUM_ROWS * NUM_COLS; ++i) {
+        *(uint8_t *)(t.video_mem + (i << 1))     = ' ';
+        *(uint8_t *)(t.video_mem + (i << 1) + 1) = ATTRIB;
+    }
 }

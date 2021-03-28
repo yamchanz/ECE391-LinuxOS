@@ -151,6 +151,9 @@ void entry(unsigned long magic, unsigned long addr) {
     //paging_init();
     // initialize_rtc();
 
+    // initialize the terminal
+    init_terminal();
+
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
@@ -158,9 +161,6 @@ void entry(unsigned long magic, unsigned long addr) {
     printf("Enabling Interrupts\n");
 
     sti();
-
-    // initialize the terminal
-    init_terminal();
     
 #ifdef RUN_TESTS
     /* Run tests */

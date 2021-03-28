@@ -165,20 +165,25 @@ int32_t puts(int8_t* s) {
  *  Function: Output a character to the console */
 void putc(uint8_t c) {
     if(c == '\n' || c == '\r') {
-        t.screen_y++;
+        if (++t.screen_y >= NUM_ROWS) {
+            scroll_up();
+            t.screen_y--;
+        }
+        // t.screen_y--;
         t.screen_x = 0;
-    // in case of backspace: move back a x or y if x == 0`
+    // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
         if (t.screen_x)
             --t.screen_x; 
         else {
-            // don't do anything for now (no vertical scroll yet)
+            // do nothing if none
             if (!t.screen_y) return;
             --t.screen_y;
             t.screen_x = NUM_COLS - 1;
         }
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = ' ';
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
+        t.buffer[--t.buffer_idx] = BUF_END_CHAR;
     } else {
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = c;
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
