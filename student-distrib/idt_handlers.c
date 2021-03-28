@@ -124,7 +124,11 @@ void rtc_handler() {
     inb(DATA_REG);
     // sti();
 
-    // rtc test
+    if(!rtc_int_received) {
+        rtc_int_received = 1;
+    }
+
+    // rtc test for CP1
 	// test_interrupts();
 
     // issue EOI to PIC at end of interrupt
@@ -149,6 +153,9 @@ void sys_call_handler() {
 
 /* Exception handler functions
     DESCRIPTION: handler functions for each of the first 20 interrupts, following the Intel IA-32 manual
+*/
+/*  divide_error_ex
+    DESCRIPTION: handler functions for divide by zero exception
     INPUTS: none
     OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
     RETURN VALUE: none
@@ -162,7 +169,13 @@ void divide_error_ex() {
 
     }
 }
-
+/*  debug_ex
+    DESCRIPTION: handler functions for debug exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void debug_ex() {
     clear();
     printf("Debug Exception (#DB)");
@@ -171,7 +184,13 @@ void debug_ex() {
 
     }
 }
-
+/*  nmi_interrupt_ex
+    DESCRIPTION: handler functions for NMI interrupt exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void nmi_interrupt_ex() {
     clear();
     printf("NMI Interrupt");
@@ -180,7 +199,13 @@ void nmi_interrupt_ex() {
 
     }
 }
-
+/*  breakpoint_ex
+    DESCRIPTION: handler functions for breakpoint exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void breakpoint_ex() {
     clear();
     printf("Breakpoint Exception (#BP)");
@@ -189,7 +214,13 @@ void breakpoint_ex() {
 
     }
 }
-
+/*  overflow_ex
+    DESCRIPTION: handler functions for overflow exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void overflow_ex() {
     clear();
     printf("Overflow Exception (#OF)");
@@ -198,7 +229,13 @@ void overflow_ex() {
 
     }
 }
-
+/*  bound_range_ex
+    DESCRIPTION: handler functions for bound range exceeded exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void bound_range_ex() {
     clear();
     printf("BOUND Range Exceeded Exception (#BR)");
@@ -207,7 +244,13 @@ void bound_range_ex() {
 
     }
 }
-
+/*  invalid_opcode_ex
+    DESCRIPTION: handler functions for invalid opcode exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void invalid_opcode_ex() {
     clear();
     printf("Invalid Opcode Exception (#UD)");
@@ -216,7 +259,13 @@ void invalid_opcode_ex() {
 
     }
 }
-
+/*  device_not_avail_ex()
+    DESCRIPTION: handler functions for device not available exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void device_not_avail_ex() {
     clear();
     printf("Device Not Available Exception (#NM)");
@@ -225,7 +274,13 @@ void device_not_avail_ex() {
 
     }
 }
-
+/*  double_fault_ex
+    DESCRIPTION: handler functions for double fault exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void double_fault_ex() {
     clear();
     printf("Double Fault Exception (#DF)");
@@ -234,7 +289,13 @@ void double_fault_ex() {
 
     }
 }
-
+/*  coprocess_seg_ex
+    DESCRIPTION: handler functions for coprocessor segment overrun exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void coprocess_seg_ex() {
     clear();
     printf("Coprocessor Segment Overrun");
@@ -243,7 +304,13 @@ void coprocess_seg_ex() {
 
     }
 }
-
+/*  invalid_tss_ex
+    DESCRIPTION: handler functions for invalid TSS exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void invalid_tss_ex() {
     clear();
     printf("Invalid TSS Exception (#TS)");
@@ -252,7 +319,13 @@ void invalid_tss_ex() {
 
     }
 }
-
+/*  seg_not_pres_ex
+    DESCRIPTION: handler functions for segment not present exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void seg_not_pres_ex() {
     clear();
     printf("Segment Not Present (#NP)");
@@ -261,7 +334,13 @@ void seg_not_pres_ex() {
 
     }
 }
-
+/*  stack_fault_ex
+    DESCRIPTION: handler functions for stack fault exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void stack_fault_ex() {
     clear();
     printf("Stack Fault Exception (#SS)");
@@ -270,7 +349,13 @@ void stack_fault_ex() {
 
     }
 }
-
+/*  gen_prot_ex
+    DESCRIPTION: handler functions for general protection exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void gen_prot_ex() {
     clear();
     printf("General Protection Exception (#GP)");
@@ -279,7 +364,13 @@ void gen_prot_ex() {
 
     }
 }
-
+/*  page_fault_ex
+    DESCRIPTION: handler functions for page fault exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void page_fault_ex() {
     clear();
     printf("Page-Fault Exception (#PF)");
@@ -288,7 +379,13 @@ void page_fault_ex() {
 
     }
 }
-
+/*  reserved
+    DESCRIPTION: general handler function for interrupts reserved by Intel
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void reserved(){
     clear();
     printf("Reserved by Intel");
@@ -297,7 +394,13 @@ void reserved(){
         
     }
 }
-
+/*  fpu_fp_ex
+    DESCRIPTION: handler functions for FPU floating point error exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void fpu_fp_ex() {
     clear();
     printf("FPU Floating-Point Error (#MF)");
@@ -306,7 +409,13 @@ void fpu_fp_ex() {
 
     }
 }
-
+/*  align_check_ex
+    DESCRIPTION: handler functions for alignment check exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void align_check_ex() {
     clear();
     printf("Alignment Check Exception (#AC)");
@@ -315,7 +424,13 @@ void align_check_ex() {
 
     }
 }
-
+/*  machine_check_ex
+    DESCRIPTION: handler functions for machine-check exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void machine_check_ex() {
     clear();
     printf("Machine-Check Exception (#MC)");
@@ -324,7 +439,13 @@ void machine_check_ex() {
 
     }
 }
-
+/*  simd_fp_ex
+    DESCRIPTION: handler functions for SIMD floating point exception
+    INPUTS: none
+    OUTPUTS: writes the interrupt to the screen, and then freezes with a while loop
+    RETURN VALUE: none
+    SIDE EFFECTS: freezes the kernel
+*/
 void simd_fp_ex() {
     clear();
     printf("SIMD Floating-Point Exception (#XF)");

@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "x86_desc.h"
 #include "lib.h"
+#include "rtc.h"
 
 #define PASS 1
 #define FAIL 0
@@ -143,9 +144,47 @@ int not_present_paging_test() {
 	return FAIL;
 }
 
-
-
 /* Checkpoint 2 tests */
+
+/* rtc_freq_test - CP2
+ * DESCRIPTION: cycles the RTC through all sets of frequences <= 1024 by writing into Register A, starting from 2
+ * INPUTS: none
+ * OUTPUTS: prints 1 for each interrupt
+ * RETURN VALUE: none
+ * SIDE EFFECTS: changes frequency on the RTC.
+ */
+int rtc_freq_test() {
+	TEST_HEADER;
+
+	// initialize rtc and set frequency to 2
+	int rtc = rtc_open(0);
+	// temp value to store result of rtc command
+	int rtc_cmd;
+
+	uint32_t freq[1];
+	// set start frequency to 2
+	*freq = 2;
+	while(*freq <= HIGH_LIMIT_FREQ) {
+		clear();
+		// error checking for NULL case or non-log2 number
+		if(rtc_write(rtc, freq, 4) != 0) {
+			return FAIL;
+		}
+		int read_int;
+		for(read_int = 0; read_int < NUM_READ_INTS; read_int++) {
+			printf("%d", *freq);
+			// wait for interrupt
+			rtc_cmd = rtc_read(rtc, 0, 0);
+		}
+
+		*freq *= 2;
+	}
+	// close RTC
+	rtc_cmd = rtc_close(rtc);
+	
+	return PASS;
+
+}
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -161,6 +200,8 @@ void launch_tests(){
 	// divide_error();
 	// opcode_error();
 	// sys_call_test();
+
+	rtc_freq_test();
 
 
 }
