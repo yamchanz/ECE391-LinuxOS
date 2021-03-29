@@ -197,7 +197,7 @@ void keyboard_handler(void) {
 
     // if not special, get the ascii character based on the flag status
     // 1st bit: caps lock flag, 2nd bit: shift flag after shift
-    key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code]
+    key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
 
     // check for CTRL-L 
     if (keyboard_flag & CTRL_MASK && key_ascii == 'L') {
