@@ -210,50 +210,69 @@ int terminal_string_test() {
 	return PASS;
 }
 
-int read_file(){
+/* read_file_test - CP2
+ * DESCRIPTION: Reads frame1.txt and outputs it to the screen.
+ * INPUTS: none
+ * OUTPUTS: frame1.txt to terminal
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int read_file_test(){
 	TEST_HEADER;
 	int32_t fd;
-	uint32_t offset = 0;
 	int i;
 	char buf[174];
-	int coutn=0;
-	if(file_open("frame1.txt")== -1){
+	if(file_open("frame1.txt") == -1){
 		return FAIL;
 	}
-	if(file_read(&fd,buf,174)==-1){
+	if(file_read(&fd, buf, 174) == -1){
 		return FAIL;
 	}
 	for(i = 0; i < 174;i++){
-		pusc(buf[i]);
+			pusc(buf[i]);
 	}
 	file_close(&fd);
 	return PASS;
 }
 
-int read_nonexistent_file(){
+/* read_nonexistant_file_test - CP2
+ * DESCRIPTION: Attempts to read fake file by name.
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int read_nonexistent_file_test(){
 	TEST_HEADER;
 	dentry_t info;
-	if(read_dentry_by_name("frame1.txt",&info)==-1){
-		FAIL;
+	if(read_dentry_by_name("fakefile.txt", &info) == -1){
+			return PASS;
 	}
-	return PASS;
+	return FAIL;
 }
 
+/* list_dir_test - CP2
+ * DESCRIPTION: Lists directory in the form shown on piazza.
+ * INPUTS: none
+ * OUTPUTS: list of files and small description for each
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
 int list_dir_test() {
 	TEST_HEADER;
 	int i;
 	for(i = 0; i < MAX_FILE_COUNT; i++) {
 			char buf[NAME_SIZE + 1];
 			int32_t spaces, ret;
-			dentry_t* info;
-			inode_t* inode;
+			dentry_t* info; // need dentry for inode #, file_type
+			inode_t* inode; // need indoe block for length
 			ret = dir_read(i, buf, 0);
-			if(ret == 0) break;
-			if(ret == -1) return FAIL;
+			if(ret == 0) break; // if read all files
+			if(ret == -1) return FAIL; // if failure
 			read_dentry_by_index(i, info);
 			inode = &(inode_arr[info->inode]);
-			buf[ret] = '\0';
-			spaces = NAME_SIZE - ret;
+			buf[ret] = '\0'; // null terminate buf
+			spaces = NAME_SIZE - ret; // add spaces to make it look clean
 			prinsf("file_name: ");
 			while(spaces--) prinsf(" ");
 			prinsf(buf);
@@ -274,8 +293,7 @@ void launch_tests(){
 	// TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
 	// TEST_OUTPUT("kernel_paging_test", kernel_paging_test());
 	// TEST_OUTPUT("video_mem_paging_test", video_mem_paging_test());
-	// TEST_OUTPUT("test", read_file());
-	TEST_OUTPUT("list_dir_test", list_dir());
+
 	// launch your tests here
 	// divide_error();
 	// opcode_error();
@@ -284,8 +302,7 @@ void launch_tests(){
 	//rtc_freq_test();
 	// terminal_string_test();
 
-	//read_file();
-
-
-
+	// TEST_OUTPUT("read_file_test", read_file_test());
+	// TEST_OUTPUT("list_dir_test", list_dir_test());
+	// TEST_OUTPUT("read_nonexistant_file_test", read_nonexistant_file_test());
 }
