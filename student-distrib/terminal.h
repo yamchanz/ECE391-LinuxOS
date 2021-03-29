@@ -3,17 +3,22 @@
 
 #include "lib.h"
 
+// cursor related macros (VGA registers)
+#define CURSOR_LOW      0x0F
+#define CURSOR_HIGH     0x0E
+#define VGA_CTRL        0x3D4
+#define VGA_DATA        0x3D5
 // Terminal related macro and data structure
 #define BUF_SIZE        128*20
 #define BUF_END_CHAR    0x10    // ascii line limiter
 typedef struct terminal {
-    int screen_x;
-    int screen_y;
+    uint32_t screen_x;
+    uint32_t screen_y;
     
     char* video_mem;
 
     uint8_t buffer[BUF_SIZE];
-    int buffer_idx;
+    uint32_t buffer_idx;
 } terminal_t;
 
 // Terminal variable
