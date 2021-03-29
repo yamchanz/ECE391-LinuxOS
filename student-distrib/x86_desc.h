@@ -201,16 +201,6 @@ typedef union pte {
     pe_NA not_present;
 } pte;
 
-/* page directory skeleton */
-//typedef struct page_directory {
-//    pde entry[MAX_PAGE_NUMBER];
-//} page_directory;
-
-/* page table skeleton */
-//typedef struct page_table {
-//    pte entry[MAX_PAGE_NUMBER];
-//} page_table;
-
 /* Some external descriptors declared in .S files */
 extern x86_desc_t gdt_desc;
 
@@ -223,12 +213,6 @@ extern uint32_t ldt;
 extern uint32_t tss_size;
 extern seg_desc_t tss_desc_ptr;
 extern tss_t tss;
-
-//uint32_t pd[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));
-//uint32_t pt[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));
-
-//page_directory pd __attribute__((aligned(BYTES_TO_ALIGN)));
-//page_table pt __attribute__((aligned(BYTES_TO_ALIGN)));
 
 pde pd[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));
 pte pt[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));

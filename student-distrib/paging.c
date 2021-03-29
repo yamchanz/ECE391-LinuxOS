@@ -9,7 +9,6 @@
  */
 void paging_init(void) {
     int i, j;
-
     //  init page table
     for(j = 0; j < MAX_PAGE_NUMBER; j++) {
         if(j == VIDEO_MEM_PAGE_ADDR) {
@@ -30,7 +29,7 @@ void paging_init(void) {
             pt[j].not_present.ignored31 = 0;
         }
     }
-
+    // init page directory
     for(i = 0; i < MAX_PAGE_NUMBER; i++) {
         // initalize first 4MB and video memory page (must be 4KB)
         if(i == 0) {

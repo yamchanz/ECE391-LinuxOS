@@ -181,7 +181,7 @@ int rtc_freq_test() {
 	}
 	// close RTC
 	rtc_cmd = rtc_close(rtc);
-	
+
 	return PASS;
 }
 
@@ -215,15 +215,16 @@ int read_file(){
 	int32_t fd;
 	uint32_t offset = 0;
 	int i;
-	char buf[100];
+	char buf[174];
+	int coutn=0;
 	if(file_open("frame1.txt")== -1){
 		return FAIL;
 	}
-	if(file_read(&fd,buf,100)==-1){
+	if(file_read(&fd,buf,174)==-1){
 		return FAIL;
 	}
-	for(i = 0; i < 100;i++){
-		putc(buf[i]);
+	for(i = 0; i < 174;i++){	
+		pusc(buf[i]);
 	}
 	file_close(&fd);
 	return PASS;
@@ -243,7 +244,7 @@ int list_dir(){
 	
 	int i;
 	int32_t fd;
-	for(i = 0; i < 63; i++){
+	for(i = 0; i < 5; i++){
 		char buf[33];
 		if(dir_read(&fd, buf, 33 )==-1){
 			return FAIL;

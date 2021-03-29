@@ -204,6 +204,23 @@ void putc(uint8_t c) {
     update_cursor();
 }
 
+
+void pusc(uint8_t c) {
+    if(c == '\n' || c == '\r') {
+        t.screen_y++;
+        t.screen_x = 0;
+    } else {
+        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = c;
+        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
+        t.screen_x++;
+        t.screen_x %= NUM_COLS;
+        t.screen_y = (t.screen_y + (t.screen_x / NUM_COLS)) % NUM_ROWS;
+    }
+
+}
+
+
+
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
  * Inputs: uint32_t value = number to convert
  *            int8_t* buf = allocated buffer to place string in

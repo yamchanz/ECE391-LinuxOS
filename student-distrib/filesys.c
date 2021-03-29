@@ -5,7 +5,6 @@
  * parameters - fs - mod->mod_start needs to be passed in here from kernel.c
  * returns - none
  */
-
 void fs_init(void* fs) {
     filesystem = fs;
     boot = (bootblk_t*)filesystem;
@@ -89,7 +88,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
     while(bytes_left > 0) {
         // check for bad block here
         uint32_t idx = inode_blk->dblk[cur]; // find data block to copy from
-        dblk_t* data_blk = &(data_arr[idx]); // instead of: (dblk_t*) ((uint32_t)filesystem + filesystem->num_of_inodes + 1 + idx);
+        dblk_t* data_blk =  &(data_arr[idx]); // instead of: (dblk_t*) ((uint32_t)filesystem + filesystem->num_of_inodes + 1 + idx);
         if(offset) { // for first time
             memcpy(buf, (uint8_t*)data_blk + offset, FOUR_KILOBYTES - start_byte);
             buf += FOUR_KILOBYTES - start_byte;
