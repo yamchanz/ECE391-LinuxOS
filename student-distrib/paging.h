@@ -1,6 +1,5 @@
 #ifndef _PAGING_H
 #define _PAGING_H
-
 /* from intel IA-32 architecture manual
  *
  * paging behavior defined by following control bits:
@@ -25,8 +24,12 @@
 #define VIDEO_MEM_PAGE_ADDR  184
 #define KERNEL_PAGE_ADDR       1
 
+
+
+
 /* initializes pages */
 extern void paging_init(void);
+
 /* flushes TLB when memory map altered */
 extern void flush(void);
 

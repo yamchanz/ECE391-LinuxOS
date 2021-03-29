@@ -180,7 +180,7 @@ int rtc_freq_test() {
 	}
 	// close RTC
 	rtc_cmd = rtc_close(rtc);
-
+	
 	return PASS;
 }
 
@@ -208,25 +208,6 @@ int terminal_string_test() {
 	write_terminal(test2);
 	return PASS;
 }
-
-int list_dir() {
-	TEST_HEADER;
-	int i;
-	for(i = 0; i < 63; i++) {
-			char buf[128];
-			if(dir_read(i, buf, 32) == 0) {
-				break;
-			}
-			if(dir_read(i, buf, 32) == -1) {
-				return FAIL;
-			}
-			buf[32] = '\0';
-			printf(buf);
-			printf(", ");
-	}
-	return PASS;
-}
-
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -243,8 +224,8 @@ void launch_tests(){
 	// opcode_error();
 	// sys_call_test();
 
-	// rtc_freq_test();
+	rtc_freq_test();
 	// terminal_string_test();
-	TEST_OUTPUT("test", list_dir());
+
 
 }
