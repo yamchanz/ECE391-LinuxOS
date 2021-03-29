@@ -33,3 +33,9 @@ keyboard_handler_link:
     popal
 
     iret
+
+/*jumptable:
+    .long 0x0
+    .long sys_call_read
+    .long sys_call
+*/

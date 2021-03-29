@@ -3,6 +3,7 @@
 #include "lib.h"
 #include "rtc.h"
 #include "terminal.h"
+#include "filesys.h"
 
 #define PASS 1
 #define FAIL 0
@@ -56,10 +57,10 @@ int idt_test(){
 int divide_error() {
 	TEST_HEADER;
 	int num = 2;
-	int denom = 0;
+	int denom = 1;
 	num /= denom;
 	denom = num;
-
+	
 	return PASS;
 }
 /* opcode_error
@@ -208,6 +209,52 @@ int terminal_string_test() {
 	write_terminal(test2);
 	return PASS;
 }
+
+int read_file(){
+	TEST_HEADER;
+	int32_t fd;
+	uint32_t offset = 0;
+	int i;
+	char buf[100];
+	if(file_open("frame1.txt")== -1){
+		return FAIL;
+	}
+	if(file_read(&fd,buf,100)==-1){
+		return FAIL;
+	}
+	for(i = 0; i < 100;i++){
+		putc(buf[i]);
+	}
+	file_close(&fd);
+	return PASS;
+}
+
+int read_nonexistent_file(){
+	TEST_HEADER;
+	dentry_t info;
+	if(read_dentry_by_name("frame1.txt",&info)==-1){
+		FAIL;
+	}
+	return PASS;
+}
+
+int list_dir(){
+	TEST_HEADER;
+	
+	int i;
+	int32_t fd;
+	for(i = 0; i < 63; i++){
+		char buf[33];
+		if(dir_read(&fd, buf, 33 )==-1){
+			return FAIL;
+		}
+		printf("%s",buf);
+		printf("\n ");
+		
+	}
+	return PASS;
+}
+
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -218,14 +265,17 @@ void launch_tests(){
 	// TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
 	// TEST_OUTPUT("kernel_paging_test", kernel_paging_test());
 	// TEST_OUTPUT("video_mem_paging_test", video_mem_paging_test());
-
+	TEST_OUTPUT("test", read_file());
 	// launch your tests here
 	// divide_error();
 	// opcode_error();
 	// sys_call_test();
 
-	rtc_freq_test();
+	//rtc_freq_test();
 	// terminal_string_test();
+
+	//read_file();
+	
 
 
 }

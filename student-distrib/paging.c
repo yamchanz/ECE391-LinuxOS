@@ -1,8 +1,5 @@
 #include "paging.h"
 
-//page_directory* pd_ptr = &pd;
-//page_table* pt_ptr = &pt;
-
 /* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
  * the first 4MB page, the 4MB Kernal page, as well as 1022 "not present"
@@ -93,6 +90,11 @@ void paging_init(void) {
     );
 }
 
+/* flush - CP2
+ * Not used as of now.
+ * parameter - none
+ * return - none
+ */
 void flush(void) {
   asm volatile ("                                               \n\
                                                                 \n\
@@ -101,6 +103,6 @@ void flush(void) {
       "                                                           \
       : /* no outputs */                                          \
       : /* no inputs */                                           \
-      : "eax", "cc"                                               \
+      : "eax"                                                     \
   );
 }
