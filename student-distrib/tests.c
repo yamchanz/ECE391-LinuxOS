@@ -2,6 +2,7 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "rtc.h"
+#include "terminal.h"
 
 #define PASS 1
 #define FAIL 0
@@ -164,27 +165,53 @@ int rtc_freq_test() {
 	uint16_t freq[1];
 	// set start frequency to 2
 	*freq = 2;
+	int amt_ints = 1;
 	while(*freq <= HIGH_LIMIT_FREQ) {
-		clear();
+		reset_terminal();
 		// error checking for NULL case or non-log2 number
 		if(rtc_write(rtc, freq, INT_BYTES) < 0) {
 			return FAIL;
 		}
 		int read_int;
-		for(read_int = 0; read_int < NUM_READ_INTS; read_int++) {
-			printf("1");
+		for(read_int = 0; read_int < NUM_READ_INTS * amt_ints; read_int++) {
 			// printf("%d", *freq);
+			printf("1");
 			// wait for interrupt
 			rtc_cmd = rtc_read(rtc, 0, 0);
 		}
 
 		*freq *= 2;
+		amt_ints++;
 	}
 	// close RTC
 	rtc_cmd = rtc_close(rtc);
 	
 	return PASS;
+}
 
+/* terminal_string_test - CP1
+ * DESCRIPTION: test the terminal to print max 128 characters
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: none
+ * SIDE EFFECTS: none
+ */
+int terminal_string_test() {
+	TEST_HEADER;
+	int32_t i;
+	uint8_t test1[128], test2[200];
+
+	for (i = 0; i < 127; ++i) {
+		test1[i] = 'a';
+		test2[i] = 'a';
+	}
+	test1[127] = 'b';
+	for (i = 127; i < 200; ++i) {
+		test2[i] = 'b';
+	}
+	write_terminal(test1);
+	write_terminal(test2);
+	return PASS;
 }
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -203,6 +230,7 @@ void launch_tests(){
 	// sys_call_test();
 
 	rtc_freq_test();
+	// terminal_string_test();
 
 
 }

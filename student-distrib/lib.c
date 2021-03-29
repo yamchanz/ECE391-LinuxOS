@@ -3,14 +3,10 @@
 
 #include "lib.h"
 
-#define VIDEO       0xB8000
-#define NUM_COLS    80
-#define NUM_ROWS    25
-#define ATTRIB      0x7
+// static int screen_x;
+// static int screen_y;
 
-static int screen_x;
-static int screen_y;
-static char* video_mem = (char *)VIDEO;
+// static char* video_mem = (char *)VIDEO;
 
 /* void clear(void);
  * Inputs: void
@@ -19,8 +15,8 @@ static char* video_mem = (char *)VIDEO;
 void clear(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        *(uint8_t *)(video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t.video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(t.video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
 
@@ -169,27 +165,43 @@ int32_t puts(int8_t* s) {
  *  Function: Output a character to the console */
 void putc(uint8_t c) {
     if(c == '\n' || c == '\r') {
-        screen_y++;
-        screen_x = 0;
-    // in case of backspace: move back a x or y if x == 0
-    } else if(c == '\b') {
-        if (screen_x)
-            --screen_x; 
-        else {
-            // don't do anything for now (no vertical scroll yet)
-            if (!screen_y) return;
-            --screen_y;
-            screen_x = NUM_COLS - 1;
+        if (++(t.screen_y) >= NUM_ROWS) {
+            scroll_up();
+            t.screen_y--;
         }
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+        // t.screen_y--;
+        t.screen_x = 0;
+    // in case of backspace: move back a x or y if x == 0, move back a buffer
+    } else if(c == '\b') {
+        if (t.screen_x)
+            --t.screen_x; 
+        else {
+            // do nothing if none
+            if (!t.screen_y) return;
+            --t.screen_y;
+            t.screen_x = NUM_COLS - 1;
+        }
+        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = ' ';
+        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
+        t.buffer[--t.buffer_idx] = BUF_END_CHAR;
     } else {
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
-        screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+        if (t.buffer_idx && !(t.buffer_idx % NUM_COLS)) {
+             if (++(t.screen_y) >= NUM_ROWS) {
+                scroll_up();
+                t.screen_y--;
+            }
+            // t.screen_y--;
+            t.screen_x = 0;
+        }
+        t.buffer[t.buffer_idx++] = c;
+        t.buffer[t.buffer_idx] = BUF_END_CHAR;          // line limiter
+        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = c;
+        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
+        t.screen_x++;
+        t.screen_x %= NUM_COLS;
+        t.screen_y = (t.screen_y + (t.screen_x / NUM_COLS)) % NUM_ROWS;
     }
+    update_cursor();
 }
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
@@ -483,6 +495,6 @@ int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n) {
 void test_interrupts(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        video_mem[i << 1]++;
+        t.video_mem[i << 1]++;
     }
 }

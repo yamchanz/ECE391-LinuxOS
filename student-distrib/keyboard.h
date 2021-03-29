@@ -3,6 +3,7 @@
 
 #include "lib.h"
 #include "i8259.h"
+#include "terminal.h"
 
 // IRQ and port
 #define KEYBOARD_IRQ    1
@@ -11,7 +12,6 @@
 // macros for the special input
 #define REL_MASK        0x80
 #define CAPS_LOCK_PRS   0x3A
-#define CAPS_LOCK_REL   (CAPS_LOCK_PRS | REL_MASK)
 #define L_SHIFT_PRS     0x2A
 #define L_SHIFT_REL     (L_SHIFT_PRS | REL_MASK)
 #define R_SHIFT_PRS     0x36
@@ -21,7 +21,6 @@
 #define CTRL_PRS        0x1D
 #define CTRL_REL        (CTRL_PRS | REL_MASK)
 #define ENTER_PRS       0x1C
-#define ENTER_REL       (ENTER_PRS | REL_MASK)
 #define BACKSPACE_PRS   0x0E
 
 // MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul; 1: on, 0: off
