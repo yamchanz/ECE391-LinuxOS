@@ -85,7 +85,7 @@ void write_terminal(void* in_buffer) {
 void scroll_up(void) {
     int32_t i;
 
-    memmove(t.video_mem, t.video_mem + NUM_COLS * 2, NUM_COLS * (NUM_ROWS - 1) * 2);
+    memmove(t.video_mem, t.video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
     for (i = (NUM_ROWS - 1) * NUM_COLS; i < NUM_ROWS * NUM_COLS; ++i) {
         *(uint8_t *)(t.video_mem + (i << 1))     = ' ';
         *(uint8_t *)(t.video_mem + (i << 1) + 1) = ATTRIB;
