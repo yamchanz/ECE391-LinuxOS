@@ -35,13 +35,14 @@ void reset_terminal(void) {
  * Inputs: void
  * Return Value: none
  * Function: update the cursor position
- * function implementation copied from https://wiki.osdev.org/Text_Mode_Cursor */
+ * function implementation copied from https://wiki.osdev.org/Text_Mode_Cursor 
+ * description from https://stackoverflow.com/questions/25321608/moving-text-mode-cursor-not-working */
 void update_cursor(void) {
-    uint16_t position = t.screen_y * NUM_COLS + t.screen_x;
-    outb(0x0F, 0x3D4);
-    outb((uint16_t)(position & 0xFF), 0x3D5);
-    outb(0x0E, 0x3D4);
-    outb((uint16_t)((position >> 8) & 0xFF), 0x3D5);
+    uint16_t position = t.screen_y * NUM_COLS + t.screen_x; // hold two 8 bits -> 16 bits
+    outb(CURSOR_LOW, VGA_CTRL);
+    outb((uint8_t)(position & 0xFF), VGA_DATA);
+    outb(CURSOR_HIGH, VGA_CTRL);
+    outb((uint8_t)((position >> 8) & 0xFF), VGA_DATA);
 }
 
 /* void read_terminal(void);
