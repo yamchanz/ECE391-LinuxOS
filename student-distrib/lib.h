@@ -14,6 +14,7 @@
 #define ATTRIB      0x7
 
 int32_t printf(int8_t *format, ...);
+int32_t prinsf(int8_t *format, ...);
 void putc(uint8_t c);
 void pusc(uint8_t c);
 int32_t puts(int8_t *s);

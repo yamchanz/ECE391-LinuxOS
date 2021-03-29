@@ -60,7 +60,7 @@ int divide_error() {
 	int denom = 1;
 	num /= denom;
 	denom = num;
-	
+
 	return PASS;
 }
 /* opcode_error
@@ -223,7 +223,7 @@ int read_file(){
 	if(file_read(&fd,buf,174)==-1){
 		return FAIL;
 	}
-	for(i = 0; i < 174;i++){	
+	for(i = 0; i < 174;i++){
 		pusc(buf[i]);
 	}
 	file_close(&fd);
@@ -239,19 +239,27 @@ int read_nonexistent_file(){
 	return PASS;
 }
 
-int list_dir(){
+int list_dir_test() {
 	TEST_HEADER;
-	
 	int i;
-	int32_t fd;
-	for(i = 0; i < 5; i++){
-		char buf[33];
-		if(dir_read(&fd, buf, 33 )==-1){
-			return FAIL;
-		}
-		printf("%s",buf);
-		printf("\n ");
-		
+	for(i = 0; i < MAX_FILE_COUNT; i++) {
+			char buf[NAME_SIZE + 1];
+			int32_t spaces, ret;
+			dentry_t* info;
+			inode_t* inode;
+			ret = dir_read(i, buf, 0);
+			if(ret == 0) break;
+			if(ret == -1) return FAIL;
+			read_dentry_by_index(i, info);
+			inode = &(inode_arr[info->inode]);
+			buf[ret] = '\0';
+			spaces = NAME_SIZE - ret;
+			prinsf("file_name: ");
+			while(spaces--) prinsf(" ");
+			prinsf(buf);
+			prinsf(", file_type: %d, ", info->file_type);
+			prinsf("filesize: %d", inode->length);
+			prinsf("\n");
 	}
 	return PASS;
 }
@@ -266,7 +274,8 @@ void launch_tests(){
 	// TEST_OUTPUT("not_present_paging_test", not_present_paging_test());
 	// TEST_OUTPUT("kernel_paging_test", kernel_paging_test());
 	// TEST_OUTPUT("video_mem_paging_test", video_mem_paging_test());
-	TEST_OUTPUT("test", read_file());
+	// TEST_OUTPUT("test", read_file());
+	TEST_OUTPUT("list_dir_test", list_dir());
 	// launch your tests here
 	// divide_error();
 	// opcode_error();
@@ -276,7 +285,7 @@ void launch_tests(){
 	// terminal_string_test();
 
 	//read_file();
-	
+
 
 
 }
