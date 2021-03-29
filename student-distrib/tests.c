@@ -201,6 +201,8 @@ int terminal_string_test() {
 		test1[i] = 'a';
 		test2[i] = 'a';
 	}
+	// both should print only 128 characters (the size of the line buffer) 
+	// and the 128th char should be 'b'
 	test1[127] = 'b';
 	for (i = 127; i < 200; ++i) {
 		test2[i] = 'b';
