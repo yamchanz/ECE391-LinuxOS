@@ -172,6 +172,7 @@ void putc(uint8_t c) {
         }
         // t.screen_y--;
         t.screen_x = 0;
+        // reset the buffer
         clear_buffer();
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
