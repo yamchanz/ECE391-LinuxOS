@@ -9,7 +9,7 @@
 #define VGA_CTRL        0x3D4
 #define VGA_DATA        0x3D5
 // Terminal related macro and data structure
-#define BUF_SIZE        128*20
+#define BUF_SIZE        128
 #define BUF_END_CHAR    0x10    // ascii line limiter
 typedef struct terminal {
     uint32_t screen_x;

@@ -14,7 +14,9 @@
 #define HIGH_BIT_MASK 0xF0
 #define INT_BYTES   4
 #define HIGH_LIMIT_FREQ 1024
-#define NUM_READ_INTS  20
+#define NUM_READ_INTS   10
+#define INTS_ROW_LIMIT  30
+    
 
 volatile int rtc_int_received;
 

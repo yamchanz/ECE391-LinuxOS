@@ -89,14 +89,6 @@ int sys_call_test() {
 	return PASS;
 }
 
-
-// add more tests here
-
-int keyboard_test() {
-	TEST_HEADER;
-	return PASS;
-}
-
 /* video_mem_paging_test - CP1
  * DESCRIPTION: dereferences the video memory portion of virtual memory.
  * INPUTS: none
@@ -174,6 +166,9 @@ int rtc_freq_test() {
 		}
 		int read_int;
 		for(read_int = 0; read_int < NUM_READ_INTS * amt_ints; read_int++) {
+			if(read_int > BUF_SIZE * INTS_ROW_LIMIT) {
+				break;
+			}
 			// printf("%d", *freq);
 			printf("1");
 			// wait for interrupt
@@ -181,7 +176,7 @@ int rtc_freq_test() {
 		}
 
 		*freq *= 2;
-		amt_ints++;
+		amt_ints *= 2;
 	}
 	// close RTC
 	rtc_cmd = rtc_close(rtc);
@@ -189,7 +184,7 @@ int rtc_freq_test() {
 	return PASS;
 }
 
-/* terminal_string_test - CP1
+/* terminal_string_test - CP2
  * DESCRIPTION: test the terminal to print max 128 characters
  * INPUTS: none
  * OUTPUTS: none
