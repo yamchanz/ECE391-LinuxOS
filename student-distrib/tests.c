@@ -326,9 +326,9 @@ void launch_tests(){
 	// opcode_error();
 	// sys_call_test();
 
-	//rtc_freq_test();
-	 terminal_string_test();
-	//read_file_test();
+	// rtc_freq_test();
+	//  terminal_string_test();
+	// read_file_test();
 	//list_dir_test();
 	//read_file_large();
 	//TEST_OUTPUT("read_nonexistant_file_test", read_nonexistent_file_test());

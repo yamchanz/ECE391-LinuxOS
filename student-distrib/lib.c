@@ -170,7 +170,6 @@ void putc(uint8_t c) {
             scroll_up();
             t.screen_y--;
         }
-        // t.screen_y--;
         t.screen_x = 0;
         // reset the buffer
         clear_buffer();
@@ -188,12 +187,13 @@ void putc(uint8_t c) {
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
         t.buffer[--t.buffer_idx] = BUF_END_CHAR;
     } else {
+        if (t.buffer_idx >= BUF_SIZE - 2) return;
+        // go to the next line if the line gets longer than the buffer
         if (t.buffer_idx && !(t.buffer_idx % NUM_COLS)) {
              if (++(t.screen_y) >= NUM_ROWS) {
                 scroll_up();
                 t.screen_y--;
             }
-            // t.screen_y--;
             t.screen_x = 0;
         }
         t.buffer[t.buffer_idx++] = c;
