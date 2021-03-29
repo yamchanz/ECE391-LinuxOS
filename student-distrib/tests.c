@@ -218,20 +218,45 @@ int terminal_string_test() {
  * SIDE EFFECTS: none
  */
 int read_file_test(){
-	TEST_HEADER;
+	//TEST_HEADER;
+	int32_t fd; // file descriptor
+	int i;	// loop index
+	char buf[FRAME1_SIZE];
+	if(file_open((uint8_t*)"frame1.txt") == -1){
+		return FAIL;
+	}
+	if(file_read(fd, buf, FRAME1_SIZE) == -1){
+		return FAIL;
+	}
+	for(i = 0; i < FRAME1_SIZE;i++){
+			putc(buf[i]);
+	}
+	file_close(fd);
+	return PASS;
+}
+
+/* read_file_large - CP2
+ * DESCRIPTION: Reads the very large text with very longname and outputs portions of it to the screen.
+ * INPUTS: none
+ * OUTPUTS: verylargetextwithverylongname.tx to terminal
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int read_file_large(){
 	int32_t fd;
-	int i;
-	char buf[174];
-	if(file_open("frame1.txt") == -1){
+	if(file_open((uint8_t*)"verylargetextwithverylongname.tx") == -1){
 		return FAIL;
 	}
-	if(file_read(&fd, buf, 174) == -1){
+	char buf[FRAME2_SIZE]; // buffer size to fill up the entire terminal screen
+	buf[FRAME2_SIZE-1] = '\0'; //null termination
+	int i; // loop index 
+	if(file_read(fd, buf, FRAME2_SIZE) == -1){
 		return FAIL;
 	}
-	for(i = 0; i < 174;i++){
-			pusc(buf[i]);
+	
+	for(i = 0; i < FRAME2_SIZE-1; i++){
+			putc(buf[i]);
 	}
-	file_close(&fd);
 	return PASS;
 }
 
@@ -245,7 +270,7 @@ int read_file_test(){
 int read_nonexistent_file_test(){
 	TEST_HEADER;
 	dentry_t info;
-	if(read_dentry_by_name("fakefile.txt", &info) == -1){
+	if(read_dentry_by_name((uint8_t*)"fakefile.txt", &info) == -1){
 			return PASS;
 	}
 	return FAIL;
@@ -259,7 +284,7 @@ int read_nonexistent_file_test(){
  * SIDE EFFECTS: none
  */
 int list_dir_test() {
-	TEST_HEADER;
+	//TEST_HEADER;
 	int i;
 	for(i = 0; i < MAX_FILE_COUNT; i++) {
 			char buf[NAME_SIZE + 1];
@@ -273,12 +298,12 @@ int list_dir_test() {
 			inode = &(inode_arr[info->inode]);
 			buf[ret] = '\0'; // null terminate buf
 			spaces = NAME_SIZE - ret; // add spaces to make it look clean
-			prinsf("file_name: ");
-			while(spaces--) prinsf(" ");
-			prinsf(buf);
-			prinsf(", file_type: %d, ", info->file_type);
-			prinsf("filesize: %d", inode->length);
-			prinsf("\n");
+			printf("file_name: ");
+			while(spaces--) printf(" ");
+			printf(buf);
+			printf(", file_type: %d, ", info->file_type);
+			printf("filesize: %d", inode->length);
+			printf("\n");
 	}
 	return PASS;
 }
@@ -300,9 +325,9 @@ void launch_tests(){
 	// sys_call_test();
 
 	//rtc_freq_test();
-	// terminal_string_test();
-
-	// TEST_OUTPUT("read_file_test", read_file_test());
-	// TEST_OUTPUT("list_dir_test", list_dir_test());
-	// TEST_OUTPUT("read_nonexistant_file_test", read_nonexistant_file_test());
+	 terminal_string_test();
+	//read_file_test();
+	//list_dir_test();
+	//read_file_large();
+	//TEST_OUTPUT("read_nonexistant_file_test", read_nonexistent_file_test());
 }

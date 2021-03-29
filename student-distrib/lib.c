@@ -146,131 +146,6 @@ format_char_switch:
     return (buf - format);
 }
 
-/* Standard prinsf().
- * Only supports the following format strings:
- * %%  - print a literal '%' character
- * %x  - print a number in hexadecimal
- * %u  - print a number as an unsigned integer
- * %d  - print a number as a signed integer
- * %c  - print a character
- * %s  - print a string
- * %#x - print a number in 32-bit aligned hexadecimal, i.e.
- *       print 8 hexadecimal digits, zero-padded on the left.
- *       For example, the hex number "E" would be printed as
- *       "0000000E".
- *       Note: This is slightly different than the libc specification
- *       for the "#" modifier (this implementation doesn't add a "0x" at
- *       the beginning), but I think it's more flexible this way.
- *       Also note: %x is the only conversion specifier that can use
- *       the "#" modifier to alter output. */
-int32_t prinsf(int8_t *format, ...) {
-
-    /* Pointer to the format string */
-    int8_t* buf = format;
-
-    /* Stack pointer for the other parameters */
-    int32_t* esp = (void *)&format;
-    esp++;
-
-    while (*buf != '\0') {
-        switch (*buf) {
-            case '%':
-                {
-                    int32_t alternate = 0;
-                    buf++;
-
-format_char_switch:
-                    /* Conversion specifiers */
-                    switch (*buf) {
-                        /* Print a literal '%' character */
-                        case '%':
-                            pusc('%');
-                            break;
-
-                        /* Use alternate formatting */
-                        case '#':
-                            alternate = 1;
-                            buf++;
-                            /* Yes, I know gotos are bad.  This is the
-                             * most elegant and general way to do this,
-                             * IMHO. */
-                            goto format_char_switch;
-
-                        /* Print a number in hexadecimal form */
-                        case 'x':
-                            {
-                                int8_t conv_buf[64];
-                                if (alternate == 0) {
-                                    itoa(*((uint32_t *)esp), conv_buf, 16);
-                                    puts(conv_buf);
-                                } else {
-                                    int32_t starting_index;
-                                    int32_t i;
-                                    itoa(*((uint32_t *)esp), &conv_buf[8], 16);
-                                    i = starting_index = strlen(&conv_buf[8]);
-                                    while(i < 8) {
-                                        conv_buf[i] = '0';
-                                        i++;
-                                    }
-                                    puts(&conv_buf[starting_index]);
-                                }
-                                esp++;
-                            }
-                            break;
-
-                        /* Print a number in unsigned int form */
-                        case 'u':
-                            {
-                                int8_t conv_buf[36];
-                                itoa(*((uint32_t *)esp), conv_buf, 10);
-                                puts(conv_buf);
-                                esp++;
-                            }
-                            break;
-
-                        /* Print a number in signed int form */
-                        case 'd':
-                            {
-                                int8_t conv_buf[36];
-                                int32_t value = *((int32_t *)esp);
-                                if(value < 0) {
-                                    conv_buf[0] = '-';
-                                    itoa(-value, &conv_buf[1], 10);
-                                } else {
-                                    itoa(value, conv_buf, 10);
-                                }
-                                puts(conv_buf);
-                                esp++;
-                            }
-                            break;
-
-                        /* Print a single character */
-                        case 'c':
-                            pusc((uint8_t) *((int32_t *)esp));
-                            esp++;
-                            break;
-
-                        /* Print a NULL-terminated string */
-                        case 's':
-                            puts(*((int8_t **)esp));
-                            esp++;
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                }
-                break;
-
-            default:
-                pusc(*buf);
-                break;
-        }
-        buf++;
-    }
-    return (buf - format);
-}
 
 /* int32_t puts(int8_t* s);
  *   Inputs: int_8* s = pointer to a string of characters
@@ -297,6 +172,7 @@ void putc(uint8_t c) {
         }
         // t.screen_y--;
         t.screen_x = 0;
+        clear_buffer();
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
         if (t.screen_x)
@@ -330,23 +206,7 @@ void putc(uint8_t c) {
     update_cursor();
 }
 
-/* void pusc(uint8_t c);
- * Inputs: uint_8* c = character to print
- * Return Value: void
- *  Function: Output a character to the console */
-void pusc(uint8_t c) {
-    if(c == '\n' || c == '\r') {
-        t.screen_y++;
-        t.screen_x = 0;
-    } else {
-        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = c;
-        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
-        t.screen_x++;
-        t.screen_x %= NUM_COLS;
-        t.screen_y = (t.screen_y + (t.screen_x / NUM_COLS)) % NUM_ROWS;
-    }
 
-}
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
  * Inputs: uint32_t value = number to convert
