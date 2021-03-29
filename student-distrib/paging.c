@@ -1,8 +1,5 @@
 #include "paging.h"
 
-//page_directory* pd_ptr = &pd;
-//page_table* pt_ptr = &pt;
-
 /* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
  * the first 4MB page, the 4MB Kernal page, as well as 1022 "not present"
@@ -12,7 +9,6 @@
  */
 void paging_init(void) {
     int i, j;
-
     //  init page table
     for(j = 0; j < MAX_PAGE_NUMBER; j++) {
         if(j == VIDEO_MEM_PAGE_ADDR) {
@@ -33,7 +29,7 @@ void paging_init(void) {
             pt[j].not_present.ignored31 = 0;
         }
     }
-
+    // init page directory
     for(i = 0; i < MAX_PAGE_NUMBER; i++) {
         // initalize first 4MB and video memory page (must be 4KB)
         if(i == 0) {
@@ -93,6 +89,11 @@ void paging_init(void) {
     );
 }
 
+/* flush - CP2
+ * Not used as of now.
+ * parameter - none
+ * return - none
+ */
 void flush(void) {
   asm volatile ("                                               \n\
                                                                 \n\
@@ -101,6 +102,6 @@ void flush(void) {
       "                                                           \
       : /* no outputs */                                          \
       : /* no inputs */                                           \
-      : "eax", "cc"                                               \
+      : "eax"                                                     \
   );
 }

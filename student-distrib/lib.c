@@ -146,6 +146,7 @@ format_char_switch:
     return (buf - format);
 }
 
+
 /* int32_t puts(int8_t* s);
  *   Inputs: int_8* s = pointer to a string of characters
  *   Return Value: Number of bytes written
@@ -171,10 +172,12 @@ void putc(uint8_t c) {
         }
         // t.screen_y--;
         t.screen_x = 0;
+        // reset the buffer
+        clear_buffer();
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
         if (t.screen_x)
-            --t.screen_x; 
+            --t.screen_x;
         else {
             // do nothing if none
             if (!t.screen_y) return;
@@ -203,6 +206,8 @@ void putc(uint8_t c) {
     }
     update_cursor();
 }
+
+
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);
  * Inputs: uint32_t value = number to convert

@@ -3,6 +3,7 @@
 #include "lib.h"
 #include "rtc.h"
 #include "terminal.h"
+#include "filesys.h"
 
 #define PASS 1
 #define FAIL 0
@@ -56,7 +57,7 @@ int idt_test(){
 int divide_error() {
 	TEST_HEADER;
 	int num = 2;
-	int denom = 0;
+	int denom = 1;
 	num /= denom;
 	denom = num;
 
@@ -180,7 +181,7 @@ int rtc_freq_test() {
 	}
 	// close RTC
 	rtc_cmd = rtc_close(rtc);
-	
+
 	return PASS;
 }
 
@@ -200,6 +201,8 @@ int terminal_string_test() {
 		test1[i] = 'a';
 		test2[i] = 'a';
 	}
+	// both should print only 128 characters (the size of the line buffer) 
+	// and the 128th char should be 'b'
 	test1[127] = 'b';
 	for (i = 127; i < 200; ++i) {
 		test2[i] = 'b';
@@ -208,6 +211,105 @@ int terminal_string_test() {
 	write_terminal(test2);
 	return PASS;
 }
+
+/* read_file_test - CP2
+ * DESCRIPTION: Reads frame1.txt and outputs it to the screen.
+ * INPUTS: none
+ * OUTPUTS: frame1.txt to terminal
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int read_file_test(){
+	//TEST_HEADER;
+	int32_t fd; // file descriptor
+	int i;	// loop index
+	char buf[FRAME1_SIZE];
+	if(file_open((uint8_t*)"frame1.txt") == -1){
+		return FAIL;
+	}
+	if(file_read(fd, buf, FRAME1_SIZE) == -1){
+		return FAIL;
+	}
+	for(i = 0; i < FRAME1_SIZE;i++){
+			putc(buf[i]);
+	}
+	file_close(fd);
+	return PASS;
+}
+
+/* read_file_large - CP2
+ * DESCRIPTION: Reads the very large text with very longname and outputs portions of it to the screen.
+ * INPUTS: none
+ * OUTPUTS: verylargetextwithverylongname.tx to terminal
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int read_file_large(){
+	int32_t fd;
+	if(file_open((uint8_t*)"verylargetextwithverylongname.tx") == -1){
+		return FAIL;
+	}
+	char buf[FRAME2_SIZE]; // buffer size to fill up the entire terminal screen
+	buf[FRAME2_SIZE-1] = '\0'; //null termination
+	int i; // loop index 
+	if(file_read(fd, buf, FRAME2_SIZE) == -1){
+		return FAIL;
+	}
+	
+	for(i = 0; i < FRAME2_SIZE-1; i++){
+			putc(buf[i]);
+	}
+	return PASS;
+}
+
+/* read_nonexistant_file_test - CP2
+ * DESCRIPTION: Attempts to read fake file by name.
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int read_nonexistent_file_test(){
+	TEST_HEADER;
+	dentry_t info;
+	if(read_dentry_by_name((uint8_t*)"fakefile.txt", &info) == -1){
+			return PASS;
+	}
+	return FAIL;
+}
+
+/* list_dir_test - CP2
+ * DESCRIPTION: Lists directory in the form shown on piazza.
+ * INPUTS: none
+ * OUTPUTS: list of files and small description for each
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int list_dir_test() {
+	//TEST_HEADER;
+	int i;
+	for(i = 0; i < MAX_FILE_COUNT; i++) {
+			char buf[NAME_SIZE + 1];
+			int32_t spaces, ret;
+			dentry_t* info; // need dentry for inode #, file_type
+			inode_t* inode; // need indoe block for length
+			ret = dir_read(i, buf, 0);
+			if(ret == 0) break; // if read all files
+			if(ret == -1) return FAIL; // if failure
+			read_dentry_by_index(i, info);
+			inode = &(inode_arr[info->inode]);
+			buf[ret] = '\0'; // null terminate buf
+			spaces = NAME_SIZE - ret; // add spaces to make it look clean
+			printf("file_name: ");
+			while(spaces--) printf(" ");
+			printf(buf);
+			printf(", file_type: %d, ", info->file_type);
+			printf("filesize: %d", inode->length);
+			printf("\n");
+	}
+	return PASS;
+}
+
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
@@ -224,8 +326,10 @@ void launch_tests(){
 	// opcode_error();
 	// sys_call_test();
 
-	rtc_freq_test();
-	// terminal_string_test();
-
-
+	//rtc_freq_test();
+	 terminal_string_test();
+	//read_file_test();
+	//list_dir_test();
+	//read_file_large();
+	//TEST_OUTPUT("read_nonexistant_file_test", read_nonexistent_file_test());
 }
