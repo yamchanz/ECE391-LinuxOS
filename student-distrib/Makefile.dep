@@ -1,6 +1,7 @@
 boot.o: boot.S multiboot.h x86_desc.h types.h
 int_asm_link.o: int_asm_link.S
 x86_desc.o: x86_desc.S x86_desc.h types.h
+filesys.o: filesys.c filesys.h types.h lib.h terminal.h
 i8259.o: i8259.c i8259.h types.h lib.h terminal.h
 idt_handlers.o: idt_handlers.c idt_handlers.h x86_desc.h types.h \
   int_asm_link.h i8259.h lib.h terminal.h rtc.h keyboard.h
