@@ -165,6 +165,7 @@ int32_t puts(int8_t* s) {
  * Return Value: void
  *  Function: Output a character to the console */
 void putc(uint8_t c) {
+    if (!c) return;
     if(c == '\n' || c == '\r') {
         if (++(t.screen_y) >= NUM_ROWS) {
             scroll_up();

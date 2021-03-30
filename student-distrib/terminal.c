@@ -20,6 +20,25 @@ void init_terminal(void) {
     reset_terminal();
 }
 
+/* int32_t open_terminal;
+ * Inputs: filename -- unused
+ * Return Value: none
+ * Function: Open the terminal and display it */
+int32_t open_terminal(const uint8_t *filename) {
+    init_terminal();
+    return 0;
+}
+
+/* int32_t close_terminal;
+ * Inputs: fd -- unused
+ * Return Value: none
+ * Function: close terminal and make it available for later */
+int32_t close_terminal(int32_t fd) {
+    if (!fd) return -1;
+    clear_buffer();
+    return 0;
+}
+
 /* void reset_terminal(void);
  * Inputs: void
  * Return Value: none
@@ -45,37 +64,43 @@ void update_cursor(void) {
     outb((uint8_t)((position >> 8) & 0xFF), VGA_DATA);
 }
 
-/* void read_terminal(void);
- * Inputs: void
- * Outputs: out_buffer -- buffer to store the line buffer copy
- * Return Value: none
+/* int32_t read_terminal;
+ * Inputs: fd -- unused
+           nbytes -- unused
+           buf -- address of the data to be sent
+ * Outputs: 
+ * Return Value: size -- the number of chars in buffer
  * Function: read (copy) the content of the line buffer to the given buffer */
-void read_terminal(void* out_buffer) {
-    int32_t i;
+int32_t read_terminal(int32_t fd, void* buf, int32_t nbytes) {
+    int32_t i, size;
 
-    if (out_buffer) {
-        for (i = 0; i < BUF_SIZE; ++i) {
-        // cast to uint8_t and copy
-        ((uint8_t *)out_buffer)[i] = t.buffer[i];
-        }
+    if (!buf) return -1;
+    for (i = 0; i < BUF_SIZE; ++i) {
+    // cast to uint8_t and copy
+        ((uint8_t *)buf)[i] = t.buffer[i];
     }
     clear_buffer();
+    return size;
 }
 
-/* void write_terminal(void);
- * Inputs: in_buffer -- buffer to be written on the terminal
+/* int32_t write_terminal;
+ * Inputs: fd -- unused
+           nbytes -- unused
+           buf -- pointer to the data to be read from
  * Return Value: none
  * Function: write the content of the given buffer on the terminal */
-void write_terminal(void* in_buffer) {
+int32_t write_terminal(int32_t fd, void* buf, int32_t nbytes) {
     int32_t i;
 
-    for (i = 0; i < BUF_SIZE && i < strlen(in_buffer); ++i) {
+    if (!buf) return -1;
+    for (i = 0; i < BUF_SIZE && i < nbytes; ++i) {
         if (i == NUM_COLS) 
             putc('\n');
-        putc(((uint8_t *)in_buffer)[i]);
+        putc(((uint8_t *)buf)[i]);
     }
     putc('\n');
     clear_buffer();
+    return nbytes;
 }
 
 /* void scroll_up(void);

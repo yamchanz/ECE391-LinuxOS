@@ -28,15 +28,22 @@ terminal_t t;
 void reset_terminal(void);
 // Initialize terminal
 void init_terminal(void);
-// Update the cursor position
-void update_cursor(void);
 // Clears terminal buffer
 void clear_buffer(void);
-// write the content of the line buffer to the given buffer
-void read_terminal(void *out_buffer);
-// read the content of the given buffer and write on the terminal
-void write_terminal(void *in_buffer);
-// delete the first line and move everything up a line
+
+// Open the terminal and display it
+int32_t open_terminal(const uint8_t *filename);
+// Close terminal and make it available for later
+int32_t close_terminal(int32_t fd);
+
+// Write the content of the line buffer to the given buffer
+int32_t read_terminal(int32_t fd, void* buf, int32_t nbytes);
+// Read the content of the given buffer and write on the terminal
+int32_t write_terminal(int32_t fd, void* buf, int32_t nbytes);
+
+// Delete the first line and move everything up a line
 void scroll_up(void);
+// Update the cursor position
+void update_cursor(void);
 
 #endif
