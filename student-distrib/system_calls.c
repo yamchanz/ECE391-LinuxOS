@@ -2,6 +2,25 @@
 #include "system_calls.h"
 #include "filesys.h"
 
+int pid[6];
+
+int32_t pid_init(){
+    int i;
+    for(i =0;i<6;i++){
+        pid[i] = 0;
+    }
+
+    return 0;
+}
+
+void get_pcb(pcb_t* address){
+    asm volatile("andl %%esp, %%ebx\n"
+                    :"=b"(address)
+                    :"b"(PCB_ADDR_MASK)
+                    :"cc"
+                    );
+}
+
 int32_t halt (uint8_t status) {
     return 0;
 }
@@ -13,6 +32,9 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     if(fd >= 8 || fd < 2) {
         return -1;
     }
+    // make sure the file is opened before read and buffer is not empty
+    if()
+
     // find fd in fd_table
     return pcb.file_table[fd].file_ops_pointer.read(fd, buf, nbytes);
     
