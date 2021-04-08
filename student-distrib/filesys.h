@@ -11,6 +11,26 @@
 #define MAX_INODE_BLOCK  1023
 #define FOUR_KILOBYTES   4096
 
+// file descriptor - used in PCB to store FDs
+typedef struct file_desc_t {
+    struct {
+        file_ops_t* file_ops_pointer;
+        uint32_t inode;
+        uint32_t file_pos;
+        uint32_t flags;
+    } __attribute__((packed));
+} file_desc_t;
+
+// file operations containing pointers to functions for that type of file
+typedef struct file_ops_t {
+    struct {
+        uint32_t(* open)(const uint8_t* filename);
+        uint32_t(* close)(int32_t fd);
+        uint32_t(* read)(int32_t fd, void* buf, int32_t nbytes);
+        uint32_t(* write)(int32_t fd, const void* buf, int32_t nbytes);
+    } __attribute__((packed));
+} file_ops_t;
+
 // single 64B directory entry within the boot block
 typedef struct dentry_t {
     struct {

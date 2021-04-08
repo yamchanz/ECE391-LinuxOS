@@ -22,6 +22,8 @@ sys_call_handler_link:
     pushl %ebp
     pushl %edi
     pushl %esi
+
+    # parameters (3 args)
     pushl %edx
     pushl %ecx
     pushl %ebx
@@ -33,7 +35,7 @@ sys_call_handler_link:
     jge $10, invalid_sys_call
     # valid, use jump table to call proper system call
     call *sys_call_table(0, %eax, 4)
-    # return code is in eax
+    # return code is in eax. pop parameters
     popl %ebx
     popl %ecx
     popl %edx
@@ -44,6 +46,7 @@ sys_call_handler_link:
     iret
 
     invalid_sys_call:
+    # invalid system call number, return -1 and pop args and restore regs
     movl $-1, eax
     popl %ebx
     popl %ecx

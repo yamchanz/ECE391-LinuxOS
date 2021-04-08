@@ -1,6 +1,15 @@
 #ifndef _SYSTEM_CALLS_H
 #define _SYSTEM_CALLS_H
 #include "lib.h"
+#include "filesys.h"
+
+typedef struct pcb {
+    struct {
+        file_desc_t fd_table[8];
+        // insert information needed to go back to parent program below
+        
+    } __attribute__ ((packed));
+} pcb;
 
 extern int32_t halt (uint8_t status);
 extern int32_t execute (const uint8_t* command);
