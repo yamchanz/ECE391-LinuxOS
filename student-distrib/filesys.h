@@ -14,7 +14,7 @@
 // file descriptor - used in PCB to store FDs
 typedef struct file_desc_t {
     struct {
-        file_ops_t* file_ops_pointer;
+        file_ops_t* fops_ptr;
         uint32_t inode;
         uint32_t file_pos;
         uint32_t flags;
