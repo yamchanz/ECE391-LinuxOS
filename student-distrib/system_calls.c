@@ -38,8 +38,39 @@ int32_t halt (uint8_t status) {
 }
 int32_t execute (const uint8_t* command) {
     cli();
+    uint8_t buffer[4], exec[5];
+    uint8_t cmd_idx = 0;
+    uint32_t entry_point;
+    int i;
+    if (command == NULL){
+        return -1;
+    }
+
+    while (command[cmd_idx]!= ' ') {
+        cmd_idx++;
+    }
+
+    for(i = 0; i<cmd_idx; i++) {
+        exec[i] = command[i];
+    } 
+
+    // checking the magic number to make sure its executable.
+    dentry_t *search;
+    if(read_dentry_by_name((uint8_t*)exec, search)==0){
+        read_data(search->inode,0,buffer, 4);
+        if(buffer[0] != 0x7f || buffer[1]!= 0x45 || buffer[2]!= 0x4c || buffer[3]!=0x46){
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+
+    // getting the entry point from 24 - 27
+    read_data(search->inode, 24,buffer,4);
+    entry_point = *((uint32_t*)buffer);
     
 
+    sti();
     return 0;
 }
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
