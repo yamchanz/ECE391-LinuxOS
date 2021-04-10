@@ -37,6 +37,8 @@ int32_t halt (uint8_t status) {
     return 0;
 }
 int32_t execute (const uint8_t* command) {
+    cli();
+    
 
     return 0;
 }
@@ -96,7 +98,7 @@ int32_t close (int32_t fd) {
     if(pcb->file_table[fd].flags == 0){
         return -1;
     } else {
-        pcb->file_table[fd].flags = 1;
+        pcb->file_table[fd].flags = 0;
     }
     // find fd in fd_table and close
     pcb->file_table[fd].fops_ptr.close(fd);
