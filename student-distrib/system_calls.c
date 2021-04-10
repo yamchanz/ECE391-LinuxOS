@@ -22,21 +22,26 @@ void get_pcb(pcb_t* address){
 }
 
 int32_t halt (uint8_t status) {
+    cli();
+
     return 0;
 }
 int32_t execute (const uint8_t* command) {
     return 0;
 }
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
+    // get a pcb to perform read operation
+    pcb_t *readpcb;
+    get_pcb(readpcb);
+
     // error handling - fd index not in array
     if(fd >= 8 || fd < 2) {
         return -1;
     }
-    // make sure the file is opened before read and buffer is not empty
-    if()
+
 
     // find fd in fd_table
-    return pcb.file_table[fd].file_ops_pointer.read(fd, buf, nbytes);
+    return readpcb->file_table[fd].file_ops_pointer.read(fd, buf, nbytes);
     
 }
 
