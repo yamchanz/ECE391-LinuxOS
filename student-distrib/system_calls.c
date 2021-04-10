@@ -12,6 +12,24 @@ file_ops_t std_out[] = {bad_call, bad_call, write_terminal, bad_call};
 int32_t bad_call() {
     return -1;
 }
+int pid[6];
+
+int32_t pid_init(){
+    int i;
+    for(i =0;i<6;i++){
+        pid[i] = 0;
+    }
+
+    return 0;
+}
+
+void get_pcb(pcb_t* address){
+    asm volatile("andl %%esp, %%ebx\n"
+                    :"=b"(address)
+                    :"b"(PCB_ADDR_MASK)
+                    :"cc"
+                    );
+}
 
 int32_t halt (uint8_t status) {
     return 0;
@@ -24,9 +42,9 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     if(fd >= 8 || fd < 2 || buf == NULL || nbytes < 0) {
         return -1;
     }
+
     // find fd in fd_table
     return (int32_t)pcb->file_table[fd].fops_ptr.read(fd, buf, nbytes);
-    
 }
 
 // write data to either terminal or RTC

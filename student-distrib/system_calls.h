@@ -5,13 +5,15 @@
 #include "rtc.h"
 #include "terminal.h"
 
+#define PCB_ADDR_MASK 0xFFFFE000
+
 typedef struct pcb {
     struct {
         file_desc_t fd_table[8];
         // insert information needed to go back to parent program below
         
     } __attribute__ ((packed));
-} pcb;
+} pcb_t;
 
 extern file_ops_t fops_rtc;
 extern file_ops_t fops_dir;
