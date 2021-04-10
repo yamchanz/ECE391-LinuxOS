@@ -32,33 +32,40 @@ void get_pcb(pcb_t* address){
 }
 
 int32_t halt (uint8_t status) {
+    cli();
+
     return 0;
 }
 int32_t execute (const uint8_t* command) {
+    cli();
+    
+
     return 0;
 }
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
-    pcb_t *pcb;
-    get_pcb(pcb);
+    // get a pcb to perform read operation
+    pcb_t *readpcb;
+    get_pcb(readpcb);
+    
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= 8 || fd < 0 || buf == NULL || nbytes < 0) {
+    if(fd > 7 || fd < 0 || buf == NULL || nbytes < 0) {
         return -1;
     }
 
     // find fd in fd_table
-    return (int32_t)pcb->file_table[fd].fops_ptr.read(fd, buf, nbytes);
+    return (int32_t)readpcb->file_table[fd].fops_ptr.read(fd, buf, nbytes);
 }
 
 // write data to either terminal or RTC
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *pcb;
-    get_pcb(pcb);
+    pcb_t *writepcb;
+    get_pcb(writepcb);
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= 8 || fd < 0 || buf == NULL || nbytes <= 0) {
         return -1;
     }
     // find fd in fd_table
-    return (int32_t)pcb->file_table[fd].fops_ptr.write(fd, buf, nbytes);
+    return (int32_t)writepcb->file_table[fd].fops_ptr.write(fd, buf, nbytes);
 }
 int32_t open (const uint8_t* filename) {
     pcb_t *pcb;
@@ -103,8 +110,17 @@ int32_t close (int32_t fd) {
     pcb_t *pcb;
     get_pcb(pcb);
     // error handling - fd index not in array
-    if(fd >= 8 || fd < 2) {
+    if(fd > 7 || fd < 0) {
         return -1;
+    }
+    pcb_t *pcb;
+    get_pcb(pcb);
+
+    //already not in use we dont need to close
+    if(pcb->file_table[fd].flags == 0){
+        return -1;
+    } else {
+        pcb->file_table[fd].flags = 0;
     }
     // find fd in fd_table and close
     pcb->file_table[fd].fops_ptr.close(fd);
