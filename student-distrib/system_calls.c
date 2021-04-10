@@ -23,6 +23,26 @@ int32_t pid_init(){
     return 0;
 }
 
+int32_t pcb_init(pcb_t* pcb) {
+
+    file_desc_t stdin;
+    stdin.fops_ptr = std_in;
+    stdin.inode = NULL;
+    stdin.file_pos = 0;
+    stdin.flags = 1;
+
+    file_desc_t stdout;
+    stdout.fops_ptr = std_out;
+    stdout.inode = NULL;
+    stdout.file_pos = 1;
+    stdout.flags = 1;
+
+    pcb->file_table[0] = stdin;
+    pcb->file_table[1] = stdout;
+
+    return 0;
+}
+
 void get_pcb(pcb_t* address){
     asm volatile("andl %%esp, %%ebx\n"
                     :"=b"(address)
@@ -68,6 +88,8 @@ int32_t execute (const uint8_t* command) {
     // getting the entry point from 24 - 27
     read_data(search->inode, 24,buffer,4);
     entry_point = *((uint32_t*)buffer);
+
+    read_data(search->inode,0,(uint8_t *)PROG_IMG_ADDR, search->inode.length);
     
 
     sti();

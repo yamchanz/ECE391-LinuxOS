@@ -6,6 +6,7 @@
 #include "terminal.h"
 
 #define PCB_ADDR_MASK 0xFFFFE000
+#define PROG_IMG_ADDR 0x8048000
 
 typedef struct pcb {
     struct {

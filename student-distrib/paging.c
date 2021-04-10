@@ -68,6 +68,31 @@ void paging_init(void) {
         }
     }
 
+/* map_program - CP3
+ * Maps the program that is currently running to the correct process given 
+ * by the process number. 
+ * parameter - process_number
+ * return - none
+ */
+void map_program(uint32_t process_number) {
+    pd[PROGRAM_IMAGE_ADDR].page.present = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.read_write = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.user_sup = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.pwt = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.pcd = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.accessed = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.dirty = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.ps = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.glob = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.ignored3 = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.pat = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.exaddr = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.reserved5 = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.page_addr = 1 + KERNEL_PAGE_ADDR + process_number;
+
+    flush();
+}
+
     // to turn on paging:
     // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
     // (we want top 20 bits)
