@@ -67,6 +67,26 @@ void paging_init(void) {
             pd[i].not_present.ignored31 = 0;
         }
     }
+    // to turn on paging:
+    // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
+    // (we want top 20 bits)
+    // - set CR4.PSE bit (to enable 4MB pages)
+    // - set CR0.PG bit, CR0.PE bit?
+    asm volatile ("                                               \n\
+        movl $pd, %%eax                                           \n\
+        movl %%eax, %%cr3                                         \n\
+        movl %%cr4, %%eax                                         \n\
+        orl  $0x00000010, %%eax                                   \n\
+        movl %%eax, %%cr4                                         \n\
+        movl %%cr0, %%eax                                         \n\
+        orl  $0x80000001, %%eax                                   \n\
+        movl %%eax, %%cr0                                         \n\
+        "                                                           \
+        : /* no outputs */                                          \
+        : /* no inputs */                                           \
+        : "eax"                                                     \
+    );
+}
 
 /* map_program - CP3
  * Maps the program that is currently running to the correct process given 
@@ -91,27 +111,6 @@ void map_program(uint32_t process_number) {
     pd[PROGRAM_IMAGE_ADDR].page.page_addr = 1 + KERNEL_PAGE_ADDR + process_number;
 
     flush();
-}
-
-    // to turn on paging:
-    // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
-    // (we want top 20 bits)
-    // - set CR4.PSE bit (to enable 4MB pages)
-    // - set CR0.PG bit, CR0.PE bit?
-    asm volatile ("                                               \n\
-        movl $pd, %%eax                                           \n\
-        movl %%eax, %%cr3                                         \n\
-        movl %%cr4, %%eax                                         \n\
-        orl  $0x00000010, %%eax                                   \n\
-        movl %%eax, %%cr4                                         \n\
-        movl %%cr0, %%eax                                         \n\
-        orl  $0x80000001, %%eax                                   \n\
-        movl %%eax, %%cr0                                         \n\
-        "                                                           \
-        : /* no outputs */                                          \
-        : /* no inputs */                                           \
-        : "eax"                                                     \
-    );
 }
 
 /* flush - CP2
