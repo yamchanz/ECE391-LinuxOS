@@ -21,6 +21,8 @@
 
 #include "types.h"
 #include "x86_desc.h"
+#include "filesys.h"
+#include "system_calls.h"
 
 #define VIDEO_MEM_PAGE_ADDR  184
 #define KERNEL_PAGE_ADDR       1

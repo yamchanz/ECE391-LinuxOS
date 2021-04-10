@@ -9,7 +9,10 @@
 #define NAME_SIZE        32
 #define DENTRY_RESERVE   24
 #define MAX_INODE_BLOCK  1023
-#define FOUR_KILOBYTES   4096
+#define _4_KB            0x1000
+#define _8_KB            0x2000
+#define _4_MB            0x400000
+#define _8_MB            0x800000
 
 // file descriptor - used in PCB to store FDs
 typedef struct file_desc_t {
@@ -62,7 +65,7 @@ typedef struct inode_t {
 
 // data block - 4KB that contains actual data
 typedef struct dblk_t {
-    uint8_t data[FOUR_KILOBYTES];
+    uint8_t data[_4_KB];
 } dblk_t;
 
 // global vars

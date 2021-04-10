@@ -95,26 +95,26 @@ void paging_init(void) {
  * return - none
  */
 void map_program(uint32_t process_number) {
-    pd[PROGRAM_IMAGE_ADDR].page.present = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.read_write = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.user_sup = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.pwt = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.pcd = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.accessed = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.dirty = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.ps = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.glob = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.ignored3 = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.pat = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.exaddr = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.reserved5 = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.page_addr = 1 + KERNEL_PAGE_ADDR + process_number;
+    pd[ONETE].page.present = 1;
+    pd[ONETE].page.read_write = 1;
+    pd[ONETE].page.user_sup = 1;
+    pd[ONETE].page.pwt = 0;
+    pd[ONETE].page.pcd = 0;
+    pd[ONETE].page.accessed = 0;
+    pd[ONETE].page.dirty = 0;
+    pd[ONETE].page.ps = 1;
+    pd[ONETE].page.glob = 0;
+    pd[ONETE].page.ignored3 = 0;
+    pd[ONETE].page.pat = 0;
+    pd[ONETE].page.exaddr = 0;
+    pd[ONETE].page.reserved5 = 0;
+    pd[ONETE].page.page_addr = (_8_MB + _4_MB * process_number)>>22; // macro in filesys.h
 
     flush();
 }
 
 /* flush - CP2
- * Not used as of now.
+ * Flushes TLB when altering paging
  * parameter - none
  * return - none
  */

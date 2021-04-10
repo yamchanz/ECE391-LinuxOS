@@ -4,14 +4,25 @@
 #include "filesys.h"
 #include "rtc.h"
 #include "terminal.h"
+#include "x86_desc.h"
 
 #define PCB_ADDR_MASK 0xFFFFE000
 #define PROG_IMG_ADDR 0x8048000
+#define ONETE   0X8000000
 
 typedef struct pcb {
     struct {
         file_desc_t fd_table[8];
         // insert information needed to go back to parent program below
+        // get ESP and EBP from address
+        struct pcb* parent_pcb;
+        //uint32_t parent_esp;
+        //uint32_t parent_ebp;
+        uint32_t esp;
+        uint32_t ebp;
+        uint8_t cur_pid;
+        //uint8_t parent_pid; we may need this?
+        uint32_t esp0;
         
     } __attribute__ ((packed));
 } pcb_t;

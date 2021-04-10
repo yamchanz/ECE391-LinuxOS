@@ -12,35 +12,38 @@ file_ops_t std_out[] = {bad_call, bad_call, write_terminal, bad_call};
 int32_t bad_call() {
     return -1;
 }
-int pid[6];
+int pid;
 
-int32_t pid_init(){
-    int i;
-    for(i =0;i<6;i++){
-        pid[i] = 0;
-    }
-
-    return 0;
-}
-
-int32_t pcb_init(pcb_t* pcb) {
+void pcb_init(pcb_t* pcb, int32_t pid) {
 
     file_desc_t stdin;
     stdin.fops_ptr = std_in;
     stdin.inode = NULL;
-    stdin.file_pos = 0;
+    stdin.file_pos = NULL;
     stdin.flags = 1;
 
     file_desc_t stdout;
     stdout.fops_ptr = std_out;
     stdout.inode = NULL;
-    stdout.file_pos = 1;
+    stdout.file_pos = NULL;
     stdout.flags = 1;
 
     pcb->file_table[0] = stdin;
     pcb->file_table[1] = stdout;
+    
+    pcb->cur_pid = pid;
+    pcb->parent_pid = 0;
+    // pcb->esp0 = tss.esp0;
 
-    return 0;
+    // write esp and ebp into pcb struct        NEED TO DOUBLE CHECK SYNTAX
+    asm volatile("                  \n\
+                    movl %%esp, %0  \n\
+                    movl %%ebp, %1  \n\ "
+                :"=r" (pcb->esp)
+                :"=r" (pcb->ebp)
+    );
+
+    return;
 }
 
 void get_pcb(pcb_t* address){
@@ -52,8 +55,35 @@ void get_pcb(pcb_t* address){
 }
 
 int32_t halt (uint8_t status) {
+    int i;
+    pcb_t* pcb, parent;
+    
     cli();
+    get_pcb(pcb);
+    parent = pcb->parent_pcb;
 
+    // restore parent data
+    pid--;
+
+    // restore parent paging
+    map_program(parent->cur_pid); // flushes tlb
+
+    // clear fd
+    for(i = 2; i < 8; i++) { 
+        close(i);
+    }
+
+    // write parent process' info back to TSS(esp0)
+    tss.esp0 = parent->esp0;
+    sti();
+    
+    // jump to execute return
+    asm volatile("                  \n\
+                    movl %0, %%esp  \n\
+                    movl %1, %%ebp  \n\ "
+                :"=r" (pcb->esp)
+                :"=r" (pcb->ebp)
+    );
     return 0;
 }
 int32_t execute (const uint8_t* command) {
@@ -66,8 +96,12 @@ int32_t execute (const uint8_t* command) {
         return -1;
     }
 
-    while (command[cmd_idx]!= ' ') {
+    while (command[cmd_idx]!= ' ' || command[cmd_idx] != '\0') {
         cmd_idx++;
+    }
+
+    if(cmd_idx >32){
+        return -1;
     }
 
     for(i = 0; i<cmd_idx; i++) {
@@ -85,14 +119,52 @@ int32_t execute (const uint8_t* command) {
         return -1;
     }
 
-    // getting the entry point from 24 - 27
+    // getting the entry point from 24 - 27 (27 -> 24)
     read_data(search->inode, 24,buffer,4);
     entry_point = *((uint32_t*)buffer);
 
+    //set up paging
+    map_program(pid);
+
+    // write file data into program image (virtual address)
     read_data(search->inode,0,(uint8_t *)PROG_IMG_ADDR, search->inode.length);
+
+    // create pcb for this process
+    pcb_t* pcb;
+    pcb_init(pcb, pid);
     
 
+    pid++;
+
     sti();
+    // prepare for context switch
+    // push DS, ESP, EFLAGS, CS, EIP
+    asm volatile(
+        "cli; \n\
+        # push DS                       \n\
+        xorl %eax, %eax                 \n\
+        movw $USER_DS, %ax              \n\
+        pushl %eax                      \n\
+                                        \n\
+        # push ESP                      \n\
+        pushl %0                        \n\
+                                        \n\
+        # push EFLAGS                   \n\
+        pushfl                          \n\
+                                        \n\
+        # push CS                       \n\
+        xorl %eax, %eax                 \n\
+        movw $USER_CS, %ax              \n\
+        pushl %eax                      \n\
+                                        \n\
+        # push EIP (entry_point)        \n\
+        pushl %1                        \n\
+                                        \n\
+        // push IRET context to kernel stack \n\
+        iret                            \n\ "
+        :"r" (pcb->esp)
+        :"r" (entry_point)
+    );
     return 0;
 }
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
@@ -147,7 +219,7 @@ int32_t open (const uint8_t* filename) {
                     pcb->file_table[fd].inode = file_block->inode;
                 default:
                     return -1;
-                pcb->file_table[fd].file_pos = fd; // ASK TA
+                pcb->file_table[fd].file_pos = 0;
                 pcb->file_table[fd].flags = 1; // set to occupied
 
                 return 0;
@@ -160,9 +232,8 @@ int32_t open (const uint8_t* filename) {
     return -1;
 }
 int32_t close (int32_t fd) {
-    pcb_t *pcb;
-    get_pcb(pcb);
     // error handling - fd index not in array
+    // fd < 2?
     if(fd > 7 || fd < 0) {
         return -1;
     }
