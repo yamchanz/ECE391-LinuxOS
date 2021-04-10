@@ -2,6 +2,16 @@
 #include "system_calls.h"
 #include "filesys.h"
 
+// static tables with function pointers for each file type
+file_ops_t fops_rtc[] = {rtc_open, rtc_close, rtc_read, rtc_write};
+file_ops_t fops_dir[] = {dir_open, dir_close, dir_read, dir_write};
+file_ops_t fops_file[] = {file_open, file_close, file_read, file_write};
+file_ops_t std_in[] = {bad_call, read_terminal, bad_call, bad_call};
+file_ops_t std_out[] = {bad_call, bad_call, write_terminal, bad_call};
+
+int32_t bad_call() {
+    return -1;
+}
 int pid[6];
 
 int32_t pid_init(){
@@ -27,55 +37,69 @@ int32_t halt (uint8_t status) {
     return 0;
 }
 int32_t execute (const uint8_t* command) {
+
     return 0;
 }
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
     pcb_t *readpcb;
     get_pcb(readpcb);
-
-    // error handling - fd index not in array
-    if(fd >= 8 || fd < 2) {
+    
+    // error handling - FD in array, buf not empty, nbytes >= 0
+    if(fd > 7 || fd < 0 || buf == NULL || nbytes < 0) {
         return -1;
     }
 
-
     // find fd in fd_table
-    return readpcb->file_table[fd].file_ops_pointer.read(fd, buf, nbytes);
-    
+    return (int32_t)readpcb->file_table[fd].fops_ptr.read(fd, buf, nbytes);
 }
 
 // write data to either terminal or RTC
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    // error handling - fd index not in array
-    if(fd >= 8 || fd < 2) {
+    pcb_t *writepcb;
+    get_pcb(writepcb);
+    // error handling - FD in array, buf not empty, nbytes >= 0
+    if(fd >= 8 || fd < 2 || buf == NULL || nbytes <= 0) {
         return -1;
     }
     // find fd in fd_table
-    return pcb.file_table[fd].file_ops_pointer.write(fd, buf, nbytes);
+    return (int32_t)writepcb->file_table[fd].fops_ptr.write(fd, buf, nbytes);
 }
 int32_t open (const uint8_t* filename) {
     // open file with error handling
-    file_open(filename);
-    // setup file descriptor
-    file_desc_t file_desc;
+    if(file_open(filename) != 0){
+        return -1;
+    }
 
     // find index to put file descriptor in
-    int idx = 0;
-    
-    // add file descriptor into fd_table in PCB
-    pcb.file_table[idx] = file_desc;
+    int32_t fd = 2;
+    while(fd < 8) {
+        // empty fd, add data in
+        if(pcb->file_table[fd].fops_ptr == NULL) {
+            pcb->file_table[fd].fops_ptr = fops_file;
+
+        }
+        fd++;
+    }
 
     return 0;
 }
 int32_t close (int32_t fd) {
     // error handling - fd index not in array
-    if(fd >= 8 || fd < 2) {
+    if(fd > 7 || fd < 0) {
         return -1;
     }
-    // find fd in fd_table
+    pcb_t *pcb;
+    get_pcb(pcb);
 
-    // close fd by removing
+    //already not in use we dont need to close
+    if(pcb->file_table[fd].flags == 0){
+        return -1;
+    } else {
+        pcb->file_table[fd].flags = 1;
+    }
+    // find fd in fd_table and close
+    pcb->file_table[fd].fops_ptr.close(fd);
 
     return 0;
 }

@@ -2,6 +2,8 @@
 #define _SYSTEM_CALLS_H
 #include "lib.h"
 #include "filesys.h"
+#include "rtc.h"
+#include "terminal.h"
 
 #define PCB_ADDR_MASK 0xFFFFE000
 
@@ -12,6 +14,13 @@ typedef struct pcb {
         
     } __attribute__ ((packed));
 } pcb_t;
+
+extern file_ops_t fops_rtc;
+extern file_ops_t fops_dir;
+extern file_ops_t fops_file;
+extern file_ops_t std_in;
+extern file_ops_t std_out;
+
 
 extern int32_t halt (uint8_t status);
 extern int32_t execute (const uint8_t* command);
