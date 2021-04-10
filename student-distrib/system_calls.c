@@ -38,8 +38,10 @@ int32_t execute (const uint8_t* command) {
     return 0;
 }
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
+    pcb_t *pcb;
+    get_pcb(pcb);
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= 8 || fd < 2 || buf == NULL || nbytes < 0) {
+    if(fd >= 8 || fd < 0 || buf == NULL || nbytes < 0) {
         return -1;
     }
 
@@ -49,33 +51,57 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
 
 // write data to either terminal or RTC
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
+    pcb_t *pcb;
+    get_pcb(pcb);
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= 8 || fd < 2 || buf == NULL || nbytes <= 0) {
+    if(fd >= 8 || fd < 0 || buf == NULL || nbytes <= 0) {
         return -1;
     }
     // find fd in fd_table
     return (int32_t)pcb->file_table[fd].fops_ptr.write(fd, buf, nbytes);
 }
 int32_t open (const uint8_t* filename) {
-    // open file with error handling
-    if(file_open(filename) != 0){
+    pcb_t *pcb;
+    get_pcb(pcb);
+    // open file with read_dentry_by_name - writes file type into file_block
+    dentry_t* file_block;
+    if(read_dentry_by_name(filename, file_block) != 0) {
         return -1;
     }
+    uint32_t f_type = file_block->file_type;
 
     // find index to put file descriptor in
     int32_t fd = 2;
     while(fd < 8) {
-        // empty fd, add data in
-        if(pcb->file_table[fd].fops_ptr == NULL) {
-            pcb->file_table[fd].fops_ptr = fops_file;
+        // write if empty fd or if fd not occupied
+        if(pcb->file_table[fd] == NULL || pcb->file_table[fd].flags == 0) {
+            switch(f_type){
+                case 0: //rtc
+                    pcb->file_table[fd].fops_ptr = fops_rtc;
+                    pcb->file_table[fd].inode = NULL;
+                case 1: // dir
+                    pcb->file_table[fd].fops_ptr = fops_dir;
+                    pcb->file_table[fd].inode = NULL;
+                case 2: // file
+                    pcb->file_table[fd].fops_ptr = fops_file;
+                    pcb->file_table[fd].inode = file_block->inode;
+                default:
+                    return -1;
+                pcb->file_table[fd].file_pos = fd; // ASK TA
+                pcb->file_table[fd].flags = 1; // set to occupied
+
+                return 0;
+            }
 
         }
         fd++;
     }
 
-    return 0;
+    return -1;
 }
 int32_t close (int32_t fd) {
+    pcb_t *pcb;
+    get_pcb(pcb);
     // error handling - fd index not in array
     if(fd >= 8 || fd < 2) {
         return -1;
