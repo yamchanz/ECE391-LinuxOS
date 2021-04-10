@@ -185,31 +185,22 @@ int rtc_freq_test() {
 	return PASS;
 }
 
-/* terminal_string_test - CP2
- * DESCRIPTION: test the terminal to print max 128 characters
+/* terminal_read_test - CP2
+ * DESCRIPTION: test the terminal read
  * INPUTS: none
  * OUTPUTS: none
  * RETURN VALUE: none
  * SIDE EFFECTS: none
  */
-int terminal_string_test() {
+int terminal_read_test() {
 	TEST_HEADER;
-	int32_t i;
-	uint8_t test1[128], test2[200];
+	int32_t i, size;
+	uint8_t test1[128];
 
-	for (i = 0; i < 127; ++i) {
-		test1[i] = 'a';
-		test2[i] = 'a';
-	}
-	// both should print only 128 characters (the size of the line buffer) 
-	// and the 128th char should be 'b'
-	test1[127] = 'b';
-	for (i = 127; i < 200; ++i) {
-		test2[i] = 'b';
-	}
-	write_terminal(test1);
-	write_terminal(test2);
-	return PASS;
+	size = read_terminal(NULL, test1, 11);
+	// should print 10 chars + '\n'
+	printf(test1);
+	return size == 11 ? PASS : FAIL;
 }
 
 /* read_file_test - CP2
@@ -327,7 +318,7 @@ void launch_tests(){
 	// sys_call_test();
 
 	// rtc_freq_test();
-	//  terminal_string_test();
+	terminal_read_test();
 	// read_file_test();
 	//list_dir_test();
 	//read_file_large();
