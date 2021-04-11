@@ -14,16 +14,6 @@
 #define _4_MB            0x400000
 #define _8_MB            0x800000
 
-// file descriptor - used in PCB to store FDs
-typedef struct file_desc_t {
-    struct {
-        file_ops_t* fops_ptr;
-        uint32_t inode;
-        uint32_t file_pos;
-        uint32_t flags;
-    } __attribute__((packed));
-} file_desc_t;
-
 // file operations containing pointers to functions for that type of file
 typedef struct file_ops_t {
     struct {
@@ -33,6 +23,16 @@ typedef struct file_ops_t {
         uint32_t(* write)(int32_t fd, const void* buf, int32_t nbytes);
     } __attribute__((packed));
 } file_ops_t;
+
+// file descriptor - used in PCB to store FDs
+typedef struct file_desc_t {
+    struct {
+        file_ops_t* fops_ptr;
+        uint32_t inode;
+        uint32_t file_pos;
+        uint32_t flags;
+    } __attribute__((packed));
+} file_desc_t;
 
 // single 64B directory entry within the boot block
 typedef struct dentry_t {

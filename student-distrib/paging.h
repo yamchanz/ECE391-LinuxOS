@@ -29,7 +29,7 @@
 #define PROGRAM_IMAGE_ADDR    32
 
 /* maps running program to virutal address 128MB */
-extern void map_program(uint32_t process_number);
+extern void map_program(uint32_t pid);
 /* initializes pages */
 extern void paging_init(void);
 /* flushes TLB when memory map altered */

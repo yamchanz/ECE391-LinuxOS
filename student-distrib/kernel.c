@@ -154,7 +154,7 @@ void entry(unsigned long magic, unsigned long addr) {
     initialize_rtc();
 
     // initialize the terminal
-    init_terminal();
+    terminal_init();
 
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
@@ -162,6 +162,8 @@ void entry(unsigned long magic, unsigned long addr) {
      * without showing you any output */
     printf("Enabling Interrupts\n");
     sti();
+    
+    execute((uint8_t*)"shell");
 
 #ifdef RUN_TESTS
     /* Run tests */

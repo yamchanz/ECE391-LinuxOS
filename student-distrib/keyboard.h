@@ -30,10 +30,11 @@
 #define CTRL_MASK       0x10
 #define ENTER_MASK      0x08
 
+extern uint8_t get_enter_flag(void);
+extern void release_enter(void);
 // initializes keyboard by setting the default flag and enabling on the PIC
 extern void keyboard_init(void);
 // installs the interrupt handler for the RTC
 extern void keyboard_handler(void);
-
 
 #endif

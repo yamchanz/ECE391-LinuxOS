@@ -30,11 +30,11 @@ sys_call_handler_link:
 
     # verify that system call number in EAX is valid (1-10, zero indexed)
     cmpl $0, %eax
-    jl $0, invalid_sys_call
-    cmpl $0, %eax
-    jge $10, invalid_sys_call
+    jl invalid_sys_call
+    cmpl $10, %eax
+    jge invalid_sys_call
     # valid, use jump table to call proper system call
-    call *sys_call_table(0, %eax, 4)
+    call *sys_call_table(, %eax, 4)
     # return code is in eax. pop parameters
     popl %ebx
     popl %ecx
@@ -68,14 +68,4 @@ keyboard_handler_link:
     iret
 
 sys_call_table:
-    .long halt,
-    .long execute,
-    .long read,
-    .long write,
-    .long open,
-    .long close,
-    .long getargs,
-    .long vidmap,
-    .long set_handler,
-    .long sigreturn
-
+    .long halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn

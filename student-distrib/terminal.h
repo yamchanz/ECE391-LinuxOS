@@ -2,6 +2,7 @@
 #define _TERMINAL_H
 
 #include "lib.h"
+#include "keyboard.h"
 
 // cursor related macros (VGA registers)
 #define CURSOR_LOW      0x0F
@@ -25,21 +26,21 @@ typedef struct terminal {
 terminal_t t;
 
 // Clear the screen and put the cursor at the top
-void reset_terminal(void);
+void terminal_reset(void);
 // Initialize terminal
-void init_terminal(void);
+void terminal_init(void);
 // Clears terminal buffer
 void clear_buffer(void);
 
 // Open the terminal and display it
-int32_t open_terminal(const uint8_t *filename);
+int32_t terminal_open(const uint8_t *filename);
 // Close terminal and make it available for later
-int32_t close_terminal(int32_t fd);
+int32_t terminal_close(int32_t fd);
 
 // Write the content of the line buffer to the given buffer
-int32_t read_terminal(int32_t fd, void* buf, int32_t nbytes);
+int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes);
 // Read the content of the given buffer and write on the terminal
-int32_t write_terminal(int32_t fd, void* buf, int32_t nbytes);
+int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes);
 
 // Delete the first line and move everything up a line
 void scroll_up(void);

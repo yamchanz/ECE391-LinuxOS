@@ -94,8 +94,9 @@ void paging_init(void) {
  * parameter - process_number
  * return - none
  */
-void map_program(uint32_t process_number) {
+void map_program(uint32_t pid) {
     pd[ONETE].page.present = 1;
+    // pd[0].page.present = 1;
     pd[ONETE].page.read_write = 1;
     pd[ONETE].page.user_sup = 1;
     pd[ONETE].page.pwt = 0;
@@ -108,7 +109,7 @@ void map_program(uint32_t process_number) {
     pd[ONETE].page.pat = 0;
     pd[ONETE].page.exaddr = 0;
     pd[ONETE].page.reserved5 = 0;
-    pd[ONETE].page.page_addr = (_8_MB + _4_MB * process_number)>>22; // macro in filesys.h
+    pd[ONETE].page.page_addr = (_8_MB + _4_MB * pid) >> 22; // macro in filesys.h
 
     flush();
 }
