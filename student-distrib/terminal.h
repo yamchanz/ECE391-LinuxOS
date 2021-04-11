@@ -2,7 +2,6 @@
 #define _TERMINAL_H
 
 #include "lib.h"
-#include "keyboard.h"
 
 // cursor related macros (VGA registers)
 #define CURSOR_LOW      0x0F

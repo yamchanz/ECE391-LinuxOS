@@ -167,11 +167,13 @@ int32_t puts(int8_t* s) {
 void putc(uint8_t c) {
     if (!c) return;
     if(c == '\n' || c == '\r') {
-        if (++t.screen_y >= NUM_ROWS) {
+        if (++(t.screen_y) >= NUM_ROWS) {
             scroll_up();
             t.screen_y--;
         }
         t.screen_x = 0;
+        // reset the buffer
+        clear_buffer();
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
         if (t.screen_x)
@@ -184,19 +186,24 @@ void putc(uint8_t c) {
         }
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = ' ';
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
+        t.buffer[--t.buffer_idx] = BUF_END_CHAR;
     } else {
+        if (t.buffer_idx >= BUF_SIZE - 2) return;
+        // go to the next line if the line gets longer than the buffer
+        if (t.buffer_idx && !(t.buffer_idx % NUM_COLS)) {
+             if (++(t.screen_y) >= NUM_ROWS) {
+                scroll_up();
+                t.screen_y--;
+            }
+            t.screen_x = 0;
+        }
+        t.buffer[t.buffer_idx++] = c;
+        t.buffer[t.buffer_idx] = BUF_END_CHAR;          // line limiter
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = c;
         *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
-        ++t.screen_x;
-    }
-    if (t.screen_x == NUM_COLS && t.screen_y < NUM_ROWS - 1) {
-        ++t.screen_y;
-        t.screen_x = 0;
-    } else if (t.screen_x == NUM_COLS && t.screen_y >= NUM_ROWS - 1) {
-        ++t.screen_y;
-        scroll_up();
-        --t.screen_y;
-        t.screen_x = 0;
+        t.screen_x++;
+        t.screen_x %= NUM_COLS;
+        t.screen_y = (t.screen_y + (t.screen_x / NUM_COLS)) % NUM_ROWS;
     }
     update_cursor();
 }

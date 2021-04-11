@@ -116,25 +116,10 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* F12 Key */
     0,  /* All other keys are undefined */
 }};
- 
-// MSB to LSB: caps_lock, shift, alt, ctrl, nul, nul, nul, nul
+
+// MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul
 static uint8_t keyboard_flag;
-static uint8_t enter_flag;
-
-/*  enter_pressed
- *  DESCRIPTION: return if enter is pressed
- *  INPUTS: none
- *  OUTPUTS: 1 (true) if pressed 0 if not
- *  RETURN VALUE: none
- *  SIDE EFFECTS: none */
-uint8_t get_enter_flag(void) {
-    return enter_flag;
-}
-
-void release_enter(void) {
-    enter_flag = 0;
-}
-
+ 
 /*  keyboard_init
  *  DESCRIPTION: initializes keyboard by setting the default flag and enabling on the PIC
  *  INPUTS: none
@@ -142,8 +127,7 @@ void release_enter(void) {
  *  RETURN VALUE: none
  *  SIDE EFFECTS: none */
 void keyboard_init(void) {
-    keyboard_flag = 0;
-    enter_flag = 0;
+    keyboard_flag = 0x0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -198,16 +182,13 @@ void keyboard_handler(void) {
             return;
 
         case ENTER_PRS:
-            enter_flag = 1;
+            read_terminal(NULL);
             putc('\n');
             send_eoi(KEYBOARD_IRQ);
             return;
             
         case BACKSPACE_PRS:
-            if (t.buffer_idx) {
-                t.buffer[--t.buffer_idx] = BUF_END_CHAR;
-                putc('\b');
-            }
+            putc('\b');
             send_eoi(KEYBOARD_IRQ);
             return;
 
@@ -219,22 +200,13 @@ void keyboard_handler(void) {
     key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
 
     // check for CTRL-L 
-    if (keyboard_flag & CTRL_MASK && (key_ascii == 'L' || key_ascii == 'l')) {
+    if (keyboard_flag & CTRL_MASK && key_ascii == 'L') {
         reset_terminal();
         send_eoi(KEYBOARD_IRQ);
         return;
     }
     // if not release, update the line buffer and echo the ascii character
     if (key_ascii && scan_code < REL_MASK) {
-        // go to the next line if the line gets longer than the buffer
-        if (t.buffer_idx < BUF_SIZE - 2) {
-            t.buffer[t.buffer_idx++] = key_ascii;
-            t.buffer[t.buffer_idx] = BUF_END_CHAR;  // line limiter
-        } else if (t.buffer_idx == BUF_SIZE - 2) {
-            t.buffer[t.buffer_idx++] = '\n';
-            t.buffer[t.buffer_idx] = BUF_END_CHAR;  // line limiter
-        } else
-            t.buffer_idx = 0;
         putc(key_ascii);
     }
     send_eoi(KEYBOARD_IRQ);

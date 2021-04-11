@@ -34,8 +34,9 @@ int32_t open_terminal(const uint8_t *filename) {
  * Return Value: none
  * Function: close terminal and make it available for later */
 int32_t close_terminal(int32_t fd) {
+    if (!fd) return -1;
     clear_buffer();
-    return -1;
+    return 0;
 }
 
 /* void reset_terminal(void);
@@ -71,19 +72,13 @@ void update_cursor(void) {
  * Return Value: size -- the number of chars in buffer
  * Function: read (copy) the content of the line buffer to the given buffer */
 int32_t read_terminal(int32_t fd, void* buf, int32_t nbytes) {
-    if (!buf || nbytes < 0) return -1;
     int32_t i, size;
 
-    clear_buffer();
-    while(t.buffer_idx < BUF_SIZE - 1 && !get_enter_flag())
-    size = nbytes > BUF_SIZE ? BUF_SIZE : nbytes;
-    for (i = 0; i < size; ++i) {
-        if (i < size - 1)
-            ((int8_t*)buf)[i] = t.buffer[i];
-        else 
-            ((int8_t*)buf)[i] = '\n';
+    if (!buf) return -1;
+    for (i = 0; i < BUF_SIZE; ++i) {
+    // cast to uint8_t and copy
+        ((uint8_t *)buf)[i] = t.buffer[i];
     }
-    release_enter();
     clear_buffer();
     return size;
 }
@@ -98,9 +93,13 @@ int32_t write_terminal(int32_t fd, void* buf, int32_t nbytes) {
     int32_t i;
 
     if (!buf) return -1;
-    for (i = 0; i < nbytes; ++i)
+    for (i = 0; i < BUF_SIZE && i < nbytes; ++i) {
+        if (i == NUM_COLS) 
+            putc('\n');
         putc(((uint8_t *)buf)[i]);
-
+    }
+    putc('\n');
+    clear_buffer();
     return nbytes;
 }
 
