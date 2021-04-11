@@ -318,7 +318,7 @@ void launch_tests(){
 	// sys_call_test();
 
 	// rtc_freq_test();
-	// terminal_read_test();
+	terminal_read_test();
 	// read_file_test();
 	//list_dir_test();
 	//read_file_large();
