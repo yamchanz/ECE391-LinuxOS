@@ -7,8 +7,8 @@
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
 file_ops_t fops_dir = {dir_open, dir_close, dir_read, dir_write};
 file_ops_t fops_file = {file_open, file_close, file_read, file_write};
-file_ops_t std_in = {bad_call, terminal_read, bad_call, bad_call};
-file_ops_t std_out = {bad_call, bad_call, terminal_write, bad_call};
+file_ops_t std_in = {bad_call, bad_call, terminal_read, bad_call};
+file_ops_t std_out = {bad_call, bad_call, bad_call, terminal_write};
 
 int32_t bad_call() {
     return -1;

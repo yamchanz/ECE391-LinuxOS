@@ -15,7 +15,7 @@
 #define _8_MB            0x800000
 
 // file operations containing pointers to functions for that type of file
-typedef struct __attribute__((packed)) file_ops {
+typedef struct __attribute__((packed)) {
     int32_t(* open)(const uint8_t* filename);
     int32_t(* close)(int32_t fd);
     int32_t(* read)(int32_t fd, void* buf, int32_t nbytes);
@@ -23,7 +23,7 @@ typedef struct __attribute__((packed)) file_ops {
 } file_ops_t;
 
 // file descriptor - used in PCB to store FDs
-typedef struct __attribute__((packed)) file_desc {
+typedef struct __attribute__((packed)) {
     file_ops_t *fops_ptr;
     uint32_t inode;
     uint32_t file_pos;
@@ -31,7 +31,7 @@ typedef struct __attribute__((packed)) file_desc {
 } file_desc_t;
 
 // single 64B directory entry within the boot block
-typedef struct __attribute__((packed)) dentry {
+typedef struct __attribute__((packed)) {
     unsigned char file_name[NAME_SIZE];
     uint32_t file_type;
     uint32_t inode;
@@ -39,7 +39,7 @@ typedef struct __attribute__((packed)) dentry {
 } dentry_t;
 
 // boot block - 1st 4KB block in file system
-typedef struct __attribute__((packed)) bootblk {
+typedef struct __attribute__((packed)) {
     uint32_t num_of_dirE;
     uint32_t num_of_inodes;
     uint32_t num_of_dblks;
@@ -48,7 +48,7 @@ typedef struct __attribute__((packed)) bootblk {
 } bootblk_t;
 
 // inode block - 4KB block which contains length and data blocks used in order
-typedef struct __attribute__((packed)) inode {
+typedef struct __attribute__((packed)) {
     uint32_t length; // length in bytes
     uint32_t dblk[MAX_INODE_BLOCK];
 } inode_t;

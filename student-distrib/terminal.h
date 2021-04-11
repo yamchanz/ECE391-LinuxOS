@@ -12,7 +12,7 @@
 // Terminal related macro and data structure
 #define BUF_SIZE        128
 #define BUF_END_CHAR    0x10    // ascii line limiter
-typedef struct terminal {
+typedef struct __attribute__((packed)) terminal {
     uint32_t screen_x;
     uint32_t screen_y;
     
