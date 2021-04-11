@@ -30,7 +30,7 @@ extern file_ops_t fops_file;
 extern file_ops_t std_in;
 extern file_ops_t std_out;
 
-
+extern int32_t bad_call();
 extern int32_t halt (uint8_t status);
 extern int32_t execute (const uint8_t* command);
 extern int32_t read (int32_t fd, void* buf, int32_t nbytes);

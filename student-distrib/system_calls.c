@@ -1,8 +1,7 @@
 #include "lib.h"
 #include "system_calls.h"
 #include "filesys.h"
-
-int32_t bad_call();
+#include "x86_desc.h"
 
 // static tables with function pointers for each file type
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
@@ -141,10 +140,10 @@ int32_t execute (const uint8_t* command) {
     // prepare for context switch
     // push DS, ESP, EFLAGS, CS, EIP
     asm volatile(
-        "cli; \n\
-        # push DS                       \n\
+        "                               \n\
+        # push USER_DS                       \n\
         xorl %%eax, %%eax                 \n\
-        movw $USER_DS, %%ax              \n\
+        movw 0x23, %%ax                  \n\
         pushl %%eax                      \n\
                                         \n\
         # push ESP                      \n\
@@ -153,15 +152,15 @@ int32_t execute (const uint8_t* command) {
         # push EFLAGS                   \n\
         pushfl                          \n\
                                         \n\
-        # push CS                       \n\
+        # push CS - 0x2B (43)            \n\
         xorl %%eax, %%eax                 \n\
-        movw $USER_CS, %%ax              \n\
+        movw 0x2B, %%ax                   \n\
         pushl %%eax                      \n\
                                         \n\
         # push EIP (entry_point)        \n\
         pushl %1                        \n\
                                         \n\
-        // push IRET context to kernel stack \n\
+        # push IRET context to kernel stack \n\
         iret                            \n\
         "
         :"=r" (pcb->esp), "=r" (entry_point)
