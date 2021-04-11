@@ -47,7 +47,7 @@ sys_call_handler_link:
 
     invalid_sys_call:
     # invalid system call number, return -1 and pop args and restore regs
-    movl $-1, eax
+    movl $-1, %eax
     popl %ebx
     popl %ecx
     popl %edx

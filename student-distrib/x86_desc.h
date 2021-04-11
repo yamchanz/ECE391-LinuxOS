@@ -37,29 +37,27 @@ typedef struct x86_desc {
 } x86_desc_t;
 
 /* This is a segment descriptor.  It goes in the GDT. */
-typedef struct seg_desc {
+typedef struct __attribute__ ((packed)) seg_desc {
     union {
         uint32_t val[2];
-        struct {
-            uint16_t seg_lim_15_00;
-            uint16_t base_15_00;
-            uint8_t  base_23_16;
-            uint32_t type          : 4;
-            uint32_t sys           : 1;
-            uint32_t dpl           : 2;
-            uint32_t present       : 1;
-            uint32_t seg_lim_19_16 : 4;
-            uint32_t avail         : 1;
-            uint32_t reserved      : 1;
-            uint32_t opsize        : 1;
-            uint32_t granularity   : 1;
-            uint8_t  base_31_24;
-        } __attribute__ ((packed));
+        uint16_t seg_lim_15_00;
+        uint16_t base_15_00;
+        uint8_t  base_23_16;
+        uint32_t type          : 4;
+        uint32_t sys           : 1;
+        uint32_t dpl           : 2;
+        uint32_t present       : 1;
+        uint32_t seg_lim_19_16 : 4;
+        uint32_t avail         : 1;
+        uint32_t reserved      : 1;
+        uint32_t opsize        : 1;
+        uint32_t granularity   : 1;
+        uint8_t  base_31_24;
     };
 } seg_desc_t;
 
 /* TSS structure */
-typedef struct __attribute__((packed)) tss_t {
+typedef struct __attribute__((packed)) tss {
     uint16_t prev_task_link;
     uint16_t prev_task_link_pad;
 
@@ -119,73 +117,65 @@ typedef struct __attribute__((packed)) tss_t {
  * |  31  :  12  | 11:8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
  *   addr of PT    xxxx   0   x   A  PCD PWT U/S R/W  1
  */
-typedef struct pde_PT {
-    struct {
-        uint32_t present : 1;    // 0 present. must be 1 to reference page table
-        uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
-        uint32_t user_sup : 1;   // 2 user/supervisor. 0 if user entry not allowed
-        uint32_t pwt : 1; // 3 page-level write thorough
-        uint32_t pcd : 1; // 4 page-level cache disable
-        uint32_t accessed : 1;   // 5 indicates if entry used for linear-address translation
-        uint32_t ignored1 : 1;   // 6 ignored
-        uint32_t ps : 1;         // 7 if CR4.PSE = 1, must be 0
-        uint32_t ignored4 : 4;   // 8:11 ignored
-        uint32_t pt_addr : 20;   // 12:31 physical addr of 4KB aligned page table reference
-    } __attribute__ ((packed));
+typedef struct __attribute__ ((packed)) pde_PT {
+    uint32_t present : 1;    // 0 present. must be 1 to reference page table
+    uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
+    uint32_t user_sup : 1;   // 2 user/supervisor. 0 if user entry not allowed
+    uint32_t pwt : 1; // 3 page-level write thorough
+    uint32_t pcd : 1; // 4 page-level cache disable
+    uint32_t accessed : 1;   // 5 indicates if entry used for linear-address translation
+    uint32_t ignored1 : 1;   // 6 ignored
+    uint32_t ps : 1;         // 7 if CR4.PSE = 1, must be 0
+    uint32_t ignored4 : 4;   // 8:11 ignored
+    uint32_t pt_addr : 20;   // 12:31 physical addr of 4KB aligned page table reference
 } pde_PT;
 
 /* PDE: 4MB page
  * | 31:22 | 21:17 | 16:13 | 12 | 11:9 |8|7|6|5|4|3|2|1|0|
  *   addr  reserved ex-addr PAT   xxx   G 1 D A p p u r 1
  */
-typedef struct pde_4MB {
-    struct {
-        uint32_t present : 1;    // 0 present. must be 1 to map 4MB page
-        uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
-        uint32_t user_sup : 1;   // 2 user/supervisor. 0 if user entry not allowed
-        uint32_t pwt : 1; // 3 page-level write thorough
-        uint32_t pcd : 1; // 4 page-level cache disable
-        uint32_t accessed : 1;   // 5 indicates if entry used for linear-address translation
-        uint32_t dirty : 1; // 6 dirty; indicates whether if software has written to page referenced
-        uint32_t ps : 1;    // 7 page size; must be 1
-        uint32_t glob : 1;  // 8 global; if CR4.PGE = 1 determines whether the trans is global, otherwise ignore
-        uint32_t ignored3 : 3;  // 11:9 ignored
-        uint32_t pat : 1; // 12 if PAT supported, indirectly determines memory type, otherwise 0
-        uint32_t exaddr : 4;    // 13:16 row does not apply unless PSE-36 supported
-        uint32_t reserved5 : 5; // 17:21 must be 0
-        uint32_t page_addr : 10;// 22:31 bits [31:22] of physical address of 4MB page reference
-    } __attribute__ ((packed));
+typedef struct __attribute__ ((packed)) pde_4MB {
+    uint32_t present : 1;    // 0 present. must be 1 to map 4MB page
+    uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
+    uint32_t user_sup : 1;   // 2 user/supervisor. 0 if user entry not allowed
+    uint32_t pwt : 1; // 3 page-level write thorough
+    uint32_t pcd : 1; // 4 page-level cache disable
+    uint32_t accessed : 1;   // 5 indicates if entry used for linear-address translation
+    uint32_t dirty : 1; // 6 dirty; indicates whether if software has written to page referenced
+    uint32_t ps : 1;    // 7 page size; must be 1
+    uint32_t glob : 1;  // 8 global; if CR4.PGE = 1 determines whether the trans is global, otherwise ignore
+    uint32_t ignored3 : 3;  // 11:9 ignored
+    uint32_t pat : 1; // 12 if PAT supported, indirectly determines memory type, otherwise 0
+    uint32_t exaddr : 4;    // 13:16 row does not apply unless PSE-36 supported
+    uint32_t reserved5 : 5; // 17:21 must be 0
+    uint32_t page_addr : 10;// 22:31 bits [31:22] of physical address of 4MB page reference
 } pde_4MB;
 
 /* PTE: 4KB page
  * |  31  :  12  |11:9| 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
  *      addr       xx   G  PAT  D   A  PCD PWT U/S R/W  1
  */
-typedef struct pte_4KB {
-    struct {
-        uint32_t present : 1;    // 0 present. must be 1 to map 4KB page
-        uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
-        uint32_t user_sup : 1;   // 2 user/supervisor. 0 if user entry not allowed
-        uint32_t pwt : 1; // 3 page-level write thorough
-        uint32_t pcd : 1; // 4 page-level cache disable
-        uint32_t accessed : 1;   // 5 accessed; indicates whether software has accessed page referenced
-        uint32_t dirty : 1; // 6 dirty; indicates whether if software has written to page referenced
-        uint32_t pat : 1;   // 7 if PAT supported, indirectly determines memory type, otherwise 0.
-        uint32_t glob : 1;  // 8 global; if CR4.PGE = 1 determines whether the trans is global
-        uint32_t ignored3 : 3;  // 9:11 ignored
-        uint32_t page_addr : 20;// 12:31 physical address of 4KB page referenced by entry
-    } __attribute__ ((packed));
+typedef struct __attribute__ ((packed)) pte_4KB {
+    uint32_t present : 1;    // 0 present. must be 1 to map 4KB page
+    uint32_t read_write : 1; // 1 read/write. 0 if writes not allowed
+    uint32_t user_sup : 1;   // 2 user/supervisor. 0 if user entry not allowed
+    uint32_t pwt : 1; // 3 page-level write thorough
+    uint32_t pcd : 1; // 4 page-level cache disable
+    uint32_t accessed : 1;   // 5 accessed; indicates whether software has accessed page referenced
+    uint32_t dirty : 1; // 6 dirty; indicates whether if software has written to page referenced
+    uint32_t pat : 1;   // 7 if PAT supported, indirectly determines memory type, otherwise 0.
+    uint32_t glob : 1;  // 8 global; if CR4.PGE = 1 determines whether the trans is global
+    uint32_t ignored3 : 3;  // 9:11 ignored
+    uint32_t page_addr : 20;// 12:31 physical address of 4KB page referenced by entry
 } pte_4KB;
 
 /* PTE / PDE: not present
  * |  31           :             1 | 0 |
  *  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx  0
  */
-typedef struct pe_NA {
-    struct {
-        uint32_t present : 1;    // 0 present. 0 means page not there
-        uint32_t ignored31 : 31; // 1:31 ignored
-    } __attribute__ ((packed));
+typedef struct __attribute__ ((packed)) pe_NA {
+    uint32_t present : 1;    // 0 present. 0 means page not there
+    uint32_t ignored31 : 31; // 1:31 ignored
 } pe_NA;
 
 /* page directory has three possibilities */

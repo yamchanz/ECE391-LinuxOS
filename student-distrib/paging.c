@@ -109,7 +109,7 @@ void map_program(uint32_t pid) {
     pd[ONETE].page.pat = 0;
     pd[ONETE].page.exaddr = 0;
     pd[ONETE].page.reserved5 = 0;
-    pd[ONETE].page.page_addr = (_8_MB + _4_MB * pid) >> 22; // macro in filesys.h
+    pd[ONETE].page.page_addr = (_8_MB + _4_MB * pid) >> PDE_ADDR_OFFSET;
 
     flush();
 }

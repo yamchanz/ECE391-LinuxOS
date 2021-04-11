@@ -24,9 +24,10 @@
 #include "filesys.h"
 #include "system_calls.h"
 
-#define VIDEO_MEM_PAGE_ADDR  184
-#define KERNEL_PAGE_ADDR       1
+#define VIDEO_MEM_PAGE_ADDR   184
+#define KERNEL_PAGE_ADDR      1
 #define PROGRAM_IMAGE_ADDR    32
+#define PDE_ADDR_OFFSET       22
 
 /* maps running program to virutal address 128MB */
 extern void map_program(uint32_t pid);

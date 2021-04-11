@@ -15,52 +15,42 @@
 #define _8_MB            0x800000
 
 // file operations containing pointers to functions for that type of file
-typedef struct file_ops_t {
-    struct {
-        uint32_t(* open)(const uint8_t* filename);
-        uint32_t(* close)(int32_t fd);
-        uint32_t(* read)(int32_t fd, void* buf, int32_t nbytes);
-        uint32_t(* write)(int32_t fd, const void* buf, int32_t nbytes);
-    } __attribute__((packed));
+typedef struct __attribute__((packed)) file_ops {
+    int32_t(* open)(const uint8_t* filename);
+    int32_t(* close)(int32_t fd);
+    int32_t(* read)(int32_t fd, void* buf, int32_t nbytes);
+    int32_t(* write)(int32_t fd, const void* buf, int32_t nbytes);
 } file_ops_t;
 
 // file descriptor - used in PCB to store FDs
-typedef struct file_desc_t {
-    struct {
-        file_ops_t* fops_ptr;
-        uint32_t inode;
-        uint32_t file_pos;
-        uint32_t flags;
-    } __attribute__((packed));
+typedef struct __attribute__((packed)) file_desc {
+    file_ops_t *fops_ptr;
+    uint32_t inode;
+    uint32_t file_pos;
+    uint32_t flags;
 } file_desc_t;
 
 // single 64B directory entry within the boot block
-typedef struct dentry_t {
-    struct {
-        unsigned char file_name[NAME_SIZE];
-        uint32_t file_type;
-        uint32_t inode;
-        uint8_t reserved[DENTRY_RESERVE];
-    } __attribute__((packed));
+typedef struct __attribute__((packed)) dentry {
+    unsigned char file_name[NAME_SIZE];
+    uint32_t file_type;
+    uint32_t inode;
+    uint8_t reserved[DENTRY_RESERVE];
 } dentry_t;
 
 // boot block - 1st 4KB block in file system
-typedef struct bootblk_t {
-    struct {
-        uint32_t num_of_dirE;
-        uint32_t num_of_inodes;
-        uint32_t num_of_dblks;
-        uint8_t reserved[BOOT_RESERVE];
-        dentry_t dir_entries[MAX_FILE_COUNT]; //63 dir.entries
-    } __attribute__ ((packed));
+typedef struct __attribute__((packed)) bootblk {
+    uint32_t num_of_dirE;
+    uint32_t num_of_inodes;
+    uint32_t num_of_dblks;
+    uint8_t reserved[BOOT_RESERVE];
+    dentry_t dir_entries[MAX_FILE_COUNT]; //63 dir.entries
 } bootblk_t;
 
 // inode block - 4KB block which contains length and data blocks used in order
-typedef struct inode_t {
-    struct {
-        uint32_t length; // length in bytes
-        uint32_t dblk[MAX_INODE_BLOCK];
-    } __attribute__((packed));
+typedef struct __attribute__((packed)) inode {
+    uint32_t length; // length in bytes
+    uint32_t dblk[MAX_INODE_BLOCK];
 } inode_t;
 
 // data block - 4KB that contains actual data

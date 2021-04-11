@@ -2,12 +2,14 @@
 #include "system_calls.h"
 #include "filesys.h"
 
+int32_t bad_call();
+
 // static tables with function pointers for each file type
-file_ops_t fops_rtc[] = {rtc_open, rtc_close, rtc_read, rtc_write};
-file_ops_t fops_dir[] = {dir_open, dir_close, dir_read, dir_write};
-file_ops_t fops_file[] = {file_open, file_close, file_read, file_write};
-file_ops_t std_in[] = {bad_call, read_terminal, bad_call, bad_call};
-file_ops_t std_out[] = {bad_call, bad_call, write_terminal, bad_call};
+file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
+file_ops_t fops_dir = {dir_open, dir_close, dir_read, dir_write};
+file_ops_t fops_file = {file_open, file_close, file_read, file_write};
+file_ops_t std_in = {bad_call, terminal_read, bad_call, bad_call};
+file_ops_t std_out = {bad_call, bad_call, terminal_write, bad_call};
 
 int32_t bad_call() {
     return -1;
@@ -15,21 +17,20 @@ int32_t bad_call() {
 int pid;
 
 void pcb_init(pcb_t* pcb, int32_t pid) {
-
     file_desc_t stdin;
-    stdin.fops_ptr = std_in;
+    stdin.fops_ptr = &std_in;
     stdin.inode = NULL;
     stdin.file_pos = NULL;
     stdin.flags = 1;
 
     file_desc_t stdout;
-    stdout.fops_ptr = std_out;
+    stdout.fops_ptr = &std_out;
     stdout.inode = NULL;
     stdout.file_pos = NULL;
     stdout.flags = 1;
 
-    pcb->file_table[0] = stdin;
-    pcb->file_table[1] = stdout;
+    pcb->fd_table[0] = stdin;
+    pcb->fd_table[1] = stdout;
     
     pcb->cur_pid = pid;
     pcb->parent_pid = 0;
@@ -38,9 +39,9 @@ void pcb_init(pcb_t* pcb, int32_t pid) {
     // write esp and ebp into pcb struct        NEED TO DOUBLE CHECK SYNTAX
     asm volatile("                  \n\
                     movl %%esp, %0  \n\
-                    movl %%ebp, %1  \n\ "
-                :"=r" (pcb->esp)
-                :"=r" (pcb->ebp)
+                    movl %%ebp, %1  \n\
+                    "
+                :"=r" (pcb->esp), "=r" (pcb->ebp)
     );
 
     return;
@@ -56,17 +57,16 @@ void get_pcb(pcb_t* address){
 
 int32_t halt (uint8_t status) {
     int i;
-    pcb_t* pcb, parent;
+    pcb_t* pcb;
     
     cli();
     get_pcb(pcb);
-    parent = pcb->parent_pcb;
 
     // restore parent data
     pid--;
 
     // restore parent paging
-    map_program(parent->cur_pid); // flushes tlb
+    map_program(pcb->parent_pid); // flushes tlb
 
     // clear fd
     for(i = 2; i < 8; i++) { 
@@ -74,15 +74,15 @@ int32_t halt (uint8_t status) {
     }
 
     // write parent process' info back to TSS(esp0)
-    tss.esp0 = parent->esp0;
+    // tss.esp0 = parent->esp0;
     sti();
     
     // jump to execute return
     asm volatile("                  \n\
                     movl %0, %%esp  \n\
-                    movl %1, %%ebp  \n\ "
-                :"=r" (pcb->esp)
-                :"=r" (pcb->ebp)
+                    movl %1, %%ebp  \n\
+                    "
+                :"=r" (pcb->esp), "=r" (pcb->ebp)
     );
     return 0;
 }
@@ -127,7 +127,8 @@ int32_t execute (const uint8_t* command) {
     map_program(pid);
 
     // write file data into program image (virtual address)
-    read_data(search->inode,0,(uint8_t *)PROG_IMG_ADDR, search->inode.length);
+    // read_data(search->inode,0,(uint8_t *)PROG_IMG_ADDR, search->inode.length); inode is not an object? did you mean to use inode_t?
+    read_data(search->inode,0,(uint8_t *)PROG_IMG_ADDR, search->inode);
 
     // create pcb for this process
     pcb_t* pcb;
@@ -142,9 +143,9 @@ int32_t execute (const uint8_t* command) {
     asm volatile(
         "cli; \n\
         # push DS                       \n\
-        xorl %eax, %eax                 \n\
-        movw $USER_DS, %ax              \n\
-        pushl %eax                      \n\
+        xorl %%eax, %%eax                 \n\
+        movw $USER_DS, %%ax              \n\
+        pushl %%eax                      \n\
                                         \n\
         # push ESP                      \n\
         pushl %0                        \n\
@@ -153,17 +154,17 @@ int32_t execute (const uint8_t* command) {
         pushfl                          \n\
                                         \n\
         # push CS                       \n\
-        xorl %eax, %eax                 \n\
-        movw $USER_CS, %ax              \n\
-        pushl %eax                      \n\
+        xorl %%eax, %%eax                 \n\
+        movw $USER_CS, %%ax              \n\
+        pushl %%eax                      \n\
                                         \n\
         # push EIP (entry_point)        \n\
         pushl %1                        \n\
                                         \n\
         // push IRET context to kernel stack \n\
-        iret                            \n\ "
-        :"r" (pcb->esp)
-        :"r" (entry_point)
+        iret                            \n\
+        "
+        :"=r" (pcb->esp), "=r" (entry_point)
     );
     return 0;
 }
@@ -178,7 +179,7 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     }
 
     // find fd in fd_table
-    return (int32_t)readpcb->file_table[fd].fops_ptr.read(fd, buf, nbytes);
+    return (int32_t)readpcb->fd_table[fd].fops_ptr->read(fd, buf, nbytes);
 }
 
 // write data to either terminal or RTC
@@ -190,7 +191,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
         return -1;
     }
     // find fd in fd_table
-    return (int32_t)writepcb->file_table[fd].fops_ptr.write(fd, buf, nbytes);
+    return (int32_t)writepcb->fd_table[fd].fops_ptr->write(fd, buf, nbytes);
 }
 int32_t open (const uint8_t* filename) {
     pcb_t *pcb;
@@ -206,21 +207,23 @@ int32_t open (const uint8_t* filename) {
     int32_t fd = 2;
     while(fd < 8) {
         // write if empty fd or if fd not occupied
-        if(pcb->file_table[fd] == NULL || pcb->file_table[fd].flags == 0) {
+        // if(pcb->fd_table[fd] == NULL || pcb->fd_table[fd].flags == 0) {
+        // NULL is set to 0 so can't be compared to fd_table object, we should use other methods instead
+        if(pcb->fd_table[fd].flags == 0) {
             switch(f_type){
                 case 0: //rtc
-                    pcb->file_table[fd].fops_ptr = fops_rtc;
-                    pcb->file_table[fd].inode = NULL;
+                    pcb->fd_table[fd].fops_ptr = &fops_rtc;
+                    pcb->fd_table[fd].inode = NULL;
                 case 1: // dir
-                    pcb->file_table[fd].fops_ptr = fops_dir;
-                    pcb->file_table[fd].inode = NULL;
+                    pcb->fd_table[fd].fops_ptr = &fops_dir;
+                    pcb->fd_table[fd].inode = NULL;
                 case 2: // file
-                    pcb->file_table[fd].fops_ptr = fops_file;
-                    pcb->file_table[fd].inode = file_block->inode;
+                    pcb->fd_table[fd].fops_ptr = &fops_file;
+                    pcb->fd_table[fd].inode = file_block->inode;
                 default:
                     return -1;
-                pcb->file_table[fd].file_pos = 0;
-                pcb->file_table[fd].flags = 1; // set to occupied
+                pcb->fd_table[fd].file_pos = 0;
+                pcb->fd_table[fd].flags = 1; // set to occupied
 
                 return 0;
             }
@@ -241,13 +244,13 @@ int32_t close (int32_t fd) {
     get_pcb(pcb);
 
     //already not in use we dont need to close
-    if(pcb->file_table[fd].flags == 0){
+    if(pcb->fd_table[fd].flags == 0){
         return -1;
     } else {
-        pcb->file_table[fd].flags = 0;
+        pcb->fd_table[fd].flags = 0;
     }
     // find fd in fd_table and close
-    pcb->file_table[fd].fops_ptr.close(fd);
+    pcb->fd_table[fd].fops_ptr->close(fd);
 
     return 0;
 }

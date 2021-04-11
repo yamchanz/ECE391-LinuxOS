@@ -160,7 +160,7 @@ int rtc_freq_test() {
 	*freq = 2;
 	int amt_ints = 1;
 	while(*freq <= HIGH_LIMIT_FREQ) {
-		reset_terminal();
+		terminal_reset();
 		// error checking for NULL case or non-log2 number
 		if(rtc_write(rtc, freq, INT_BYTES) < 0) {
 			return FAIL;
@@ -194,10 +194,10 @@ int rtc_freq_test() {
  */
 int terminal_read_test() {
 	TEST_HEADER;
-	int32_t i, size;
-	uint8_t test1[128];
+	int32_t size;
+	int8_t test1[128];
 
-	size = read_terminal(NULL, test1, 11);
+	size = terminal_read(NULL, test1, 11);
 	// should print 10 chars + '\n'
 	printf(test1);
 	return size == 11 ? PASS : FAIL;
