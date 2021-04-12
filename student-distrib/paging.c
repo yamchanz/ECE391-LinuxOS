@@ -67,7 +67,6 @@ void paging_init(void) {
             pd[i].not_present.ignored31 = 0;
         }
     }
-
     // to turn on paging:
     // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
     // (we want top 20 bits)
@@ -89,8 +88,35 @@ void paging_init(void) {
     );
 }
 
+/* map_program - CP3
+ * Maps the program that is currently running to the correct process given 
+ * by the process number. 
+ * parameter - pid : pid is always between 1 - 6, thus we point at
+ *                   8MB, 12MB, ... and so on depending on the process. 
+ * return - none
+ */
+void map_program(uint32_t pid) {
+    if (pid > 5) return;
+    pd[PROGRAM_IMAGE_ADDR].page.present = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.read_write = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.user_sup = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.pwt = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.pcd = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.accessed = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.dirty = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.ps = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.glob = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.ignored3 = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.pat = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.exaddr = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.reserved5 = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.page_addr = KERNEL_PAGE_ADDR + pid;
+
+    flush();
+}
+
 /* flush - CP2
- * Not used as of now.
+ * Flushes TLB when altering paging
  * parameter - none
  * return - none
  */

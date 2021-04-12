@@ -13,6 +13,7 @@
 #include "idt_handlers.h"
 #include "paging.h"
 #include "filesys.h"
+#include "system_calls.h"
 
 #define RUN_TESTS   0
 
@@ -23,7 +24,7 @@
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
 void entry(unsigned long magic, unsigned long addr) {
-
+    int32_t res;
     multiboot_info_t *mbi;
 
     /* Clear the screen. */
@@ -150,11 +151,11 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
     keyboard_init();
-    // paging_init();
+    //paging_init();
     initialize_rtc();
 
     // initialize the terminal
-    init_terminal();
+    terminal_init();
 
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
@@ -165,9 +166,11 @@ void entry(unsigned long magic, unsigned long addr) {
 
 #ifdef RUN_TESTS
     /* Run tests */
-    launch_tests();
+    // launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
+    res = execute((uint8_t*)"shell");
+    printf("shell returns: %d", res);
 
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");

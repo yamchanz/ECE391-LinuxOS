@@ -75,14 +75,15 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
     if(inode >= boot->num_of_inodes) return -1; // check if inode valid
 
     inode_t* inode_blk = &(inode_arr[inode]); // instead of: (inode_t*) ((uint32_t)filesystem + inode + 1);
+    filesize = inode_blk->length;
 
     // if length is greater than what we have left in the file, set length to rest of file
     if(length + offset > filesize) length = filesize - offset;
     // if offset is greater than file size, nothing read
     if(offset >= filesize) return 0;
 
-    uint32_t cur = offset / FOUR_KILOBYTES; // init first data block
-    uint32_t start_byte = offset % FOUR_KILOBYTES; // init starting byte in first block
+    uint32_t cur = offset / _4_KB; // init first data block
+    uint32_t start_byte = offset % _4_KB; // init starting byte in first block
     uint32_t bytes_left = length; // init number of bytes to copy
 
     while(bytes_left > 0) {
@@ -90,15 +91,20 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
         uint32_t idx = inode_blk->dblk[cur]; // find data block to copy from
         dblk_t* data_blk =  &(data_arr[idx]); // instead of: (dblk_t*) ((uint32_t)filesystem + filesystem->num_of_inodes + 1 + idx);
         if(offset) { // for first time
-            memcpy(buf, (uint8_t*)data_blk + offset, FOUR_KILOBYTES - start_byte);
-            buf += FOUR_KILOBYTES - start_byte;
-            bytes_left -= FOUR_KILOBYTES - start_byte;
+            if((_4_KB - start_byte) > bytes_left) {
+                memcpy(buf, (uint8_t*)data_blk + offset, bytes_left);
+                buf += bytes_left;
+                return length;
+            }
+            memcpy(buf, (uint8_t*)data_blk + offset, _4_KB - start_byte);
+            buf += _4_KB - start_byte;
+            bytes_left -= _4_KB - start_byte;
             offset = 0;
         }
-        else if(bytes_left >= FOUR_KILOBYTES) { // for every block in between
-            memcpy(buf, (uint8_t*)data_blk, FOUR_KILOBYTES);
-            buf += FOUR_KILOBYTES;
-            bytes_left -= FOUR_KILOBYTES;
+        else if(bytes_left >= _4_KB) { // for every block in between
+            memcpy(buf, (uint8_t*)data_blk, _4_KB);
+            buf += _4_KB;
+            bytes_left -= _4_KB;
         }
         else{ // for last time
             memcpy(buf, (uint8_t*)data_blk, bytes_left);
