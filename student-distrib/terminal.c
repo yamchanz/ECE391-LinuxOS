@@ -76,12 +76,11 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 
     clear_buffer();
     while(t.buffer_idx < BUF_SIZE - 1 && !get_enter_flag())
-    size = nbytes > BUF_SIZE ? BUF_SIZE : nbytes;
+    size = nbytes > t.buffer_idx ? t.buffer_idx : nbytes;
+    for (i = 0; i < nbytes; ++i) 
+        ((int8_t*)buf)[i] = ' ';
     for (i = 0; i < size; ++i) {
-        if (i < size - 1)
-            ((int8_t*)buf)[i] = t.buffer[i];
-        else 
-            ((int8_t*)buf)[i] = '\n';
+        ((int8_t*)buf)[i] = t.buffer[i];
     }
     release_enter();
     clear_buffer();

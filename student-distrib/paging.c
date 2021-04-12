@@ -96,7 +96,7 @@ void paging_init(void) {
  * return - none
  */
 void map_program(uint32_t pid) {
-    if (pid > 5) return;
+    if (pid > 6) return;
     pd[PROGRAM_IMAGE_ADDR].page.present = 1;
     pd[PROGRAM_IMAGE_ADDR].page.read_write = 1;
     pd[PROGRAM_IMAGE_ADDR].page.user_sup = 1;
