@@ -170,6 +170,8 @@ void entry(unsigned long magic, unsigned long addr) {
 #endif
     /* Execute the first program ("shell") ... */
     res = execute((uint8_t*)"shell");
+    while (!res)
+        res = execute((uint8_t*)"shell");
     printf("shell returns: %d", res);
 
     /* Spin (nicely, so we don't chew up cycles) */
