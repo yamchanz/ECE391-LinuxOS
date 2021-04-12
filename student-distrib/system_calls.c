@@ -162,14 +162,14 @@ int32_t halt (uint8_t status) {
     pcb_t *pcb, *parent_pcb;
     
     cli();
-    pcb = get_pcb(pid);
+    pcb = get_pcb(pid--);
     parent_pcb = get_pcb(pcb->parent_pid);
+    if (pcb->parent_pid == 1)
+         execute((uint8_t*)"shell");
 
     // clear all file descriptors 
     for(i = 2; i < 8; i++) 
         close(i);
-
-    --pid;
 
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb

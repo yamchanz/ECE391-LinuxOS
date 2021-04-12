@@ -24,7 +24,6 @@
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
 void entry(unsigned long magic, unsigned long addr) {
-    int32_t res;
     multiboot_info_t *mbi;
 
     /* Clear the screen. */
@@ -169,10 +168,7 @@ void entry(unsigned long magic, unsigned long addr) {
     // launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-    res = execute((uint8_t*)"shell");
-    while (!res)
-        res = execute((uint8_t*)"shell");
-    printf("shell returns: %d", res);
+    execute((uint8_t*)"shell");
 
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");
