@@ -37,7 +37,10 @@ void pcb_init(pcb_t pcb, int32_t pid) {
     if(pcb.pid == 1) pcb.parent_pid = 1;
     else pcb.parent_pid = pid - 1;
     
-    // pcb->esp0 = tss.esp0;
+    tss.esp0 = _8_MB - (pid - 1) * _8_KB; 
+    tss.ss0 = KERNEL_DS;
+    pcb.esp0 = tss.esp0;
+    pcb.ss0 = tss.ss0;
     
     // write esp and ebp into pcb struct        NEED TO DOUBLE CHECK SYNTAX
     asm volatile("                  \n\
@@ -60,7 +63,7 @@ void get_pcb(pcb_t* address){
 
 int32_t execute (const uint8_t* command) {
     cli();
-    uint8_t buffer[4], exec[33], *test_buffer;
+    uint8_t buffer[4], exec[33];
     uint8_t cmd_idx = 0;
     uint32_t entry_point;
     int i;
@@ -83,9 +86,9 @@ int32_t execute (const uint8_t* command) {
     exec[cmd_idx] = '\0';  
 
     // checking the magic number to make sure its executable.
-    dentry_t *search;
-    if(read_dentry_by_name((uint8_t*)exec, search)==0){
-        read_data(search->inode, 0, buffer, 4);
+    dentry_t search;
+    if(read_dentry_by_name((uint8_t*)exec, &search)==0){
+        read_data(search.inode, 0, buffer, 4);
         if(buffer[0] != 0x7f || buffer[1]!= 0x45 || buffer[2]!= 0x4c || buffer[3]!=0x46){
             return -1;
         }
@@ -94,18 +97,19 @@ int32_t execute (const uint8_t* command) {
     }
 
     // getting the entry point from 24 - 27 (27 -> 24)
-    read_data(search.inode, 24,buffer,4);
+    read_data(search.inode, 24, buffer, 4);
     // read_data(search.inode, 27,test_buffer,1);
     // printf("test buffer: %x, %x\n", test_buffer, *test_buffer);
     // read_data(search.inode, 27,&buffer[0],1);
-    // printf("%x, %x\n", buffer, *buffer);
+    // // printf("%x, %x\n", &buffer, *buffer);
     // read_data(search.inode, 26,&buffer[1],1);
-    // printf("buf1: %x, %x\n", buffer, *buffer);
+    // // printf("buf1: %x, %x\n", buffer, *buffer);
     // read_data(search.inode, 25,&buffer[2],1);
-    // printf("buf2: %x, %x\n", buffer, *buffer);
+    // // printf("buf2: %x, %x\n", buffer, *buffer);
     // read_data(search.inode, 24,&buffer[3],1);
     // printf("buf3: %x, %x\n", buffer, *buffer);
-    entry_point = *((uint32_t*)buffer); //byte manipulation; val: 0xe8820408
+    entry_point = *((uint32_t*)buffer); //byte manipulation; val: 0x080482E8
+ 
     printf("entry point, buf: %x, %x\n", entry_point, (uint32_t*)buffer);
 
     //set up paging
@@ -119,19 +123,20 @@ int32_t execute (const uint8_t* command) {
     // create pcb for this process
     pcb_t pcb;
     pcb_init(pcb, pid);
+    pcb.esp = 0x0083FFFFC;
     // printf("pcb.esp: %u, pcb.esp: %u", pcb.esp, pcb.ebp);
 
     context_switch(pcb.esp, entry_point);
 
     pid++;
 
-    sti();
     // prepare for context switch
     // push DS, ESP, EFLAGS, CS, EIP
 
     // asm volatile(
-    //     "                               \n\
-    //     # push USER_DS                       \n\
+    //     "                                 \n\
+    //     cli                               \n\
+    //     # push USER_DS                    \n\
     //     xorl %%eax, %%eax                 \n\
     //     movw 0x23, %%ax                  \n\
     //     pushl %%eax                      \n\
@@ -152,8 +157,10 @@ int32_t execute (const uint8_t* command) {
     //                                     \n\
     //     # push IRET context to kernel stack \n\
     //     iret                            \n\
-    //     "
-    //     :"=r" (pcb->esp), "=r" (entry_point)
+    //     "                                      \
+    //     :                                      \
+    //     :"r"(pcb.esp), "r"(entry_point)        \
+    //     :                                      \
     // );
     
     return 0;
@@ -183,7 +190,7 @@ int32_t halt (uint8_t status) {
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
     // !!write parent process' info back to TSS(esp0)
-    // tss.esp0 = _8_MB - (pid - 1) * _4_KB
+    // tss.esp0 = _8_MB - (pid - 1) * _8_KB
     // tss.ss0 = KERNEL_DS;
     sti();
     

@@ -170,7 +170,7 @@ void entry(unsigned long magic, unsigned long addr) {
 #endif
     /* Execute the first program ("shell") ... */
     res = execute((uint8_t*)"shell");
-    printf("%d", res);
+    printf("shell returns: %d", res);
 
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");

@@ -22,6 +22,7 @@ typedef struct __attribute__((packed)){
     uint32_t ebp;
     uint8_t pid;
     uint8_t parent_pid; // we may need this?
+    uint16_t ss0;
     uint32_t esp0;
 } pcb_t;
 

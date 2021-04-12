@@ -37,7 +37,7 @@ sys_call_handler_link:
     call *sys_call_table(, %eax, 4)
     # return code is in eax. pop parameters
     popl %ebx
-    popl %ecx
+    popl %ecx              
     popl %edx
     popl %esi
     popl %edi
