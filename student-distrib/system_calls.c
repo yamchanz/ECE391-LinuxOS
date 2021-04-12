@@ -7,15 +7,15 @@
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
 file_ops_t fops_dir = {dir_open, dir_close, dir_read, dir_write};
 file_ops_t fops_file = {file_open, file_close, file_read, file_write};
-file_ops_t std_in = {bad_call, bad_call, terminal_read, bad_call};
-file_ops_t std_out = {bad_call, bad_call, bad_call, terminal_write};
+file_ops_t std_in = {terminal_open, terminal_close, terminal_read, terminal_write};
+file_ops_t std_out = {terminal_open, terminal_close, terminal_read, terminal_write};
 
 int32_t bad_call() {
     return -1;
 }
 int pid = 1;
 
-void pcb_init(pcb_t pcb, int32_t pid) {
+void pcb_init(pcb_t *pcb, int32_t pid) {
     file_desc_t stdin;
     stdin.fops_ptr = &std_in;
     stdin.inode = NULL;
@@ -28,26 +28,21 @@ void pcb_init(pcb_t pcb, int32_t pid) {
     stdout.file_pos = NULL;
     stdout.flags = 1;
 
-    pcb.fd_table[0] = stdin;
-    pcb.fd_table[1] = stdout;
+    pcb->fd_table[0] = stdin;
+    pcb->fd_table[1] = stdout;
     
     // 0 marks available, pid from 1 - 6
-    pcb.pid = pid;
+    pcb->pid = pid;
     // check if current process is base shell
-    if(pcb.pid == 1) pcb.parent_pid = 1;
-    else pcb.parent_pid = pid - 1;
-    
-    tss.esp0 = _8_MB - (pid - 1) * _8_KB; 
-    tss.ss0 = KERNEL_DS;
-    pcb.esp0 = tss.esp0;
-    pcb.ss0 = tss.ss0;
+    if(pcb->pid == 1) pcb->parent_pid = 1;
+    else pcb->parent_pid = pid - 1;
     
     // write esp and ebp into pcb struct        NEED TO DOUBLE CHECK SYNTAX
     asm volatile("                  \n\
                     movl %%esp, %0   \n\
                     movl %%ebp, %1  \n\
                     "
-                :"=r" (pcb.esp), "=r" (pcb.ebp)
+                :"=r" (pcb->esp), "=r" (pcb->ebp)
     );
 
     return;
@@ -98,8 +93,6 @@ int32_t execute (const uint8_t* command) {
 
     // getting the entry point from 24 - 27 (27 -> 24)
     read_data(search.inode, 24, buffer, 4);
-    // read_data(search.inode, 27,test_buffer,1);
-    // printf("test buffer: %x, %x\n", test_buffer, *test_buffer);
     // read_data(search.inode, 27,&buffer[0],1);
     // // printf("%x, %x\n", &buffer, *buffer);
     // read_data(search.inode, 26,&buffer[1],1);
@@ -122,47 +115,15 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t pcb;
-    pcb_init(pcb, pid);
-    pcb.esp = 0x0083FFFFC;
+    pcb_init(&pcb, pid);
+
+    tss.ss0 = KERNEL_DS;
+    tss.esp0 = _8_MB - _8_KB * pid;
     // printf("pcb.esp: %u, pcb.esp: %u", pcb.esp, pcb.ebp);
 
-    context_switch(pcb.esp, entry_point);
+    context_switch(0x8400000, entry_point);
 
     pid++;
-
-    // prepare for context switch
-    // push DS, ESP, EFLAGS, CS, EIP
-
-    // asm volatile(
-    //     "                                 \n\
-    //     cli                               \n\
-    //     # push USER_DS                    \n\
-    //     xorl %%eax, %%eax                 \n\
-    //     movw 0x23, %%ax                  \n\
-    //     pushl %%eax                      \n\
-    //                                     \n\
-    //     # push ESP                      \n\
-    //     pushl %0                        \n\
-    //                                     \n\
-    //     # push EFLAGS                   \n\
-    //     pushfl                          \n\
-    //                                     \n\
-    //     # push CS - 0x2B (43)            \n\
-    //     xorl %%eax, %%eax                 \n\
-    //     movw 0x2B, %%ax                   \n\
-    //     pushl %%eax                      \n\
-    //                                     \n\
-    //     # push EIP (entry_point)        \n\
-    //     pushl %1                        \n\
-    //                                     \n\
-    //     # push IRET context to kernel stack \n\
-    //     iret                            \n\
-    //     "                                      \
-    //     :                                      \
-    //     :"r"(pcb.esp), "r"(entry_point)        \
-    //     :                                      \
-    // );
-    
     return 0;
 }
 

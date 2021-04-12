@@ -72,7 +72,6 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry) {
  * returns : number of bytes copied (success), -1 (failure)
  */
 int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length) {
-    int i;
     if(inode >= boot->num_of_inodes) return -1; // check if inode valid
 
     inode_t* inode_blk = &(inode_arr[inode]); // instead of: (inode_t*) ((uint32_t)filesystem + inode + 1);

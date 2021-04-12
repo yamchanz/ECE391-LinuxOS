@@ -232,7 +232,7 @@ int read_file_offset_test(){
 	//TEST_HEADER;
 	int32_t fd; // file descriptor
 	int i;	// loop index
-	char buf[5];
+	uint8_t buf[5];
 	dentry_t dentry;
 	read_dentry_by_name((uint8_t*)"frame1.txt", &dentry);
 	read_data(dentry.inode, FRAME1_SIZE - 10, buf, 5);

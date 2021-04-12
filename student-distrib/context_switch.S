@@ -6,17 +6,12 @@
 # reference http://www.jamesmolloy.co.uk/tutorial_html/10.-User%20Mode.html
 context_switch:
     # get parameters (esp, entry_point)
-    cli
     movl 4(%esp), %ecx # esp
     movl 8(%esp), %edx # entry_point
 
-    # push USER_DS                    
+    # push USER_DS  0x2B                  
     xorl %eax, %eax               
-    movw $0x0023, %ax  
-    movw %ax, %ds  
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs            
+    movw $0x002B, %ax      
     pushl %eax                               
                                     
     # push ESP                      
@@ -24,14 +19,11 @@ context_switch:
                                     
     # push EFLAGS                   
     pushfl     
+    orl $0x200, (%esp)   
 
-    popl %eax
-    orl $0x200, %eax   
-    pushl %eax
-
-    # push CS - 0x2B (43)           
+    # push CS - 0x23
     xorl %eax, %eax               
-    movw $0x002B, %ax                 
+    movw $0x0023, %ax                 
     pushl %eax                           
 
     # push entry point                                
