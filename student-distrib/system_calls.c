@@ -83,12 +83,10 @@ int32_t execute (const uint8_t* command) {
     exec[cmd_idx] = '\0';  
 
     // checking the magic number to make sure its executable.
-    dentry_t search;
-    if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
-        if(read_data(search.inode, 0, buffer, 4) != 4){
-            return -1;
-        }
-        if(buffer[0] != 0x7f || buffer[1] != 0x45 || buffer[2] != 0x4c || buffer[3] != 0x46){
+    dentry_t *search;
+    if(read_dentry_by_name((uint8_t*)exec, search)==0){
+        read_data(search->inode, 0, buffer, 4);
+        if(buffer[0] != 0x7f || buffer[1]!= 0x45 || buffer[2]!= 0x4c || buffer[3]!=0x46){
             return -1;
         }
     } else {
