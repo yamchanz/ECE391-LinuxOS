@@ -143,7 +143,7 @@ int32_t execute (const uint8_t* command) {
 
     // update task segment
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = _8_MB - _8_KB * pid;
+    tss.esp0 = _8_MB - _8_KB * (pid - 1) - 4;
 
     context_switch(BOTTOM_USER_STACK, entry_point);
     
@@ -166,11 +166,13 @@ int32_t halt (uint8_t status) {
     pcb = get_pcb(pid);
 
     // clear all file descriptors 
-    for(i = 2; i < 8; i++) { 
-        close(i);
+    for(i = FD_START; i < FD_MAX; i++) {
+        if(pcb->fd_table[i].flags == 1) 
+            close(i);
+        pcb->fd_table[i].flags = 0;
     }
     // restore parent data
-    if(pid > 0) {
+    if(pid > 1) {
         // mark avail?
         pcb->pid = 0;
         pcb->parent_pid = 0;
@@ -184,12 +186,13 @@ int32_t halt (uint8_t status) {
     map_program(pcb->parent_pid); // flushes tlb
     // write parent process' info back to TSS(esp0)
     // pid already decr
-    tss.esp0 = (uint32_t) get_pcb(pid);
+    tss.esp0 = _8_MB - _8_KB * (pid - 1) - 4;
     tss.ss0 = KERNEL_DS;
     sti();
 
     ret_val = status;
-    
+    // now parent 
+    pcb = get_pcb(pid);
     // jump to execute return
     asm volatile("                  \n\
                     movl %0, %%esp  \n\
