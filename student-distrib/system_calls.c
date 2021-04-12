@@ -51,16 +51,8 @@ void pcb_init(pcb_t *pcb) {
     if(pcb->pid == 1) pcb->parent_pid = 1;
     else pcb->parent_pid = pid - 1;
 
-    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - 4;
+    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
     pcb->ss0 = KERNEL_DS;
-    
-    // write esp and ebp into pcb struct
-    // asm volatile("                  \n\
-    //                 movl %%esp, %0   \n\
-    //                 movl %%ebp, %1  \n\
-    //                 "
-    //             :"=r" (pcb->esp), "=r" (pcb->ebp)
-    // );
 
     return;
 }
@@ -108,7 +100,8 @@ int32_t execute (const uint8_t* command) {
     dentry_t search;
     if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
         read_data(search.inode, 0, buffer, FOUR_BYTE);
-        // check for magic numbers at beginning of executable
+        // check for magic numbers at beginning of executable as defined by the documentation: 0x7F, 0x45, 0x4C, and 0x46 should be the first
+        // four chars of any executable. If not this, then invalid ex
         if(buffer[0] != 0x7f || buffer[1]!= 0x45 || buffer[2]!= 0x4c || buffer[3]!=0x46){
             return -1;
         }
