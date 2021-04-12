@@ -40,7 +40,7 @@ int32_t terminal_close(int32_t fd);
 // Write the content of the line buffer to the given buffer
 int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes);
 // Read the content of the given buffer and write on the terminal
-int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes);
+int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
 
 // Delete the first line and move everything up a line
 void scroll_up(void);

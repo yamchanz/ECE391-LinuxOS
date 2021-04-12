@@ -11,9 +11,18 @@
 #define PCB_ADDR_MASK   0xFFFFE000
 #define PROG_IMG_ADDR   0x8048000
 #define ONETE           0X8000001
+#define BOTTOM_USER_STACK 0x8400000
+#define ENTRY_POINT_START   24
+#define CMD_MAX_LEN     32
+#define FOUR_BYTE       4
+#define FD_START        2
+#define FD_MAX          8
+#define RTC_FTYPE       0
+#define DIR_FTYPE       1
+#define FILE_FTYPE      2
 
 typedef struct __attribute__((packed)){
-    file_desc_t fd_table[8];
+    file_desc_t fd_table[FD_MAX];
     // insert information needed to go back to parent program below
     // get ESP and EBP from address
     uint32_t parent_esp;

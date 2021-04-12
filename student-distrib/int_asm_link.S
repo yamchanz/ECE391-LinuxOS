@@ -29,6 +29,7 @@ sys_call_handler_link:
     pushl %ebx
 
     # verify that system call number in EAX is valid (1-10, zero indexed)
+    decl %eax
     cmpl $0, %eax
     jl invalid_sys_call
     cmpl $10, %eax

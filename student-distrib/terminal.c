@@ -94,7 +94,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
            buf -- pointer to the data to be read from
  * Return Value: none
  * Function: write the content of the given buffer on the terminal */
-int32_t terminal_write(int32_t fd, void* buf, int32_t nbytes) {
+int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
     int32_t i;
 
     if (!buf) return -1;

@@ -4,6 +4,10 @@
 
 .globl context_switch
 # reference http://www.jamesmolloy.co.uk/tutorial_html/10.-User%20Mode.html
+/* context_switch: CP3
+ * parameter - entry_point - points to EIP that we push so we can IRET to executable user space
+ * return - none
+ */
 context_switch:
     # get parameters (esp, entry_point)
     movl 4(%esp), %ecx # esp
@@ -14,7 +18,7 @@ context_switch:
     movw $0x002B, %ax      
     pushl %eax                               
                                     
-    # push ESP                      
+    # push ESP - bottom of user stack 128MB + 4MB                      
     pushl %ecx                        
                                     
     # push EFLAGS                   
