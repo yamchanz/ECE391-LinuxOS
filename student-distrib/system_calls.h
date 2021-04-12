@@ -11,7 +11,7 @@
 #define PCB_ADDR_MASK   0xFFFFE000
 #define PROG_IMG_ADDR   0x8048000
 #define ONETE           0X8000001
-#define BOTTOM_USER_STACK 0x8400000
+#define BOTTOM_USER_STACK 0x8400000 - 4
 #define ENTRY_POINT_START   24
 #define CMD_MAX_LEN     32
 #define FOUR_BYTE       4

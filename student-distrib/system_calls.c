@@ -5,7 +5,6 @@
 
 // global
 int pid;
-int8_t ret_val;
 
 // static tables with function pointers for each file type
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
@@ -52,16 +51,8 @@ void pcb_init(pcb_t *pcb) {
     if(pcb->pid == 1) pcb->parent_pid = 1;
     else pcb->parent_pid = pid - 1;
 
-    pcb->ss0 = tss.ss0;
-    // pcb->esp0 = tss.esp0
-    
-    // write esp and ebp into pcb struct
-    asm volatile("                  \n\
-                    movl %%esp, %0   \n\
-                    movl %%ebp, %1  \n\
-                    "
-                :"=r" (pcb->esp), "=r" (pcb->ebp)
-    );
+    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
+    pcb->ss0 = KERNEL_DS;
 
     return;
 }
@@ -109,7 +100,8 @@ int32_t execute (const uint8_t* command) {
     dentry_t search;
     if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
         read_data(search.inode, 0, buffer, FOUR_BYTE);
-        // check for magic numbers at beginning of executable
+        // check for magic numbers at beginning of executable as defined by the documentation: 0x7F, 0x45, 0x4C, and 0x46 should be the first
+        // four chars of any executable. If not this, then invalid ex
         if(buffer[0] != 0x7f || buffer[1]!= 0x45 || buffer[2]!= 0x4c || buffer[3]!=0x46){
             return -1;
         }
@@ -121,7 +113,7 @@ int32_t execute (const uint8_t* command) {
     read_data(search.inode, ENTRY_POINT_START, buffer, FOUR_BYTE);
     entry_point = *((uint32_t*)buffer); //byte manipulation; val: 0x080482E8
 
-    pid++;
+    ++pid;
 
     //set up paging
     map_program(pid);
@@ -134,22 +126,22 @@ int32_t execute (const uint8_t* command) {
     pcb_t *pcb;
     pcb = get_pcb(pid);
     asm volatile("                  \n\
-                movl %%ebp, %%eax   \n\
-                movl %%esp, %%edx   \n\
+                movl %%ebp, %0   \n\
+                movl %%esp, %1   \n\
                 "
-                :"=a"(pcb->ebp), "=d"(pcb->esp)
+                :"=r"(pcb->ebp), "=r"(pcb->esp)
     );
     pcb_init(pcb);
 
     // update task segment
-    tss.ss0 = KERNEL_DS;
-    tss.esp0 = _8_MB - _8_KB * (pid - 1) - 4;
+    tss.ss0 = pcb->ss0;
+    tss.esp0 = pcb->esp0;
 
     context_switch(BOTTOM_USER_STACK, entry_point);
     
     asm volatile("exec_ret:");
 
-    return ret_val;
+    return 0;
 }
 
 /* halt - CP3
@@ -160,48 +152,34 @@ int32_t execute (const uint8_t* command) {
  */
 int32_t halt (uint8_t status) {
     int i;
-    pcb_t* pcb;
+    pcb_t *pcb, *parent_pcb;
     
     cli();
-    pcb = get_pcb(pid);
+    pcb = get_pcb(pid--);
+    parent_pcb = get_pcb(pcb->parent_pid);
+    if (pcb->parent_pid == 1)
+         execute((uint8_t*)"shell");
 
     // clear all file descriptors 
-    for(i = FD_START; i < FD_MAX; i++) {
-        if(pcb->fd_table[i].flags == 1) 
-            close(i);
-        pcb->fd_table[i].flags = 0;
-    }
-    // restore parent data
-    if(pid > 1) {
-        // mark avail?
-        pcb->pid = 0;
-        pcb->parent_pid = 0;
-        pid--;
-    }
-    // if base shell, re-execute shell
-    else {
-        execute((uint8_t*)"shell");
-    } 
+    for(i = 2; i < 8; i++) 
+        close(i);
+
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
     // write parent process' info back to TSS(esp0)
     // pid already decr
-    tss.esp0 = _8_MB - _8_KB * (pid - 1) - 4;
-    tss.ss0 = KERNEL_DS;
+    tss.esp0 = parent_pcb->esp0;
+    tss.ss0 = parent_pcb->ss0;
     sti();
-
-    ret_val = status;
-    // now parent 
-    pcb = get_pcb(pid);
+    
     // jump to execute return
     asm volatile("                  \n\
                     movl %0, %%esp  \n\
                     movl %1, %%ebp  \n\
-                    movl %2, %%eax  \n\
                     jmp exec_ret    \n\
-                    "
+                "
                 :
-                :"r"(pcb->esp), "r"(pcb->ebp), "r"((uint32_t)status)
+                :"r"(parent_pcb->esp), "r"(parent_pcb->ebp)
                 :"eax"
     );
 
