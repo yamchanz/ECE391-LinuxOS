@@ -25,8 +25,6 @@ typedef struct __attribute__((packed)){
     file_desc_t fd_table[FD_MAX];
     // insert information needed to go back to parent program below
     // get ESP and EBP from address
-    uint32_t parent_esp;
-    uint32_t parent_ebp;
     uint32_t esp;
     uint32_t ebp;
     uint8_t pid;

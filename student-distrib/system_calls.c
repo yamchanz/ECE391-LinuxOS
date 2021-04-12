@@ -5,6 +5,7 @@
 
 // global
 int pid;
+int8_t ret_val;
 
 // static tables with function pointers for each file type
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
@@ -51,8 +52,6 @@ void pcb_init(pcb_t *pcb) {
     if(pcb->pid == 1) pcb->parent_pid = 1;
     else pcb->parent_pid = pid - 1;
 
-    pcb->parent_esp = 0;
-    pcb->parent_ebp = 0;
     pcb->ss0 = tss.ss0;
     // pcb->esp0 = tss.esp0
     
@@ -73,7 +72,7 @@ void pcb_init(pcb_t *pcb) {
  * returns - none
  */
 pcb_t* get_pcb(int pid_in) {
-   return (pcb_t*)(_8_MB - _8_KB * (pid_in + 1));
+   return (pcb_t*)(_8_MB - _8_KB * pid_in);
 }
 
 /* execute - CP3
@@ -92,7 +91,7 @@ int32_t execute (const uint8_t* command) {
         return -1;
     }
 
-    while (command[cmd_idx] != ' ' && command[cmd_idx] != '\0') {
+    while (command[cmd_idx] != ' ' && command[cmd_idx] != '\0' && command[cmd_idx] != '\n') {
         cmd_idx++;
     }
 
@@ -134,16 +133,23 @@ int32_t execute (const uint8_t* command) {
     // create pcb for this process
     pcb_t *pcb;
     pcb = get_pcb(pid);
+    asm volatile("                  \n\
+                movl %%ebp, %%eax   \n\
+                movl %%esp, %%edx   \n\
+                "
+                :"=a"(pcb->ebp), "=d"(pcb->esp)
+    );
     pcb_init(pcb);
 
     // update task segment
     tss.ss0 = KERNEL_DS;
     tss.esp0 = _8_MB - _8_KB * pid;
-    // printf("pcb.esp: %u, pcb.esp: %u", pcb.esp, pcb.ebp);
 
     context_switch(BOTTOM_USER_STACK, entry_point);
+    
+    asm volatile("exec_ret:");
 
-    return 0;
+    return ret_val;
 }
 
 /* halt - CP3
@@ -177,17 +183,26 @@ int32_t halt (uint8_t status) {
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
     // write parent process' info back to TSS(esp0)
-    tss.esp0 = _8_MB - pid * _8_KB;
+    // pid already decr
+    tss.esp0 = (uint32_t) get_pcb(pid);
     tss.ss0 = KERNEL_DS;
     sti();
+
+    ret_val = status;
     
-    // !! jump to execute return
+    // jump to execute return
     asm volatile("                  \n\
                     movl %0, %%esp  \n\
                     movl %1, %%ebp  \n\
+                    movl %2, %%eax  \n\
+                    jmp exec_ret    \n\
                     "
-                :"=r" (pcb->esp), "=r" (pcb->ebp)
+                :
+                :"r"(pcb->esp), "r"(pcb->ebp), "r"((uint32_t)status)
+                :"eax"
     );
+
+    // doesn't reach here
     return 0;
 }
 
