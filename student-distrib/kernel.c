@@ -13,6 +13,7 @@
 #include "idt_handlers.h"
 #include "paging.h"
 #include "filesys.h"
+#include "system_calls.h"
 
 #define RUN_TESTS   0
 
@@ -150,7 +151,7 @@ void entry(unsigned long magic, unsigned long addr) {
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
     keyboard_init();
-    // paging_init();
+    //paging_init();
     initialize_rtc();
 
     // initialize the terminal
@@ -168,7 +169,7 @@ void entry(unsigned long magic, unsigned long addr) {
     // launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-    execute((uint8_t)"shell");
+    execute((uint8_t*)"shell");
 
     /* Spin (nicely, so we don't chew up cycles) */
     asm volatile (".1: hlt; jmp .1;");

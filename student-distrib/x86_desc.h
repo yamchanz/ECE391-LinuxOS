@@ -37,24 +37,27 @@ typedef struct x86_desc {
 } x86_desc_t;
 
 /* This is a segment descriptor.  It goes in the GDT. */
-typedef struct __attribute__ ((packed)) seg_desc {
+typedef struct seg_desc {
     union {
         uint32_t val[2];
-        uint16_t seg_lim_15_00;
-        uint16_t base_15_00;
-        uint8_t  base_23_16;
-        uint32_t type          : 4;
-        uint32_t sys           : 1;
-        uint32_t dpl           : 2;
-        uint32_t present       : 1;
-        uint32_t seg_lim_19_16 : 4;
-        uint32_t avail         : 1;
-        uint32_t reserved      : 1;
-        uint32_t opsize        : 1;
-        uint32_t granularity   : 1;
-        uint8_t  base_31_24;
+        struct {
+            uint16_t seg_lim_15_00;
+            uint16_t base_15_00;
+            uint8_t  base_23_16;
+            uint32_t type          : 4;
+            uint32_t sys           : 1;
+            uint32_t dpl           : 2;
+            uint32_t present       : 1;
+            uint32_t seg_lim_19_16 : 4;
+            uint32_t avail         : 1;
+            uint32_t reserved      : 1;
+            uint32_t opsize        : 1;
+            uint32_t granularity   : 1;
+            uint8_t  base_31_24;
+        } __attribute__ ((packed));
     };
 } seg_desc_t;
+
 
 /* TSS structure */
 typedef struct __attribute__((packed)) tss {

@@ -72,9 +72,11 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry) {
  * returns : number of bytes copied (success), -1 (failure)
  */
 int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length) {
+    int i;
     if(inode >= boot->num_of_inodes) return -1; // check if inode valid
 
     inode_t* inode_blk = &(inode_arr[inode]); // instead of: (inode_t*) ((uint32_t)filesystem + inode + 1);
+    filesize = inode_blk->length;
 
     // if length is greater than what we have left in the file, set length to rest of file
     if(length + offset > filesize) length = filesize - offset;
@@ -90,6 +92,16 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
         uint32_t idx = inode_blk->dblk[cur]; // find data block to copy from
         dblk_t* data_blk =  &(data_arr[idx]); // instead of: (dblk_t*) ((uint32_t)filesystem + filesystem->num_of_inodes + 1 + idx);
         if(offset) { // for first time
+            printf("start_byte: %x, bytes_left: %x\n", start_byte, bytes_left);
+            if((_4_KB - start_byte) > bytes_left) {
+                memcpy(buf, (uint8_t*)data_blk + offset, bytes_left);
+                for (i = 0; i < offset; ++i) {
+                    printf("data_blk: %x, %x\n", (uint8_t*)data_blk + i, *(uint32_t*)((uint8_t*)data_blk + i));
+                }
+                printf("read_data buf: %x, %x\n", buf, *buf);
+                buf += bytes_left;
+                return length;
+            }
             memcpy(buf, (uint8_t*)data_blk + offset, _4_KB - start_byte);
             buf += _4_KB - start_byte;
             bytes_left -= _4_KB - start_byte;

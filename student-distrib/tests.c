@@ -228,6 +228,21 @@ int read_file_test(){
 	return PASS;
 }
 
+int read_file_offset_test(){
+	//TEST_HEADER;
+	int32_t fd; // file descriptor
+	int i;	// loop index
+	char buf[5];
+	dentry_t dentry;
+	read_dentry_by_name((uint8_t*)"frame1.txt", &dentry);
+	read_data(dentry.inode, FRAME1_SIZE - 10, buf, 5);
+	for(i = 0; i < 5;i++){
+			putc(buf[i]);
+	}
+	file_close(fd);
+	return PASS;
+}
+
 /* read_file_large - CP2
  * DESCRIPTION: Reads the very large text with very longname and outputs portions of it to the screen.
  * INPUTS: none
@@ -320,6 +335,7 @@ void launch_tests(){
 	// rtc_freq_test();
 	// terminal_read_test();
 	// read_file_test();
+	// read_file_offset_test();
 	//list_dir_test();
 	//read_file_large();
 	//TEST_OUTPUT("read_nonexistant_file_test", read_nonexistent_file_test());

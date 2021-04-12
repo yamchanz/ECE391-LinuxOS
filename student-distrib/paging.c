@@ -91,25 +91,26 @@ void paging_init(void) {
 /* map_program - CP3
  * Maps the program that is currently running to the correct process given 
  * by the process number. 
- * parameter - process_number
+ * parameter - pid : pid is always greater than 0, thus we point at
+ *                   8MB, 12MB, ... and so on depending on the process. 
  * return - none
  */
 void map_program(uint32_t pid) {
-    pd[ONETE].page.present = 1;
-    // pd[0].page.present = 1;
-    pd[ONETE].page.read_write = 1;
-    pd[ONETE].page.user_sup = 1;
-    pd[ONETE].page.pwt = 0;
-    pd[ONETE].page.pcd = 0;
-    pd[ONETE].page.accessed = 0;
-    pd[ONETE].page.dirty = 0;
-    pd[ONETE].page.ps = 1;
-    pd[ONETE].page.glob = 0;
-    pd[ONETE].page.ignored3 = 0;
-    pd[ONETE].page.pat = 0;
-    pd[ONETE].page.exaddr = 0;
-    pd[ONETE].page.reserved5 = 0;
-    pd[ONETE].page.page_addr = (_8_MB + _4_MB * pid) >> PDE_ADDR_OFFSET;
+    if (pid == 0) return;
+    pd[PROGRAM_IMAGE_ADDR].page.present = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.read_write = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.user_sup = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.pwt = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.pcd = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.accessed = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.dirty = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.ps = 1;
+    pd[PROGRAM_IMAGE_ADDR].page.glob = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.ignored3 = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.pat = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.exaddr = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.reserved5 = 0;
+    pd[PROGRAM_IMAGE_ADDR].page.page_addr = KERNEL_PAGE_ADDR + pid;
 
     flush();
 }
