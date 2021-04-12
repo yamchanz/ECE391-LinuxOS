@@ -91,7 +91,7 @@ void paging_init(void) {
 /* map_program - CP3
  * Maps the program that is currently running to the correct process given 
  * by the process number. 
- * parameter - pid : pid is always between 0 - 5, thus we point at
+ * parameter - pid : pid is always between 1 - 6, thus we point at
  *                   8MB, 12MB, ... and so on depending on the process. 
  * return - none
  */
@@ -110,7 +110,7 @@ void map_program(uint32_t pid) {
     pd[PROGRAM_IMAGE_ADDR].page.pat = 0;
     pd[PROGRAM_IMAGE_ADDR].page.exaddr = 0;
     pd[PROGRAM_IMAGE_ADDR].page.reserved5 = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.page_addr = 1 + KERNEL_PAGE_ADDR + pid;
+    pd[PROGRAM_IMAGE_ADDR].page.page_addr = KERNEL_PAGE_ADDR + pid;
 
     flush();
 }

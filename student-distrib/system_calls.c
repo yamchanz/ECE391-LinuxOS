@@ -41,14 +41,20 @@ void pcb_init(pcb_t *pcb) {
     stdout.file_pos = NULL;
     stdout.flags = 1;
 
+    
     pcb->fd_table[0] = stdin;
     pcb->fd_table[1] = stdout;
     
     //pid from 1 - 6
     pcb->pid = pid;
     // check if current process is base shell
-    if(pcb->pid == 0) pcb->parent_pid = 0;
+    if(pcb->pid == 1) pcb->parent_pid = 1;
     else pcb->parent_pid = pid - 1;
+
+    pcb->parent_esp = 0;
+    pcb->parent_ebp = 0;
+    pcb->ss0 = tss.ss0;
+    // pcb->esp0 = tss.esp0
     
     // write esp and ebp into pcb struct
     asm volatile("                  \n\
@@ -63,22 +69,12 @@ void pcb_init(pcb_t *pcb) {
 
 /* get_pcb - CP3
  * Fills in given struct with correct pcb info
- * parameters - address : ptr to pcb struct 
+ * parameters - pid_in : pid num of pcb struct to find
  * returns - none
  */
-pcb_t* get_pcb(void){
-    pcb_t* address;
-    asm volatile("andl %%esp, %%ebx\n"
-                    :"=b"(address)
-                    :"b"(PCB_ADDR_MASK)
-                    :"cc"
-                    );
-    return address;
+pcb_t* get_pcb(int pid_in) {
+   return (pcb_t*)(_8_MB - _8_KB * (pid_in + 1));
 }
-
-// pcb_t* get_pcb(int pid) {
-
-// }
 
 /* execute - CP3
  * Executes a file.
@@ -125,8 +121,8 @@ int32_t execute (const uint8_t* command) {
     // getting the entry point from 24 - 27 (27 -> 24)
     read_data(search.inode, ENTRY_POINT_START, buffer, FOUR_BYTE);
     entry_point = *((uint32_t*)buffer); //byte manipulation; val: 0x080482E8
- 
-    printf("entry point, buf: %x, %x\n", entry_point, (uint32_t*)buffer);
+
+    pid++;
 
     //set up paging
     map_program(pid);
@@ -137,7 +133,8 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t *pcb;
-    pcb = get_pcb();
+    pcb = get_pcb(pid);
+    pcb_init(pcb);
 
     // update task segment
     tss.ss0 = KERNEL_DS;
@@ -146,7 +143,6 @@ int32_t execute (const uint8_t* command) {
 
     context_switch(BOTTOM_USER_STACK, entry_point);
 
-    pid++;
     return 0;
 }
 
@@ -161,7 +157,7 @@ int32_t halt (uint8_t status) {
     pcb_t* pcb;
     
     cli();
-    get_pcb(pcb);
+    pcb = get_pcb(pid);
 
     // clear all file descriptors 
     for(i = 2; i < 8; i++) { 
@@ -180,9 +176,9 @@ int32_t halt (uint8_t status) {
     } 
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
-    // !!write parent process' info back to TSS(esp0)
-    // tss.esp0 = _8_MB - pid * _8_KB
-    // tss.ss0 = KERNEL_DS;
+    // write parent process' info back to TSS(esp0)
+    tss.esp0 = _8_MB - pid * _8_KB;
+    tss.ss0 = KERNEL_DS;
     sti();
     
     // !! jump to execute return
@@ -204,13 +200,14 @@ int32_t halt (uint8_t status) {
  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
-    pcb_t *readpcb = get_pcb();
+    pcb_t *readpcb = get_pcb(pid);
     
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0) {
+    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || readpcb->fd_table[fd].flags == 0) {
         return -1;
     }
 
+    sti();
     // find fd in fd_table
     return (int32_t)readpcb->fd_table[fd].fops_ptr->read(fd, buf, nbytes);
 }
@@ -223,9 +220,9 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *writepcb = get_pcb();
+    pcb_t *writepcb = get_pcb(pid);
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes <= 0) {
+    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || writepcb->fd_table[fd].flags == 0) {
         return -1;
     }
     // find fd in fd_table
@@ -238,7 +235,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t open (const uint8_t* filename) {
-    pcb_t *pcb = get_pcb();
+    pcb_t *pcb = get_pcb(pid);
     
     // open file with read_dentry_by_name - writes file type into file_block
     dentry_t* file_block;
@@ -289,8 +286,7 @@ int32_t close (int32_t fd) {
     if(fd >= FD_MAX || fd < FD_START) {
         return -1;
     }
-    pcb_t *pcb;
-    get_pcb(pcb);
+    pcb_t* pcb = get_pcb(pid);
 
     //already not in use we dont need to close
     if(pcb->fd_table[fd].flags == 0){
