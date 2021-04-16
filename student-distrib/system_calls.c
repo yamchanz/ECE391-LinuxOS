@@ -232,6 +232,11 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
  */
 int32_t open (const uint8_t* filename) {
     pcb_t *pcb = get_pcb(pid);
+
+    // input error handling
+    if(filename == NULL) {
+        return -1;
+    }
     
     // open file with read_dentry_by_name - writes file type into file_block
     dentry_t* file_block;
@@ -241,6 +246,7 @@ int32_t open (const uint8_t* filename) {
     uint32_t f_type = file_block->file_type;
 
     // find index to put file descriptor in
+    int type_found = 0;
     int32_t fd = FD_START;
     while(fd < FD_MAX) {
         // write if empty fd or if fd not occupied
@@ -251,18 +257,28 @@ int32_t open (const uint8_t* filename) {
                 case RTC_FTYPE:
                     pcb->fd_table[fd].fops_ptr = &fops_rtc;
                     pcb->fd_table[fd].inode = NULL;
+                    type_found = 1;
+                    break;
                 case DIR_FTYPE:
                     pcb->fd_table[fd].fops_ptr = &fops_dir;
                     pcb->fd_table[fd].inode = NULL;
+                    type_found = 1;
+                    break;
                 case FILE_FTYPE: 
                     pcb->fd_table[fd].fops_ptr = &fops_file;
                     pcb->fd_table[fd].inode = file_block->inode;
+                    type_found = 1;
+                    break;
                 default:
                     return -1;
+            }
+            if(type_found){
                 pcb->fd_table[fd].file_pos = 0;
                 pcb->fd_table[fd].flags = 1; // set to occupied
+                // call open for our file type
+                pcb->fd_table[fd].fops_ptr->open(filename);
 
-                return 0;
+                return fd;
             }
         }
         fd++;
