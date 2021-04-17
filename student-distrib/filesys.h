@@ -13,6 +13,10 @@
 #define _8_KB            0x2000
 #define _4_MB            0x400000
 #define _8_MB            0x800000
+#define _128_MB          0x8000000
+#define _132_MB          0x8400000
+#define _140_MB          0X8C00000
+#define VID_MEM          0xB8000
 
 // file operations containing pointers to functions for that type of file
 typedef struct __attribute__((packed)) {

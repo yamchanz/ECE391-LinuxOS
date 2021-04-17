@@ -103,7 +103,11 @@ int32_t execute (const uint8_t* command) {
     // set end NULL byte
     exec[cmd_idx] = '\0';  
 
-    arg_idx = cmd_idx +1;
+    
+    while(command[cmd_idx] == ' '){
+        cmd_idx++;
+    }
+    arg_idx = cmd_idx;
     while (command[arg_idx] != ' ' && command[arg_idx] != '\0' && command[arg_idx] != '\n') {
         arg_idx++;
     }
@@ -343,12 +347,20 @@ int32_t close (int32_t fd) {
  * return - none
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
-
+    uint8_t buffer[MAX_KBUFF_LEN];
+    int32_t i;
+    if(nbytes <= 0){
+        return -1;
+    }
     if(buf == null) {
         return -1;
     }
+
+    for(i = 0; i < nbytes; i++){
+        buffer[i] = pcb->arg[i];
+    }
     pcb_t* pcb = get_pcb(pid);
-    strcpy((int8_t*)buf, (int8_t*)pcb->arg);
+    strcpy((int8_t*)buf, (int8_t*)buffer);
     return 0;
 }
 
@@ -358,7 +370,13 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
  * return - none
  */
 int32_t vidmap (uint8_t** screen_start) {
-    return 0;
+    if(screen_start == NULL || screen_start < _128_MB || screen_start > _132_MB ){
+        return -1;
+    }
+    map_video((uint32_t)_140_MB, (uint32_t)VID_MEM);
+    *screen_start = (uint8_t*) _140_MB;
+
+    return _140_MB;
 }
 
 /* set_handler - CP3

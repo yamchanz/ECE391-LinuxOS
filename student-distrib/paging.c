@@ -115,6 +115,30 @@ void map_program(uint32_t pid) {
     flush();
 }
 
+void map_video(uint32_t vaddr, uint32_t paddr){
+    uint32_t entry = vaddr/ _4_MB;
+    if(vaddr == NULL || paddr == NULL){
+        return;
+    }
+
+    pd[entry].page.present = 1;
+    pd[entry].page.read_write = 1;
+    pd[entry].page.user_sup = 1;
+    pd[entry].page.pwt = 0;
+    pd[entry].page.pcd = 0;
+    pd[entry].page.accessed = 0;
+    pd[entry].page.dirty = 0;
+    pd[entry].page.ps = 1;
+    pd[entry].page.glob = 0;
+    pd[entry].page.ignored3 = 0;
+    pd[entry].page.pat = 0;
+    pd[entry].page.exaddr = 0;
+    pd[entry].page.reserved5 = 0;
+    pd[entry].page.page_addr = ;
+
+    flush();
+}
+
 /* flush - CP2
  * Flushes TLB when altering paging
  * parameter - none

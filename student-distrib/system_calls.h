@@ -20,6 +20,7 @@
 #define RTC_FTYPE       0
 #define DIR_FTYPE       1
 #define FILE_FTYPE      2
+#define MAX_KBUFF_LEN   128
 
 typedef struct __attribute__((packed)){
     file_desc_t fd_table[FD_MAX];
@@ -31,7 +32,7 @@ typedef struct __attribute__((packed)){
     uint8_t parent_pid; // we may need this?
     uint16_t ss0;
     uint32_t esp0;
-    uint8_t arg[];
+    uint8_t arg[MAX_KBUFF_LEN];
 } pcb_t;
 
 extern file_ops_t fops_rtc;
