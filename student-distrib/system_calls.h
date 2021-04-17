@@ -31,6 +31,7 @@ typedef struct __attribute__((packed)){
     uint8_t parent_pid; // we may need this?
     uint16_t ss0;
     uint32_t esp0;
+    uint8_t arg[];
 } pcb_t;
 
 extern file_ops_t fops_rtc;

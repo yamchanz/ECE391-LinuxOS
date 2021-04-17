@@ -74,13 +74,20 @@ pcb_t* get_pcb(int pid_in) {
  */
 int32_t execute (const uint8_t* command) {
     cli();
-    uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1];
+    uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
+    uint8_t arg_idx, cmd_start = 0;
     uint32_t entry_point;
     int i;
     if (command == NULL){
         return -1;
     }
+
+    while (command[cmd_start] == ' '){
+        cmd_start++;
+    }
+
+    cmd_idx = cmd_start;
 
     while (command[cmd_idx] != ' ' && command[cmd_idx] != '\0' && command[cmd_idx] != '\n') {
         cmd_idx++;
@@ -90,11 +97,26 @@ int32_t execute (const uint8_t* command) {
         return -1;
     }
 
-    for(i = 0; i <cmd_idx; i++) {
-        exec[i] = command[i];
+    for(i = cmd_start; i <cmd_idx; i++) {
+        exec[i-cmd_start] = command[i];
     }
     // set end NULL byte
     exec[cmd_idx] = '\0';  
+
+    arg_idx = cmd_idx +1;
+    while (command[arg_idx] != ' ' && command[arg_idx] != '\0' && command[arg_idx] != '\n') {
+        arg_idx++;
+    }
+
+    if(arg_idx > CMD_MAX_LEN){
+        return -1;
+    }
+
+    for(i = cmd_idx ; i <arg_idx; i++) {
+        argb[i-cmd_idx] = command[i];
+    }
+
+    argb[arg_idx] = '\0';
 
     // checking the magic number to make sure its executable.
     dentry_t search;
@@ -132,6 +154,8 @@ int32_t execute (const uint8_t* command) {
                 :"=r"(pcb->ebp), "=r"(pcb->esp)
     );
     pcb_init(pcb);
+
+    strcpy(pcb->arg, argb);
 
     // update task segment
     tss.ss0 = pcb->ss0;
@@ -319,6 +343,12 @@ int32_t close (int32_t fd) {
  * return - none
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
+
+    if(buf == null) {
+        return -1;
+    }
+    pcb_t* pcb = get_pcb(pid);
+    strcpy((int8_t*)buf, (int8_t*)pcb->arg);
     return 0;
 }
 
