@@ -31,6 +31,8 @@
 
 /* maps running program to virutal address 128MB */
 extern void map_program(uint32_t pid);
+/* maps video memory to virutal address 140MB */
+extern void map_video(uint32_t vaddr, uint32_t paddr);
 /* initializes pages */
 extern void paging_init(void);
 /* flushes TLB when memory map altered */

@@ -134,7 +134,7 @@ void map_video(uint32_t vaddr, uint32_t paddr){
     pd[entry].page.pat = 0;
     pd[entry].page.exaddr = 0;
     pd[entry].page.reserved5 = 0;
-    pd[entry].page.page_addr = ;
+    pd[entry].page.page_addr = 0;
 
     flush();
 }
