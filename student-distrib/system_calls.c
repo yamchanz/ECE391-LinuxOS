@@ -252,7 +252,7 @@ int32_t open (const uint8_t* filename) {
     pcb_t *pcb = get_pcb(t.pid);
 
     // input error handling
-    if(filename == NULL) {
+    if(filename == NULL || strlen((int8_t*)filename) == 0) {
         return -1;
     }
 
