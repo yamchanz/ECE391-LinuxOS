@@ -229,10 +229,10 @@ void keyboard_handler(void) {
         // go to the next line if the line gets longer than the buffer
         if (t.buffer_idx < BUF_SIZE - 2) {
             t.buffer[t.buffer_idx++] = key_ascii;
-            t.buffer[t.buffer_idx] = BUF_END_CHAR;  // line limiter
+            t.buffer[t.buffer_idx] = '\0';  // line limiter
         } else if (t.buffer_idx == BUF_SIZE - 2) {
             t.buffer[t.buffer_idx++] = '\n';
-            t.buffer[t.buffer_idx] = BUF_END_CHAR;  // line limiter
+            t.buffer[t.buffer_idx] = '\0';  // line limiter
         } else
             t.buffer_idx = 0;
         putc(key_ascii);

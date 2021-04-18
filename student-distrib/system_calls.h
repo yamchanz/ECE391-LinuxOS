@@ -6,7 +6,7 @@
 #include "terminal.h"
 #include "x86_desc.h"
 #include "paging.h"
-#include "context_switch.h"
+#include "system_calls_wrapper.h"
 
 #define PCB_ADDR_MASK   0xFFFFE000
 #define PROG_IMG_ADDR   0x8048000
@@ -22,18 +22,20 @@
 #define FILE_FTYPE      2
 #define MAX_KBUFF_LEN   128
 
+// PCB
 typedef struct __attribute__((packed)){
     file_desc_t fd_table[FD_MAX];
     // insert information needed to go back to parent program below
     // get ESP and EBP from address
     uint32_t esp;
     uint32_t ebp;
-    uint8_t pid;
-    uint8_t parent_pid; // we may need this?
+    uint32_t pid;
+    uint32_t parent_pid; // we may need this?
     uint16_t ss0;
     uint32_t esp0;
     uint8_t arg[MAX_KBUFF_LEN];
 } pcb_t;
+
 
 extern file_ops_t fops_rtc;
 extern file_ops_t fops_dir;

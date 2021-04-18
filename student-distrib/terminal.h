@@ -20,6 +20,8 @@ typedef struct __attribute__((packed)) terminal {
 
     uint8_t buffer[BUF_SIZE];
     uint32_t buffer_idx;
+
+    int pid;
 } terminal_t;
 
 // Terminal variable

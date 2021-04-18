@@ -7,7 +7,7 @@
 void clear_buffer(void) {
     int32_t i;
     for (i = 0; i < BUF_SIZE; ++i) 
-        t.buffer[i] = ' ';
+        t.buffer[i] = '\0';
     t.buffer_idx = 0;
 }
 
@@ -77,8 +77,6 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
     clear_buffer();
     while(t.buffer_idx < BUF_SIZE - 1 && !get_enter_flag())
     size = nbytes > t.buffer_idx ? t.buffer_idx : nbytes;
-    for (i = 0; i < nbytes; ++i) 
-        ((int8_t*)buf)[i] = ' ';
     for (i = 0; i < size; ++i) {
         ((int8_t*)buf)[i] = t.buffer[i];
     }
@@ -89,14 +87,15 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 
 /* int32_t terminal_write;
  * Inputs: fd -- unused
-           nbytes -- unused
+           nbytes -- the number of bytes to write
            buf -- pointer to the data to be read from
- * Return Value: none
+ * Return Value: nbytes
  * Function: write the content of the given buffer on the terminal */
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
-    int32_t i;
+    if (buf == NULL || nbytes < 0) 
+        return -1;
 
-    if (!buf) return -1;
+    int32_t i;
     for (i = 0; i < nbytes; ++i)
         putc(((uint8_t *)buf)[i]);
 

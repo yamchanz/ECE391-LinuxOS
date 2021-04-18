@@ -95,3 +95,4 @@ int main ()
 
     return 0;
 }
+strcpy((int8_t*)pcb->arg, (int8_t*)argb);

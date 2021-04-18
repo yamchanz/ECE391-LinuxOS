@@ -1,5 +1,10 @@
 #include "paging.h"
 
+uint32_t video_page_table[_1_KB] __attribute__((aligned(_4_KB)));
+uint32_t page_table[_1_KB] __attribute__((aligned(_4_KB)));
+uint32_t page_dir[_1_KB] __attribute__((aligned(_4_KB)));
+
+
 /* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
  * the first 4MB page, the 4MB Kernal page, as well as 1022 "not present"
@@ -8,110 +13,45 @@
  * return - none
  */
 void paging_init(void) {
-    int i, j;
-    //  init page table
-    for(j = 0; j < MAX_PAGE_NUMBER; j++) {
-        if(j == VIDEO_MEM_PAGE_ADDR) {
-            pt[j].page.present = 1;
-            pt[j].page.read_write = 1;
-            pt[j].page.user_sup = 0;
-            pt[j].page.pwt = 0;
-            pt[j].page.pcd = 0;
-            pt[j].page.accessed = 0;
-            pt[j].page.dirty = 0;
-            pt[j].page.pat = 0;
-            pt[j].page.glob = 0;
-            pt[j].page.ignored3 = 0;
-            pt[j].page.page_addr = VIDEO_MEM_PAGE_ADDR;
-          }
-        else {
-            pt[j].not_present.present = 0;
-            pt[j].not_present.ignored31 = 0;
-        }
+    int i;
+    for (i = 0; i < _1_KB; ++i) {
+        page_dir[i] = RW;
+        page_table[i] = i * _4_KB | RW;
     }
-    // init page directory
-    for(i = 0; i < MAX_PAGE_NUMBER; i++) {
-        // initalize first 4MB and video memory page (must be 4KB)
-        if(i == 0) {
-            pd[i].table.present = 1;
-            pd[i].table.read_write = 1;
-            pd[i].table.user_sup = 0;
-            pd[i].table.pwt = 0;
-            pd[i].table.pcd = 0;
-            pd[i].table.accessed = 0;
-            pd[i].table.ignored1 = 0;
-            pd[i].table.ps = 0;
-            pd[i].table.ignored4 = 0;
-            pd[i].table.pt_addr = (unsigned long) pt >> 12;
-        }
-        // initialize 4MB kernel page
-        else if(i == 1) {
-            pd[i].page.present = 1;
-            pd[i].page.read_write = 1;
-            pd[i].page.user_sup = 0;
-            pd[i].page.pwt = 0;
-            pd[i].page.pcd = 0;
-            pd[i].page.accessed = 0;
-            pd[i].page.dirty = 0;
-            pd[i].page.ps = 1;
-            pd[i].page.glob = 0;
-            pd[i].page.ignored3 = 0;
-            pd[i].page.pat = 0;
-            pd[i].page.exaddr = 0;
-            pd[i].page.reserved5 = 0;
-            pd[i].page.page_addr = KERNEL_PAGE_ADDR;
-        }
-        // initialize rest of 4MB pages
-        else {
-            pd[i].not_present.present = 0;
-            pd[i].not_present.ignored31 = 0;
-        }
-    }
+    page_table[VIDEO_MEM_IDX] |= USR | RW | PR;
+    // kernel space video
+    page_dir[0] = ((uint32_t)page_table) | USR | RW | PR;
+    page_dir[1] = _4_MB | PAGE_4MB | RW | PR;
+    
     // to turn on paging:
     // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
     // (we want top 20 bits)
     // - set CR4.PSE bit (to enable 4MB pages)
     // - set CR0.PG bit, CR0.PE bit?
-    asm volatile ("                                               \n\
-        movl $pd, %%eax                                           \n\
+    asm volatile("                                               \n\
+        movl $page_dir, %%eax                                     \n\
         movl %%eax, %%cr3                                         \n\
         movl %%cr4, %%eax                                         \n\
         orl  $0x00000010, %%eax                                   \n\
         movl %%eax, %%cr4                                         \n\
         movl %%cr0, %%eax                                         \n\
         orl  $0x80000001, %%eax                                   \n\
-        movl %%eax, %%cr0                                         \n\
-        "                                                           \
-        : /* no outputs */                                          \
-        : /* no inputs */                                           \
-        : "eax"                                                     \
-    );
+        movl %%eax, %%cr0"                                        \
+        :                                                         \
+        : "g"(page_dir)                                           \
+        : "eax");
 }
 
 /* map_program - CP3
- * Maps the program that is currently running to the correct process given 
- * by the process number. 
- * parameter - pid : pid is always between 1 - 6, thus we point at
- *                   8MB, 12MB, ... and so on depending on the process. 
+ * Maps the program that is currently running to the correct process given
+ * by the process number.
+ * parameter - pid : pid is between 0 - 5, thus we point at
+ *                   8MB, 12MB, ... and so on depending on the process.
  * return - none
  */
 void map_program(uint32_t pid) {
-    if (pid > 6) return;
-    pd[PROGRAM_IMAGE_ADDR].page.present = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.read_write = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.user_sup = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.pwt = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.pcd = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.accessed = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.dirty = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.ps = 1;
-    pd[PROGRAM_IMAGE_ADDR].page.glob = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.ignored3 = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.pat = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.exaddr = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.reserved5 = 0;
-    pd[PROGRAM_IMAGE_ADDR].page.page_addr = KERNEL_PAGE_ADDR + pid;
-
+    uint32_t addr = _8_MB + _4_MB * pid;
+    page_dir[32] = addr | PAGE_4MB | USR | RW | PR;
     flush();
 }
 
@@ -120,32 +60,23 @@ void map_video(uint32_t vaddr, uint32_t paddr){
     if(vaddr == NULL || paddr == NULL){
         return;
     }
-
-    vpt[0].page.present = 1;
-    vpt[0].page.read_write = 1;
-    vpt[0].page.user_sup = 1;
-    vpt[0].page.pwt = 0;
-    vpt[0].page.pcd = 0;
-    vpt[0].page.accessed = 0;
-    vpt[0].page.dirty = 0;
-    vpt[0].page.pat = 0;
-    vpt[0].page.glob = 0;
-    vpt[0].page.ignored3 = 0;
-    vpt[0].page.page_addr = VIDEO_MEM_PAGE_ADDR;
-
-    pd[entry].table.present = 1;
-    pd[entry].table.read_write = 1;
-    pd[entry].table.user_sup = 1;
-    pd[entry].table.pwt = 0;
-    pd[entry].table.pcd = 0;
-    pd[entry].table.accessed = 0;
-    pd[entry].table.ignored1 = 0;
-    pd[entry].table.ps = 0;
-    pd[entry].table.ignored4 = 0;
-    pd[entry].table.pt_addr = (unsigned long) vpt >> 12;
+    page_dir[entry] = (uint32_t)video_page_table | USR | RW | PR;
+    video_page_table[0] = (VIDEO_MEM_IDX << 12) | USR | RW | PR;
 
     flush();
 }
+
+void unmap_video(uint32_t vaddr, uint32_t paddr){
+    uint32_t entry = vaddr/ _4_MB;
+    if(vaddr == NULL || paddr == NULL){
+        return;
+    }
+    page_dir[entry] = 0;
+    video_page_table[0] = 0;
+
+    flush();
+}
+
 
 /* flush - CP2
  * Flushes TLB when altering paging
@@ -153,13 +84,11 @@ void map_video(uint32_t vaddr, uint32_t paddr){
  * return - none
  */
 void flush(void) {
-  asm volatile ("                                               \n\
-                                                                \n\
-      movl %%cr3, %%eax                                         \n\
-      movl %%eax, %%cr3                                         \n\
-      "                                                           \
-      : /* no outputs */                                          \
-      : /* no inputs */                                           \
-      : "eax"                                                     \
-  );
+    int32_t cr3;
+    asm volatile(
+        "movl %%cr3, %0     \n\
+        movl %0, %%cr3"  \
+        :"=r"(cr3)      \
+        :"r"(cr3)       \
+        :"memory", "cc");
 }

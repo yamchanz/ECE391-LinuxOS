@@ -32,11 +32,13 @@ int32_t read_dentry_by_name(const uint8_t* fname, dentry_t* dentry) {
     if(name_len > NAME_SIZE) { // if name size invalid
         return -1;
     }
+    if(name_len != NAME_SIZE){
+        name_len += 1; // for null termination
+    }
+
     for(i = 0; i < MAX_FILE_COUNT; i++) { // for all files, check for fname
         dentry_t* cur_dir = &(boot->dir_entries[i]);
-        if(strlen((int8_t*)fname) != 32){
-            name_len += 1; // for null termination
-        }
+       
         if(strncmp((int8_t*)fname, (int8_t*)cur_dir->file_name, name_len) == 0){
             *dentry = *cur_dir; // get block
             return 0;
@@ -151,12 +153,12 @@ int32_t file_write(int32_t fd, const void* buf, int32_t nbytes) {
  * returns : 0 (success), -1 (failure)
  */
 int32_t file_open(const uint8_t* filename) {
-    dentry_t* entry_info;
+    dentry_t entry_info;
     if(!filesystem) {
         return -1;
     }
-    if(read_dentry_by_name(filename, entry_info) != -1) {
-        inode_num = entry_info->inode;
+    if(read_dentry_by_name(filename, &entry_info) != -1) {
+        inode_num = entry_info.inode;
         file_pos = 0;
         inode_t* inode_blk = &(inode_arr[inode_num]);
         filesize = inode_blk->length;
@@ -186,17 +188,17 @@ int32_t file_close(int32_t fd) {
 int32_t dir_read(int32_t fd, void* buf, int32_t nbytes) {
     int i;
 
-    dentry_t* entry_info;
+    dentry_t entry_info;
     if(!filesystem) {
         return -1;
     }
-    if(read_dentry_by_index(dir_offset, entry_info) != -1) {
-        for(i = 0;i <33; i++){
+    if(read_dentry_by_index(dir_offset, &entry_info) != -1) {
+        for(i = 0;i <NAME_SIZE+1; i++){
             ((int8_t*)(buf))[i] = '\0';
         }
-        uint32_t name_length = strlen((int8_t*)entry_info->file_name);
+        uint32_t name_length = strlen((int8_t*)entry_info.file_name);
         if(name_length > NAME_SIZE) name_length = NAME_SIZE;
-        memcpy((char*)buf, (char*)entry_info->file_name, name_length);
+        memcpy((char*)buf, (char*)entry_info.file_name, name_length);
         //buf += name_length;
         dir_offset++;
         return name_length;

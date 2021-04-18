@@ -9,6 +9,7 @@
 #define NAME_SIZE        32
 #define DENTRY_RESERVE   24
 #define MAX_INODE_BLOCK  1023
+#define _1_KB            0x400
 #define _4_KB            0x1000
 #define _8_KB            0x2000
 #define _4_MB            0x400000

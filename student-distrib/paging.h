@@ -24,19 +24,20 @@
 #include "filesys.h"
 #include "system_calls.h"
 
-#define VIDEO_MEM_PAGE_ADDR   184
-#define KERNEL_PAGE_ADDR      1
-#define PROGRAM_IMAGE_ADDR    32
-#define VID_MAP_ADDR          35
-#define PDE_ADDR_OFFSET       22
+#define VIDEO_MEM_IDX       184
+#define PR                  0x01
+#define RW                  0x02
+#define USR                 0x04
+#define PAGE_4MB            0x80
 
 /* maps running program to virutal address 128MB */
 extern void map_program(uint32_t pid);
-/* maps video memory to virutal address 140MB */
-extern void map_video(uint32_t vaddr, uint32_t paddr);
 /* initializes pages */
 extern void paging_init(void);
 /* flushes TLB when memory map altered */
-extern void flush(void);
+extern void map_video(uint32_t vaddr, uint32_t paddr);
+extern void unmap_video(uint32_t vaddr, uint32_t paddr);
+void flush(void);
 
 #endif
+
