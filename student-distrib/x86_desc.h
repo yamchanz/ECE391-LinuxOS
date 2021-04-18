@@ -209,6 +209,7 @@ extern tss_t tss;
 
 pde pd[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));
 pte pt[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));
+pte vpt[MAX_PAGE_NUMBER] __attribute__((aligned(BYTES_TO_ALIGN)));
 
 /* Sets runtime-settable parameters in the GDT entry for the LDT */
 #define SET_LDT_PARAMS(str, addr, lim)                          \

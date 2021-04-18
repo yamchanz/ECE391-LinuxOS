@@ -91,12 +91,13 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
         uint32_t idx = inode_blk->dblk[cur]; // find data block to copy from
         dblk_t* data_blk =  &(data_arr[idx]); // instead of: (dblk_t*) ((uint32_t)filesystem + filesystem->num_of_inodes + 1 + idx);
         if(offset) { // for first time
-            if((_4_KB - start_byte) > bytes_left) {
-                memcpy(buf, (uint8_t*)data_blk + offset, bytes_left);
+            if((_4_KB - start_byte) >= bytes_left) {
+                memcpy(buf, (uint8_t*)data_blk + start_byte, bytes_left);
                 buf += bytes_left;
                 return length;
             }
-            memcpy(buf, (uint8_t*)data_blk + offset, _4_KB - start_byte);
+
+            memcpy(buf, (uint8_t*)data_blk + start_byte, _4_KB - start_byte);
             buf += _4_KB - start_byte;
             bytes_left -= _4_KB - start_byte;
             offset = 0;
@@ -113,7 +114,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
         }
         cur++;
     }
-    return 0; // will never get here
+    return 0; // we will not get here
 }
 
 /* file_read - CP2
@@ -131,7 +132,7 @@ int32_t file_read(int32_t fd, void* buf, int32_t nbytes) {
     // read_data always puts length bytes into buffer (or 0).
     num_read = read_data(inode_num, file_pos, (uint8_t*)buf, nbytes);
     file_pos += num_read;
-    return 0;
+    return num_read;
 }
 
 /* file_write - CP2
@@ -183,11 +184,16 @@ int32_t file_close(int32_t fd) {
  * returns : 0 (success), <size read>
  */
 int32_t dir_read(int32_t fd, void* buf, int32_t nbytes) {
+    int i;
+
     dentry_t* entry_info;
     if(!filesystem) {
         return -1;
     }
     if(read_dentry_by_index(dir_offset, entry_info) != -1) {
+        for(i = 0;i <33; i++){
+            ((int8_t*)(buf))[i] = '\0';
+        }
         uint32_t name_length = strlen((int8_t*)entry_info->file_name);
         if(name_length > NAME_SIZE) name_length = NAME_SIZE;
         memcpy((char*)buf, (char*)entry_info->file_name, name_length);
@@ -195,6 +201,7 @@ int32_t dir_read(int32_t fd, void* buf, int32_t nbytes) {
         dir_offset++;
         return name_length;
     }
+    dir_offset = 0;
     return 0;
 }
 

@@ -6,6 +6,9 @@
 // global
 int pid;
 
+// static flag to signal remove in halt
+int vidmap_page_flag = 0;
+
 // static tables with function pointers for each file type
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
 file_ops_t fops_dir = {dir_open, dir_close, dir_read, dir_write};
@@ -41,7 +44,6 @@ void pcb_init(pcb_t *pcb) {
     stdout.file_pos = NULL;
     stdout.flags = 1;
 
-    
     pcb->fd_table[0] = stdin;
     pcb->fd_table[1] = stdout;
     
@@ -189,7 +191,7 @@ int32_t halt (uint8_t status) {
          execute((uint8_t*)"shell");
 
     // clear all file descriptors 
-    for(i = 2; i < 8; i++) 
+    for(i = FD_START; i < FD_MAX; i++) 
         close(i);
 
     // restore parent paging
@@ -224,16 +226,19 @@ int32_t halt (uint8_t status) {
  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
-    pcb_t *readpcb = get_pcb(pid);
+    pcb_t *pcb = get_pcb(pid);
     
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || readpcb->fd_table[fd].flags == 0) {
+    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
     }
 
-    sti();
+    // enable interrupts for keyboard so we can stdin and read the terminal
+    if(fd == 0) {
+        sti();
+    }
     // find fd in fd_table
-    return (int32_t)readpcb->fd_table[fd].fops_ptr->read(fd, buf, nbytes);
+    return (int32_t)pcb->fd_table[fd].fops_ptr->read(fd, buf, nbytes);
 }
 
 /* write - CP3
@@ -244,13 +249,15 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *writepcb = get_pcb(pid);
+    pcb_t *pcb = get_pcb(pid);
+    pcb = get_pcb(pid);
     // error handling - FD in array, buf not empty, nbytes >= 0
-    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || writepcb->fd_table[fd].flags == 0) {
+    if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
     }
     // find fd in fd_table
-    return (int32_t)writepcb->fd_table[fd].fops_ptr->write(fd, buf, nbytes);
+    
+    return (int32_t)pcb->fd_table[fd].fops_ptr->write(fd, buf, nbytes);
 }
 
 /* open - CP3
@@ -341,10 +348,10 @@ int32_t close (int32_t fd) {
 }
 
 /* getargs - CP3
- * Not used yet.
- * parameter - buf :
- *             nbytes :
- * return - none
+ * copies arguments passed in from execute in the pcb into a user-level buffer
+ * parameter - buf : user level buffer that we copy the data into
+ *             nbytes : number of bytes to be copied (sometimes more than the size of the buffer)
+ * return - 0 on success, -1 on failure
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
 
@@ -360,18 +367,23 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
 }
 
 /* vidmap - CP3
- * Not used yet.
- * parameter - screen_start : 
- * return - none
+ * maps text mode video memory into user space at virtual address 140MB. Creates page
+ * parameter - screen_start : double pointer to 140MB screen start
+ * return - 0 on success, -1 on failure
  */
 int32_t vidmap (uint8_t** screen_start) {
     if(screen_start == NULL || screen_start < (uint8_t**)_128_MB || screen_start > (uint8_t**)_132_MB ){
         return -1;
     }
+
+    // create page and set screen start to 140MB pointer
     map_video((uint32_t)_140_MB, (uint32_t)VID_MEM);
     *screen_start = (uint8_t*) _140_MB;
 
-    return _140_MB;
+    // set vidmap_page flag
+    vidmap_page_flag = 1;
+
+    return 0;
 }
 
 /* set_handler - CP3

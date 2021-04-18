@@ -121,20 +121,28 @@ void map_video(uint32_t vaddr, uint32_t paddr){
         return;
     }
 
-    pd[entry].page.present = 1;
-    pd[entry].page.read_write = 1;
-    pd[entry].page.user_sup = 1;
-    pd[entry].page.pwt = 0;
-    pd[entry].page.pcd = 0;
-    pd[entry].page.accessed = 0;
-    pd[entry].page.dirty = 0;
-    pd[entry].page.ps = 1;
-    pd[entry].page.glob = 0;
-    pd[entry].page.ignored3 = 0;
-    pd[entry].page.pat = 0;
-    pd[entry].page.exaddr = 0;
-    pd[entry].page.reserved5 = 0;
-    pd[entry].page.page_addr = 0;
+    vpt[0].page.present = 1;
+    vpt[0].page.read_write = 1;
+    vpt[0].page.user_sup = 1;
+    vpt[0].page.pwt = 0;
+    vpt[0].page.pcd = 0;
+    vpt[0].page.accessed = 0;
+    vpt[0].page.dirty = 0;
+    vpt[0].page.pat = 0;
+    vpt[0].page.glob = 0;
+    vpt[0].page.ignored3 = 0;
+    vpt[0].page.page_addr = VIDEO_MEM_PAGE_ADDR;
+
+    pd[entry].table.present = 1;
+    pd[entry].table.read_write = 1;
+    pd[entry].table.user_sup = 1;
+    pd[entry].table.pwt = 0;
+    pd[entry].table.pcd = 0;
+    pd[entry].table.accessed = 0;
+    pd[entry].table.ignored1 = 0;
+    pd[entry].table.ps = 0;
+    pd[entry].table.ignored4 = 0;
+    pd[entry].table.pt_addr = (unsigned long) vpt >> 12;
 
     flush();
 }
