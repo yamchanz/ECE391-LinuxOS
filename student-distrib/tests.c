@@ -228,6 +228,13 @@ int read_file_test(){
 	return PASS;
 }
 
+/* read_file_offset_test - CP2
+ * DESCRIPTION: Reads portion of frame1.txt and outputs it to the screen.
+ * INPUTS: none
+ * OUTPUTS: portion of frame1.txt to terminal
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
 int read_file_offset_test(){
 	//TEST_HEADER;
 	int32_t fd; // file descriptor
@@ -318,6 +325,24 @@ int list_dir_test() {
 
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
+
+/* video_paging_test - CP4
+ * DESCRIPTION: Verifies the values in vidmap paging structure
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: PASS / FAIL
+ * SIDE EFFECTS: none
+ */
+int video_paging_test() {
+	TEST_HEADER;
+	map_video();
+	uint8_t* ptr = (uint8_t*) 0X8C00000; // test at 140MB
+	uint8_t deref;
+	deref = *ptr;
+	unmap_video();
+	return PASS;
+}
+
 /* Checkpoint 5 tests */
 
 
@@ -331,12 +356,12 @@ void launch_tests(){
 	// divide_error();
 	// opcode_error();
 	// sys_call_test();
-
+	TEST_OUTPUT("video_Paging_test", video_paging_test());
 	// rtc_freq_test();
-	terminal_read_test();
+	// terminal_read_test();
 	// read_file_test();
 	// read_file_offset_test();
-	//list_dir_test();
-	//read_file_large();
-	//TEST_OUTPUT("read_nonexistant_file_test", read_nonexistent_file_test());
+	// list_dir_test();
+	// read_file_large();
+	// TEST_OUTPUT("read_nonexistant_file_test", read_nonexistent_file_test());
 }

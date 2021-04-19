@@ -2,6 +2,7 @@
 #define _IDT_HANDLERS_H
 
 #include "x86_desc.h"
+#include "system_calls.h"
 
 #define EX_ARR_SIZE 20
 #define SYS_CALL_IDX 0x80

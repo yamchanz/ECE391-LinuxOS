@@ -375,6 +375,7 @@ void page_fault_ex() {
     clear();
     printf("Page-Fault Exception (#PF)");
     // freeze with while loop
+    
     while(1) {
 
     }

@@ -76,43 +76,51 @@ int32_t execute (const uint8_t* command) {
     uint8_t arg_idx, cmd_start = 0;
     uint32_t entry_point;
     int i;
+    // sanity check
     if (command == NULL){
         return -1;
     }
 
+    // to account for spaces before the executable
     while (command[cmd_start] == ' '){
         cmd_start++;
     }
 
     cmd_idx = cmd_start;
 
+    // loop through the command until we reach the end of the executable
     while (command[cmd_idx] != ' ' && command[cmd_idx] != '\0' && command[cmd_idx] != '\n') {
         cmd_idx++;
     }
 
+    // if the executable is larger than the limit
     if(cmd_idx > CMD_MAX_LEN){
         return -1;
     }
 
+    // copy the executable from the user typed in command
     for(i = cmd_start; i <cmd_idx; i++) {
         exec[i-cmd_start] = command[i];
     }
     // set end NULL byte
     exec[cmd_idx] = '\0';  
 
-    
+    // to account for spaces between the executable and the arguments
     while(command[cmd_idx] == ' '){
         cmd_idx++;
     }
     arg_idx = cmd_idx;
+    // determining the length of the argument(s)
     while (command[arg_idx] != '\0' && command[arg_idx] != '\n') {
         arg_idx++;
     }
 
+    // if over the limit then return 
     if(arg_idx > MAX_KBUFF_LEN){
         return -1;
     }
 
+    // copying the argument into argument buffer to be stored in pcb later
     for(i = cmd_idx ; i < arg_idx; i++) {
         argb[i-cmd_idx] = command[i];
     }
@@ -148,6 +156,7 @@ int32_t execute (const uint8_t* command) {
     pcb = get_pcb(t.pid);
     pcb_init(pcb);
 
+    // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
 
     asm volatile(
