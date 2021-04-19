@@ -3,6 +3,8 @@
 
 #include "types.h"
 #include "lib.h"
+#include "system_calls.h"
+#include "terminal.h"
 
 #define BOOT_RESERVE     52
 #define MAX_FILE_COUNT   63
@@ -18,22 +20,6 @@
 #define _132_MB          0x8400000
 #define _140_MB          0X8C00000
 #define VID_MEM          0xB8000
-
-// file operations containing pointers to functions for that type of file
-typedef struct __attribute__((packed)) {
-    int32_t(* open)(const uint8_t* filename);
-    int32_t(* close)(int32_t fd);
-    int32_t(* read)(int32_t fd, void* buf, int32_t nbytes);
-    int32_t(* write)(int32_t fd, const void* buf, int32_t nbytes);
-} file_ops_t;
-
-// file descriptor - used in PCB to store FDs
-typedef struct __attribute__((packed)) {
-    file_ops_t *fops_ptr;
-    uint32_t inode;
-    uint32_t file_pos;
-    uint32_t flags;
-} file_desc_t;
 
 // single 64B directory entry within the boot block
 typedef struct __attribute__((packed)) {
@@ -69,9 +55,9 @@ bootblk_t* boot;
 dentry_t* den_arr;
 inode_t* inode_arr;
 dblk_t* data_arr;
-uint32_t inode_num;
-uint32_t file_pos;
-uint32_t filesize;
+// uint32_t inode_num;
+// uint32_t file_pos;
+// uint32_t filesize;
 uint32_t dir_offset;
 
 // init and helper functions

@@ -11,9 +11,6 @@ void fs_init(void* fs) {
     inode_arr = &((inode_t*)filesystem)[1]; // accessing first inode (4KB)
     data_arr = &((dblk_t*)filesystem)[1 + boot->num_of_inodes]; // accessing first data block (4KB)
     den_arr = &((dentry_t*)boot)[1]; // accessing first dentry by casting bootblock (64B)
-    inode_num = 0;
-    file_pos = 0;
-    filesize = 0;
     dir_offset = 0;
 }
 
@@ -77,7 +74,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
     if(inode >= boot->num_of_inodes) return -1; // check if inode valid
 
     inode_t* inode_blk = &(inode_arr[inode]); // instead of: (inode_t*) ((uint32_t)filesystem + inode + 1);
-    filesize = inode_blk->length;
+    uint32_t filesize = inode_blk->length;
 
     // if length is greater than what we have left in the file, set length to rest of file
     if(length + offset > filesize) length = filesize - offset;
@@ -127,13 +124,17 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
  */
 int32_t file_read(int32_t fd, void* buf, int32_t nbytes) {
     uint32_t num_read;
+    // now that we added pcb, must adjust this function with fd
+    pcb_t* pcb = get_pcb(t.pid);
+    // sanity check
+    if(fd >= FD_MAX || fd < FD_START) return -1;
     if(!filesystem) {
         return -1;
     }
     // have to process length in this function,
     // read_data always puts length bytes into buffer (or 0).
-    num_read = read_data(inode_num, file_pos, (uint8_t*)buf, nbytes);
-    file_pos += num_read;
+    num_read = read_data(pcb->fd_table[fd].inode, pcb->fd_table[fd].file_pos, (uint8_t*)buf, nbytes);
+    pcb->fd_table[fd].file_pos += num_read;
     return num_read;
 }
 
@@ -158,10 +159,10 @@ int32_t file_open(const uint8_t* filename) {
         return -1;
     }
     if(read_dentry_by_name(filename, &entry_info) != -1) {
-        inode_num = entry_info.inode;
-        file_pos = 0;
-        inode_t* inode_blk = &(inode_arr[inode_num]);
-        filesize = inode_blk->length;
+        // inode_num = entry_info.inode;
+        // file_pos = 0;
+        // inode_t* inode_blk = &(inode_arr[inode_num]);
+        // filesize = inode_blk->length;
         return 0;
     }
     return -1;
@@ -173,9 +174,9 @@ int32_t file_open(const uint8_t* filename) {
  * returns : 0 (success)
  */
 int32_t file_close(int32_t fd) {
-    inode_num = 0;
-    file_pos = 0;
-    filesize = 0;
+    // inode_num = 0;
+    // file_pos = 0;
+    // filesize = 0;
     return 0;
 }
 

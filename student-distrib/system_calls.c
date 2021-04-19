@@ -68,6 +68,8 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
+    if (t.pid > 5)
+        return -1;
     cli();
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
@@ -186,7 +188,7 @@ int32_t halt (uint8_t status) {
         execute((uint8_t*)"shell");
 
     if (vidmap_page_flag) {
-        // unmap_video(uint32_t vaddr, uint32_t paddr);
+        unmap_video();
         vidmap_page_flag = 0;
     }
     // restore parent paging
@@ -326,10 +328,10 @@ int32_t close (int32_t fd) {
 }
 
 /* getargs - CP3
- * Not used yet.
- * parameter - buf :
- *             nbytes :
- * return - none
+ * copies arguments passed in from execute in the pcb into a user-level buffer
+ * parameter - buf : user level buffer that we copy the data into
+ *             nbytes : number of bytes to be copied (sometimes more than the size of the buffer)
+ * return - 0 on success, -1 on failure
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
     pcb_t* pcb = get_pcb(t.pid);
@@ -338,6 +340,7 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
         return -1;
     }
     
+    // copy into our user buffer from pcb arg
     strncpy((int8_t*)buf, (int8_t*)pcb->arg, nbytes);
     buf[strlen((int8_t*)pcb->arg)] = '\0';
     return 0;
@@ -345,21 +348,21 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
 }
 
 /* vidmap - CP3
- * Not used yet.
- * parameter - screen_start :
- * return - none
+ * maps text mode video memory into user space at virtual address 140MB. Creates page
+ * parameter - screen_start : double pointer to 140MB screen start
+ * return - 0 on success, -1 on failure
  */
 int32_t vidmap (uint8_t** screen_start) {
-    if(screen_start == NULL || screen_start < (uint8_t**)_128_MB || screen_start > (uint8_t**)(_132_MB - 4)){
+    if(screen_start == NULL || screen_start < (uint8_t**)_128_MB || screen_start > (uint8_t**)(_132_MB - FOUR_BYTE)){ // account for pointer size
         return -1;
     }
 
     // create page and set screen start to 140MB pointer
-    map_video((uint32_t)_140_MB, (uint32_t)VID_MEM);
+    map_video();
     *screen_start = (uint8_t*) _140_MB;
 
-    // // set vidmap_page flag
-    // vidmap_page_flag = 1;
+    // set vidmap_page flag
+    vidmap_page_flag = 1;
 
     return 0;
 

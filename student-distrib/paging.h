@@ -24,7 +24,11 @@
 #include "filesys.h"
 #include "system_calls.h"
 
-#define VIDEO_MEM_IDX       184
+#define VIDEO_MEM_ADDR      184
+#define K_VIDEO_IDX         0
+#define KERNEL_IDX          1
+#define PROGRAM_IDX         32
+#define U_VIDEO_IDX         35
 #define PR                  0x01
 #define RW                  0x02
 #define USR                 0x04
@@ -34,9 +38,11 @@
 extern void map_program(uint32_t pid);
 /* initializes pages */
 extern void paging_init(void);
+/* helps user program write to video memory */
+extern void map_video(void);
+/* unmaps page after program is finished writing */
+extern void unmap_video(void);
 /* flushes TLB when memory map altered */
-extern void map_video(uint32_t vaddr, uint32_t paddr);
-extern void unmap_video(uint32_t vaddr, uint32_t paddr);
 void flush(void);
 
 #endif

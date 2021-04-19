@@ -18,10 +18,10 @@ void paging_init(void) {
         page_dir[i] = RW;
         page_table[i] = i * _4_KB | RW;
     }
-    page_table[VIDEO_MEM_IDX] |= USR | RW | PR;
+    page_table[VIDEO_MEM_ADDR] |= RW | PR;
     // kernel space video
-    page_dir[0] = ((uint32_t)page_table) | USR | RW | PR;
-    page_dir[1] = _4_MB | PAGE_4MB | RW | PR;
+    page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) | RW | PR;
+    page_dir[KERNEL_IDX] = _4_MB | PAGE_4MB | RW | PR;
     
     // to turn on paging:
     // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
@@ -51,25 +51,27 @@ void paging_init(void) {
  */
 void map_program(uint32_t pid) {
     uint32_t addr = _8_MB + _4_MB * pid;
-    page_dir[32] = addr | PAGE_4MB | USR | RW | PR;
+    page_dir[PROGRAM_IDX] = addr | PAGE_4MB | USR | RW | PR;
     flush();
 }
 
-void map_video(uint32_t vaddr, uint32_t paddr){
-    uint32_t entry = vaddr/ _4_MB;
-    if(vaddr == NULL || paddr == NULL){
-        return;
-    }
-    page_dir[entry] = (uint32_t)video_page_table | USR | RW | PR;
-    video_page_table[0] = (VIDEO_MEM_IDX << 12) | USR | RW | PR;
+/* map_video - CP4
+ * maps video memory page in virtual address
+ * parameter - void
+ * return - none
+ */
+void map_video(void){
+    page_dir[U_VIDEO_IDX] = (uint32_t)video_page_table | USR | RW | PR;
+    video_page_table[0] = (VIDEO_MEM_ADDR << 12) | USR | RW | PR;
 }
 
-void unmap_video(uint32_t vaddr, uint32_t paddr){
-    uint32_t entry = vaddr/ _4_MB;
-    if(vaddr == NULL || paddr == NULL){
-        return;
-    }
-    page_dir[entry] = 0;
+/* unmap_video - CP4
+ * Unmaps the video memory page. Called in halt when the video memory flag is set
+ * parameter - void
+ * return - none
+ */
+void unmap_video(void){
+    page_dir[U_VIDEO_IDX] = 0;
     video_page_table[0] = 0;
 
     flush();
