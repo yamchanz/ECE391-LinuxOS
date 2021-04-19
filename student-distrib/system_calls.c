@@ -217,10 +217,6 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
         return -1;
     }
 
-    // enable interrupts for keyboard so we can stdin and read the terminal
-    if(fd == 0) {
-        sti();
-    }
     // find fd in fd_table
     return (int32_t)pcb->fd_table[fd].fops_ptr->read(fd, buf, nbytes);
 }
@@ -354,7 +350,7 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
  * return - none
  */
 int32_t vidmap (uint8_t** screen_start) {
-    if(screen_start == NULL || screen_start < (uint8_t**)_128_MB || screen_start > (uint8_t**)_132_MB ){
+    if(screen_start == NULL || screen_start < (uint8_t**)_128_MB || screen_start > (uint8_t**)(_132_MB - 4)){
         return -1;
     }
 

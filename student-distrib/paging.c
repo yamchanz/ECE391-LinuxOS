@@ -62,8 +62,6 @@ void map_video(uint32_t vaddr, uint32_t paddr){
     }
     page_dir[entry] = (uint32_t)video_page_table | USR | RW | PR;
     video_page_table[0] = (VIDEO_MEM_IDX << 12) | USR | RW | PR;
-
-    flush();
 }
 
 void unmap_video(uint32_t vaddr, uint32_t paddr){

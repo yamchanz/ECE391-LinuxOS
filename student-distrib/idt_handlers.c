@@ -127,8 +127,6 @@ void rtc_handler() {
     if(!rtc_int_received) {
         rtc_int_received = 1;
     }
-    // re-enable interrupts
-    sti();
 
     // rtc test for CP1
 	// test_interrupts();

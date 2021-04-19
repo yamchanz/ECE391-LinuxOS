@@ -29,7 +29,7 @@ void initialize_rtc() {
     // set interrupt flag to 0  
     rtc_int_received = 0;
 
-    sti();
+    // sti();
 
     // enable RTC on PIC
     enable_irq(IRQ_RTC);
@@ -57,7 +57,7 @@ int32_t rtc_open(const uint8_t* filename) {
     // set frequency to 2Hz
     outb((prev & HIGH_BIT_MASK) | TWO_HZ_FREQ, DATA_REG);
 
-    sti();
+    // sti();
 
     return 0;
 }
@@ -70,12 +70,14 @@ int32_t rtc_open(const uint8_t* filename) {
     SIDE EFFECTS: none
 */
 int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
+    // reset interrupt flag after read
+    rtc_int_received = 0;
+    
     sti();
     while(!rtc_int_received) {
         // block until the next interrupt
     }
-    // reset interrupt flag after read
-    rtc_int_received = 0;
+    cli();
 
     return 0;
 }
@@ -115,9 +117,9 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
         // set index again
         outb(NMI_REG_A, SELECT_REG);
         // set rate based on offset from 2Hz rate
-        outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow), DATA_REG);
+        outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow+1), DATA_REG);
 
-        sti();
+        // sti();
     } else {
         return -1;
     }
