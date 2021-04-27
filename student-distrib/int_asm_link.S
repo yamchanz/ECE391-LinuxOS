@@ -25,3 +25,11 @@ keyboard_handler_link:
     popfl
     popal
     iret
+
+pit_handler_linK:
+    pushal
+    pushfl
+    call pit_handler
+    popfl
+    popal
+    iret

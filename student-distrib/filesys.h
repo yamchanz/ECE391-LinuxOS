@@ -55,9 +55,6 @@ bootblk_t* boot;
 dentry_t* den_arr;
 inode_t* inode_arr;
 dblk_t* data_arr;
-// uint32_t inode_num;
-// uint32_t file_pos;
-// uint32_t filesize;
 uint32_t dir_offset;
 
 // init and helper functions

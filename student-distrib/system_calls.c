@@ -188,7 +188,7 @@ int32_t halt (uint8_t status) {
     pcb = get_pcb(t.pid);
 
     // clear all file descriptors
-    for(i = 2; i < 8; ++i)
+    for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
     --t.pid;
