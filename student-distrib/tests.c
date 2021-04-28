@@ -160,7 +160,7 @@ int rtc_freq_test() {
 	*freq = 2;
 	int amt_ints = 1;
 	while(*freq <= HIGH_LIMIT_FREQ) {
-		terminal_reset();
+		terminal_reset(t_run);
 		// error checking for NULL case or non-log2 number
 		if(rtc_write(rtc, freq, INT_BYTES) < 0) {
 			return FAIL;

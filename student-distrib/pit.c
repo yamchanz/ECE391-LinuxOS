@@ -13,7 +13,7 @@ void schedule() {
         int i;
         for(i = 0; i < 3; i++) {
             // for pid 0 to 2,  assign to each terminal and init
-            t[i].pid_[0] = i;
+            // t[i].pid_[0] = i;
 
             // clone directory
 
@@ -31,21 +31,21 @@ void schedule() {
 
     // switch ESP/EBP to next process' kernel stack
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = _8MB - _8KB * (/*whichever pid we are on the terminal we are on*/) - 4;
+    tss.esp0 = _8_MB - _8_KB; // * (/*whichever pid we are on the terminal we are on*/) - 4;
 
     // restore next process' TSS
-    asm volatile(
-        "movl %%esp, %%eax;"
-        "movl %%bp, %%ebx;"
-        :"=a"(old_pcb->esp), "=b"(old_pcb->ebp) // output
-        : // input
-    );
-    asm volatile(
-        "movl %%ebx, %%esp;"
-        "movl %%ecx, %%ebp;"
-        : //ouput
-        :"b"(next_pcb->esp), "c"(next_pcb->ebp) //input
-    );
+    // asm volatile(
+    //     "movl %%esp, %%eax"
+    //     "movl %%bp, %%ebx"
+    //     :"=a"(old_pcb->esp), "=b"(old_pcb->ebp) // output
+    //     : // input
+    // );
+    // asm volatile(
+    //     "movl %%ebx, %%esp"
+    //     "movl %%ecx, %%ebp"
+    //     : //ouput
+    //     :"b"(next_pcb->esp), "c"(next_pcb->ebp) //input
+    // );
     // flush TLB on process switch
 
 
@@ -64,8 +64,8 @@ void schedule() {
 void pit_init () {
     // initialize PIT to interrupts at 10ms frequency (10ms = 100Hz)
     schedule_init = 1;
-    uint32_t = freq = 100;
-    uint32_t divisor = 1193182 / freq;
+    uint32_t freq = 100;
+    // uint32_t divisor = 1193182 / freq;
     // disable interrupts to set registers
     cli();
     // set command register - select channel 0, lobyte/hibyte, and rate generator - 0011 0110 
