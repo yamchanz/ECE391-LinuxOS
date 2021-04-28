@@ -6,8 +6,6 @@
 #include "i8259.h"
 #include "paging.h"
 
-#define IRQ_PIT 0
-
 /*
 PIT Mode/Command register
 
@@ -34,19 +32,19 @@ Bits         Usage
 0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
  */
 
-#define CMD_REG 0x43
-#define PIT_CMD 0x36
-#define CHANNEL_0 0x40
+#define IRQ_PIT                 0
 
-#define HIGH_8_BIT_MASK 0xFF00
-#define LOW_8_BIT_MASK  0xFF
+#define CHANNEL_0               0x40
+#define CMD_REG                 0x43
+#define PIT_CMD                 0x36
 
-typedef struct __attribute__((packed)) {
-    pcb_t* pcb;
+#define HIGH_8_BIT_MASK         0xFF00
+#define LOW_8_BIT_MASK          0xFF
 
-    
-} term_t;
+/* initializes PIT */
+extern void pit_init(void);
+/* scheduler for PIT interrupt */
+extern void schedule(void);
 
-int vis_term_idx;
 
 #endif

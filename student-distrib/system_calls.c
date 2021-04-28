@@ -42,8 +42,8 @@ void pcb_init(pcb_t *pcb) {
     pcb->fd_table[1] = stdout;
 
     //pid from 0 - 5
-    pcb->pid = t.pid;
-    // check if current process is base shell
+    pcb->pid = pid;
+    // find the parent_pid, return itself when its the base
     if(!pcb->pid) pcb->parent_pid = pcb->pid;
     else pcb->parent_pid = pcb->pid - 1;
     pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
@@ -53,7 +53,7 @@ void pcb_init(pcb_t *pcb) {
 }
 
 /* get_pcb - CP3
- * Fills in given struct with correct pcb info
+ * Gets pointer to correct pcb info
  * parameters - pid_in : pid num of pcb struct to find
  * returns - none
  */
@@ -68,8 +68,11 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
-    if (t.pid > 5)
+    // don't execute if pid is out of range 0 - 5
+    if (pid > 5)
         return -1;
+    // set pid flag to 1 for the running terminal
+    t[t_run].pid_[pid] = 1;
     cli();
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
@@ -162,6 +165,7 @@ int32_t execute (const uint8_t* command) {
     asm volatile(
         "movl %%esp, %0   \n\
         movl %%ebp, %1"
+        // (current pid - 1)'s esp and ebp
         :"=r"(pcb->esp), "=r"(pcb->ebp)
     );
 
