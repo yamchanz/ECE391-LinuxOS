@@ -1,25 +1,51 @@
 #include "scheduler.h"
 
 volatile int schedule_init;
+volatile uint8_t cur_ter = 0;
+uint8_t next_ter = 0;
 
 void schedule(void) {
-    // first bootup - start the three terminals
-    if(schedule_init) {
-        int i;
-        for(i = 0; i < 3; i++) {
-                // clone directory
-                // clone page table
-                execute((uint8_t*)"shell");
-        }
-        schedule_init = 0;
-    }
-    // second bootup
+    next_ter = (cur_ter + 1) % TERMINAL_COUNT;
+
+    map_program(term[next_ter].cur_pid_idx);
+
+    pcb_t* old_pcb = get_pcb(term[cur_ter].cur_pid_idx);
+    pcb_t* cur_pcb = get_pcb(term[next_ter].cur_pid_idx);
+    
+   
     // switch ESP/EBP to next process' kernel stack
-    //tss.ss0 = KERNEL_DS;
-    //tss.esp0 = _8_MB - _8_KB * pcb->pid - FOUR_BYTE;
+    tss.ss0 = KERNEL_DS;
+    tss.esp0 = _8_MB - _8_KB * term[next_ter].cur_pid_idx - 4;
+    
+    cur_ter = next_ter;
+
     // restore next process' TSS
-    // flush TLB on process switch
+    asm volatile(
+        "movl %%esp, %0\n\
+        movl %%ebp, %1"
+        :"=r"(old_pcb->cur_esp), "=r"(old_pcb->cur_ebp) // output
+        : // input
+    );
+
+    // process switch
+    asm volatile(
+        "movl %0, %%esp\n\
+        movl %1, %%ebp"
+        : //ouput
+        :"r"(cur_pcb->cur_esp), "r"(cur_pcb->cur_ebp) //input
+    );
+
     return;
+
+}
+
+void PIT_handler(){
+    send_eoi(IRQ_PIT);
+
+    cli();
+    if(term[1].t_status = 1 || term[2].t_status = 1){
+        schedule();
+    }
 }
 
 void pit_init(void) {

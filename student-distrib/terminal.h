@@ -22,10 +22,14 @@ typedef struct __attribute__((packed)) terminal {
     uint32_t buffer_idx;
 
     int pid;
+    uint8_t tid;
+    int8_t cur_pid_idx;
+    uint8_t t_status;
 } terminal_t;
 
 // Terminal variable
-terminal_t t;
+terminal_t term[3];
+volatile executing_term;
 
 // Clear the screen and put the cursor at the top
 void terminal_reset(void);
