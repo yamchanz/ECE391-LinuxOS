@@ -35,7 +35,7 @@ int32_t read_dentry_by_name(const uint8_t* fname, dentry_t* dentry) {
 
     for(i = 0; i < MAX_FILE_COUNT; i++) { // for all files, check for fname
         dentry_t* cur_dir = &(boot->dir_entries[i]);
-       
+
         if(strncmp((int8_t*)fname, (int8_t*)cur_dir->file_name, name_len) == 0){
             *dentry = *cur_dir; // get block
             return 0;
@@ -125,7 +125,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
 int32_t file_read(int32_t fd, void* buf, int32_t nbytes) {
     uint32_t num_read;
     // now that we added pcb, must adjust this function with fd
-    pcb_t* pcb = get_pcb(t.pid);
+    pcb_t* pcb = get_pcb(pid);
     // sanity check
     if(fd >= FD_MAX || fd < FD_START) return -1;
     if(!filesystem) {

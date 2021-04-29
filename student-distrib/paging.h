@@ -23,6 +23,7 @@
 #include "x86_desc.h"
 #include "filesys.h"
 #include "system_calls.h"
+#include "terminal.h"
 
 #define VIDEO_MEM_ADDR      184
 #define K_VIDEO_IDX         0
@@ -46,4 +47,3 @@ extern void unmap_video(void);
 void flush(void);
 
 #endif
-

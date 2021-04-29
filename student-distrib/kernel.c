@@ -143,21 +143,19 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
+    pid = -1;
+    /* Init the IDT */
     initialize_idt();
-
     /* Init the PIC */
     i8259_init();
-
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
     keyboard_init();
     paging_init();
     initialize_rtc();
-
+    pit_init();
     // initialize the terminal
     terminal_init();
-    pit_init();
-
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
@@ -170,7 +168,6 @@ void entry(unsigned long magic, unsigned long addr) {
     //launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-    t.pid = -1;
     execute((uint8_t*)"shell");
 
     /* Spin (nicely, so we don't chew up cycles) */

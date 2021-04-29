@@ -5,6 +5,7 @@
 #include "filesys.h"
 #include "i8259.h"
 #include "paging.h"
+#include "terminal.h"
 
 #define IRQ_PIT          0
 
@@ -15,7 +16,7 @@
 #define HIGH_8_BIT_MASK 0xFF00
 #define LOW_8_BIT_MASK  0xFF
 
-void schedule(void);
 void pit_init(void);
+void schedule(void);
 
 #endif

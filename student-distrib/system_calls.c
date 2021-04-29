@@ -42,7 +42,7 @@ void pcb_init(pcb_t *pcb) {
     pcb->fd_table[1] = stdout;
 
     //pid from 0 - 5
-    pcb->pid = t.pid;
+    pcb->pid = pid;
     // check if current process is base shell
     if(!pcb->pid) pcb->parent_pid = pcb->pid;
     else pcb->parent_pid = pcb->pid - 1;
@@ -68,7 +68,7 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
-    if (t.pid > 5)
+    if (pid > 5)
         return -1;
     cli();
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
@@ -145,7 +145,7 @@ int32_t execute (const uint8_t* command) {
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
     //set up paging
-    map_program(++t.pid);
+    map_program(++pid);
 
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
@@ -153,7 +153,7 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t *pcb;
-    pcb = get_pcb(t.pid);
+    pcb = get_pcb(pid);
     pcb_init(pcb);
 
     // storing the argument to a buffer in pcb for getargs fn
@@ -185,13 +185,13 @@ int32_t halt (uint8_t status) {
     pcb_t *pcb;
 
     // get current process block and current process' parent block
-    pcb = get_pcb(t.pid);
+    pcb = get_pcb(pid);
 
     // clear all file descriptors
     for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
-    --t.pid;
+    --pid;
     // if current process block is base shell, re-execute shell
     if (!pcb->pid)
         execute((uint8_t*)"shell");
@@ -221,7 +221,7 @@ int32_t halt (uint8_t status) {
  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
-    pcb_t *pcb = get_pcb(t.pid);
+    pcb_t *pcb = get_pcb(pid);
 
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
@@ -240,7 +240,7 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *pcb = get_pcb(t.pid);
+    pcb_t *pcb = get_pcb(pid);
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
@@ -256,7 +256,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t open (const uint8_t* filename) {
-    pcb_t *pcb = get_pcb(t.pid);
+    pcb_t *pcb = get_pcb(pid);
 
     // input error handling
     if(filename == NULL || strlen((int8_t*)filename) == 0) {
@@ -322,7 +322,7 @@ int32_t close (int32_t fd) {
     if(fd >= FD_MAX || fd < FD_START) {
         return -1;
     }
-    pcb_t* pcb = get_pcb(t.pid);
+    pcb_t* pcb = get_pcb(pid);
 
     //already not in use we dont need to close
     if(pcb->fd_table[fd].flags == 0){
@@ -343,7 +343,7 @@ int32_t close (int32_t fd) {
  * return - 0 on success, -1 on failure
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
-    pcb_t* pcb = get_pcb(t.pid);
+    pcb_t* pcb = get_pcb(pid);
 
     if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
         return -1;

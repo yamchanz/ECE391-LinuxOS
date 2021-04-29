@@ -6,9 +6,9 @@
  * Function: Clears terminal buffer */
 void clear_buffer(void) {
     int32_t i;
-    for (i = 0; i < BUF_SIZE; ++i) 
-        t.buffer[i] = '\0';
-    t.buffer_idx = 0;
+    for (i = 0; i < BUF_SIZE; ++i)
+        t[t_run].buffer[i] = '\0';
+    t[t_run].buffer_idx = 0;
 }
 
 /* void terminal_init(void);
@@ -16,7 +16,7 @@ void clear_buffer(void) {
  * Return Value: none
  * Function: Clear the screen and put the cursor at the top */
 void terminal_init(void) {
-    t.video_mem = (char *)VIDEO;
+    t[t_run].video_mem = (char *)VIDEO;
     terminal_reset();
 }
 
@@ -43,7 +43,7 @@ int32_t terminal_close(int32_t fd) {
  * Return Value: none
  * Function: Clear the screen and put the cursor at the top */
 void terminal_reset(void) {
-    t.screen_x = 0, t.screen_y = 0;
+    t[t_run].screen_x = 0, t[t_run].screen_y = 0;
     clear();
     clear_buffer();
     update_cursor();
@@ -53,10 +53,10 @@ void terminal_reset(void) {
  * Inputs: void
  * Return Value: none
  * Function: update the cursor position
- * function implementation copied from https://wiki.osdev.org/Text_Mode_Cursor 
+ * function implementation copied from https://wiki.osdev.org/Text_Mode_Cursor
  * description from https://stackoverflow.com/questions/25321608/moving-text-mode-cursor-not-working */
 void update_cursor(void) {
-    uint16_t position = t.screen_y * NUM_COLS + t.screen_x; // hold two 8 bits -> 16 bits
+    uint16_t position = t[t_run].screen_y * NUM_COLS + t[t_run].screen_x; // hold two 8 bits -> 16 bits
     outb(CURSOR_LOW, VGA_CTRL);
     outb((uint8_t)(position & 0xFF), VGA_DATA);
     outb(CURSOR_HIGH, VGA_CTRL);
@@ -67,7 +67,7 @@ void update_cursor(void) {
  * Inputs: fd -- unused
            nbytes -- unused
            buf -- address of the data to be sent
- * Outputs: 
+ * Outputs:
  * Return Value: size -- the number of chars in buffer
  * Function: read (copy) the content of the line buffer to the given buffer */
 int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
@@ -76,11 +76,11 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 
     clear_buffer();
     sti();
-    while(t.buffer_idx < BUF_SIZE - 1 && !get_enter_flag());
+    while(t[t_run].buffer_idx < BUF_SIZE - 1 && !get_enter_flag());
     cli();
-    size = nbytes > t.buffer_idx ? t.buffer_idx : nbytes;
+    size = nbytes > t[t_run].buffer_idx ? t[t_run].buffer_idx : nbytes;
     for (i = 0; i < size; ++i) {
-        ((int8_t*)buf)[i] = t.buffer[i];
+        ((int8_t*)buf)[i] = t[t_run].buffer[i];
     }
     release_enter();
     clear_buffer();
@@ -94,7 +94,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
  * Return Value: nbytes
  * Function: write the content of the given buffer on the terminal */
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
-    if (buf == NULL || nbytes < 0) 
+    if (buf == NULL || nbytes < 0)
         return -1;
 
     int32_t i;
@@ -111,9 +111,9 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
 void scroll_up(void) {
     int32_t i;
 
-    memmove(t.video_mem, t.video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
+    memmove(t[t_run].video_mem, t[t_run].video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
     for (i = (NUM_ROWS - 1) * NUM_COLS; i < NUM_ROWS * NUM_COLS; ++i) {
-        *(uint8_t *)(t.video_mem + (i << 1))     = ' ';
-        *(uint8_t *)(t.video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[t_run].video_mem + (i << 1))     = ' ';
+        *(uint8_t *)(t[t_run].video_mem + (i << 1) + 1) = ATTRIB;
     }
 }

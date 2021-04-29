@@ -7,6 +7,7 @@
 #include "x86_desc.h"
 #include "paging.h"
 #include "system_calls_wrapper.h"
+#include "scheduler.h"
 
 #define PCB_ADDR_MASK   0xFFFFE000
 #define PROG_IMG_ADDR   0x8048000
@@ -52,6 +53,7 @@ typedef struct __attribute__((packed)){
     uint8_t arg[MAX_KBUFF_LEN];
 } pcb_t;
 
+int pid;
 
 extern file_ops_t fops_rtc;
 extern file_ops_t fops_dir;

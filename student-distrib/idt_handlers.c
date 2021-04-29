@@ -121,10 +121,8 @@ void pit_handler() {
     // issue EOI to PIC at end of interrupt
     send_eoi(IRQ_PIT);
     // get pcb of current process
-    // pcb_t* old_process = get_pcb(t.pid);
+    pcb_t* old_process = get_pcb(t[t_run].cur_pid_idx);
     // prepare for switching process
-    // ....
-
 
     // begin scheduling
     schedule();

@@ -12,20 +12,26 @@
 // Terminal related macro and data structure
 #define BUF_SIZE        128
 #define BUF_END_CHAR    0x10    // ascii line limiter
+
+#define TERMINAL_COUNT  3
+
 typedef struct __attribute__((packed)) terminal {
     uint32_t screen_x;
     uint32_t screen_y;
-    
+
     char* video_mem;
 
     uint8_t buffer[BUF_SIZE];
     uint32_t buffer_idx;
 
-    int pid;
+    int cur_pid_idx;
 } terminal_t;
 
-// Terminal variable
-terminal_t t;
+// Terminal array
+terminal_t t[TERMINAL_COUNT];
+// active terminal index
+int32_t t_run;
+int32_t t_visible;
 
 // Clear the screen and put the cursor at the top
 void terminal_reset(void);
