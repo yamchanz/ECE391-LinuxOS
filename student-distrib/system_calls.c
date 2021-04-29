@@ -103,7 +103,7 @@ int32_t execute (const uint8_t* command) {
         exec[i-cmd_start] = command[i];
     }
     // set end NULL byte
-    exec[cmd_idx] = '\0';  
+    exec[cmd_idx] = '\0';
 
     // to account for spaces between the executable and the arguments
     while(command[cmd_idx] == ' '){
@@ -115,7 +115,7 @@ int32_t execute (const uint8_t* command) {
         arg_idx++;
     }
 
-    // if over the limit then return 
+    // if over the limit then return
     if(arg_idx > MAX_KBUFF_LEN){
         return -1;
     }
@@ -183,12 +183,12 @@ int32_t execute (const uint8_t* command) {
 int32_t halt (uint8_t status) {
     int i;
     pcb_t *pcb;
-    
+
     // get current process block and current process' parent block
     pcb = get_pcb(t.pid);
 
     // clear all file descriptors
-    for(i = 2; i < 8; ++i)
+    for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
     --t.pid;
@@ -202,7 +202,7 @@ int32_t halt (uint8_t status) {
     }
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
-    
+
     // write parent process' info back to TSS(esp0)
     tss.esp0 = pcb->esp0;
     tss.ss0 = KERNEL_DS;
@@ -222,7 +222,7 @@ int32_t halt (uint8_t status) {
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
     pcb_t *pcb = get_pcb(t.pid);
-    
+
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
@@ -246,7 +246,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
         return -1;
     }
     // find fd in fd_table
-    
+
     return (int32_t)pcb->fd_table[fd].fops_ptr->write(fd, buf, nbytes);
 }
 
@@ -348,7 +348,7 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
     if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
         return -1;
     }
-    
+
     // copy into our user buffer from pcb arg
     strncpy((int8_t*)buf, (int8_t*)pcb->arg, nbytes);
     buf[strlen((int8_t*)pcb->arg)] = '\0';

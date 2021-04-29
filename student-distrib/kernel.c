@@ -14,6 +14,7 @@
 #include "paging.h"
 #include "filesys.h"
 #include "system_calls.h"
+#include "scheduler.h"
 
 #define RUN_TESTS   0
 
@@ -155,6 +156,7 @@ void entry(unsigned long magic, unsigned long addr) {
 
     // initialize the terminal
     terminal_init();
+    pit_init();
 
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your

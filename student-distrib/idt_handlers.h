@@ -8,6 +8,7 @@
 #define SYS_CALL_IDX 0x80
 #define RTC_IDX 0x28
 #define KEYBOARD_IDX 0x21
+#define PIT_IDX 0x20
 
 // initialize IDT at bootup
 extern void initialize_idt();

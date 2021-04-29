@@ -22,11 +22,11 @@ void initialize_rtc() {
     outb(NMI_REG_A, SELECT_REG);
     // read last char from Register B
     char prev = inb(DATA_REG);
-    // set index again  
-    outb(NMI_REG_B, SELECT_REG);	
+    // set index again
+    outb(NMI_REG_B, SELECT_REG);
     // OR to turn on 6th bit of register B
     outb(prev | BIT_6_MASK, DATA_REG);
-    // set interrupt flag to 0  
+    // set interrupt flag to 0
     rtc_int_received = 0;
 
     // sti();
@@ -35,7 +35,7 @@ void initialize_rtc() {
     enable_irq(IRQ_RTC);
 
     return;
-    
+
 }
 
 /* rtc_open
@@ -72,7 +72,7 @@ int32_t rtc_open(const uint8_t* filename) {
 int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes) {
     // reset interrupt flag after read
     rtc_int_received = 0;
-    
+
     sti();
     while(!rtc_int_received) {
         // block until the next interrupt
@@ -97,7 +97,7 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
     if(freq == NULL) {
         return -1;
     }
-    /* check if power of two - referenced formula from 
+    /* check if power of two - referenced formula from
     https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2 */
     if(freq && (!(freq & (freq - 1))) == 0) {
         return -1;
@@ -106,7 +106,7 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
     if(nbytes == INT_BYTES && freq <= HIGH_LIMIT_FREQ) {
         // count power of 2 by finding where the 1 bit is
         int pow = 0;
-        while(freq >>= 1) { 
+        while(freq >>= 1) {
             ++pow;
         }
         // write new frequency into Register A - block interrupts while writing
@@ -117,7 +117,7 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
         // set index again
         outb(NMI_REG_A, SELECT_REG);
         // set rate based on offset from 2Hz rate
-        outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow+1), DATA_REG);
+        outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow+2), DATA_REG);
 
         // sti();
     } else {
@@ -142,5 +142,3 @@ int32_t rtc_close(int32_t fd) {
     }
     return 0;
 }
-
-

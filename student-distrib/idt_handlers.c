@@ -5,6 +5,7 @@
 #include "lib.h"
 #include "rtc.h"
 #include "keyboard.h"
+#include "scheduler.h"
 
 /* Array of exception functions (0x00 to 0x13) */
 void divide_error_ex();
@@ -61,7 +62,8 @@ void initialize_idt() {
     install_interrupt_handler(RTC_IDX, rtc_handler_link, 0, 0);
     // install keyboard (IRQ1)
     install_interrupt_handler(KEYBOARD_IDX, keyboard_handler_link, 0, 0);
-
+    // install PIT (IRQ0)
+    install_interrupt_handler(PIT_IDX, pit_handler_link, 0, 0);
     // system call handler (0x80)
     install_interrupt_handler(SYS_CALL_IDX, sys_call_handler_link, 0, 1);
 
@@ -106,6 +108,26 @@ void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sy
     SET_IDT_ENTRY(idt[idt_offset], handler);
 
     return;
+}
+
+/* pit_handler
+    DESCRIPTION: installs the interrupt handler for the PIT
+    INPUTS: none
+    OUTPUTS: writes to PIT registers
+    RETURN VALUE: none
+    SIDE EFFECTS: none
+*/
+void pit_handler() {
+    // issue EOI to PIC at end of interrupt
+    send_eoi(IRQ_PIT);
+    // get pcb of current process
+    // pcb_t* old_process = get_pcb(t.pid);
+    // prepare for switching process
+    // ....
+
+
+    // begin scheduling
+    schedule();
 }
 
 /* rtc_handler
@@ -375,7 +397,7 @@ void page_fault_ex() {
     clear();
     printf("Page-Fault Exception (#PF)");
     // freeze with while loop
-    
+
     while(1) {
 
     }
@@ -392,7 +414,7 @@ void reserved(){
     printf("Reserved by Intel");
     // freeze with while looop
     while(1) {
-        
+
     }
 }
 /*  fpu_fp_ex
