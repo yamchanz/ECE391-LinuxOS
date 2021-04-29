@@ -42,11 +42,19 @@ void pcb_init(pcb_t *pcb) {
     pcb->fd_table[1] = stdout;
 
     //pid from 0 - 5
-    pcb->pid = t.pid;
+    pcb->pid = term[cur_pid].cur_pid_idx;
+
     // check if current process is base shell
-    if(!pcb->pid) pcb->parent_pid = pcb->pid;
-    else pcb->parent_pid = pcb->pid - 1;
-    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
+    if(term[cur_pid].t_status == 0){
+        cur_ter = executing_term;
+        pcb->parent_pid = pcb->pid;
+        term[executing_term].t_status = 1;  
+    } else{
+         pcb_t* p_pcb = get_pcb(term[executing_term].cur_pid_idx);
+        pcb->parent_pid = p_pcb->pid-1;
+    }
+
+    pcb->esp0 = _8_MB - _8_KB * term[executing_term].cur_pid_idx - FOUR_BYTE;
     pcb->ss0 = KERNEL_DS;
 
     return;
@@ -145,7 +153,7 @@ int32_t execute (const uint8_t* command) {
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
     //set up paging
-    map_program(++t.pid);
+    map_program(term[executing_term].cur_pid_idx); // ++?
 
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
@@ -153,9 +161,10 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t *pcb;
-    pcb = get_pcb(t.pid);
+    pcb = get_pcb(term[executing_term].cur_pid_idx);
     pcb_init(pcb);
-
+    term[executing_term].cur_pid_idx++;
+    
     // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
 
