@@ -30,11 +30,6 @@
 #define CTRL_MASK       0x10
 #define ENTER_MASK      0x08
 
-// function keys for changing terminals
-#define F1              0x3B
-#define F2              0x3C
-#define F3              0x3D
-
 extern uint8_t get_enter_flag(void);
 extern void release_enter(void);
 // initializes keyboard by setting the default flag and enabling on the PIC

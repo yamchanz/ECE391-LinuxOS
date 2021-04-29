@@ -63,7 +63,7 @@ void initialize_idt() {
     // install keyboard (IRQ1)
     install_interrupt_handler(KEYBOARD_IDX, keyboard_handler_link, 0, 0);
     // install PIT (IRQ0)
-    // install_interrupt_handler(PIT_IDX, pit_handler_link, 0, 0);
+    install_interrupt_handler(PIT_IDX, pit_handler_link, 0, 0);
 
     // system call handler (0x80)
     install_interrupt_handler(SYS_CALL_IDX, sys_call_handler_link, 0, 1);
