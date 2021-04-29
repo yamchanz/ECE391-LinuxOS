@@ -156,6 +156,9 @@ void keyboard_init(void) {
 void keyboard_handler(void) {
     uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
 
+    char* video_mem_cpy = t[t_run].video_mem;
+    t[t_run].video_mem = (char*)0xb8000;
+
     scan_code = inb(KEYBOARD_PORT);
     // check special cases
     switch(scan_code) {
@@ -262,6 +265,9 @@ void keyboard_handler(void) {
             t[t_visible].buffer_idx = 0;
         putc(key_ascii);
     }
+
+    t[t_run].video_mem = video_mem_cpy;
+
     send_eoi(KEYBOARD_IRQ);
     return;
 }
