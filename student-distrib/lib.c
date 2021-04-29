@@ -15,8 +15,8 @@
 void clear(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        *(uint8_t *)(t.video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(t.video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[t_run].video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(t[t_run].video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
 
@@ -29,14 +29,14 @@ void clear(void) {
  * %c  - print a character
  * %s  - print a string
  * %#x - print a number in 32-bit aligned hexadecimal, i.e.
- *       print 8 hexadecimal digits, zero-padded on the left.
+ *       print 8 hexadecimal digits, zero-padded on the left[t].
  *       For example, the hex number "E" would be printed as
  *       "0000000E".
  *       Note: This is slightly different than the libc specification
  *       for the "#" modifier (this implementation doesn't add a "0x" at
  *       the beginning), but I think it's more flexible this way.
  *       Also note: %x is the only conversion specifier that can use
- *       the "#" modifier to alter output. */
+ *       the "#" modifier to alter output[t]. */
 int32_t printf(int8_t *format, ...) {
 
     /* Pointer to the format string */
@@ -167,36 +167,36 @@ int32_t puts(int8_t* s) {
 void putc(uint8_t c) {
     if (!c) return;
     if(c == '\n' || c == '\r') {
-        if (++t.screen_y >= NUM_ROWS) {
+        if (++t[t_run].screen_y >= NUM_ROWS) {
             scroll_up();
-            t.screen_y--;
+            t[t_run].screen_y--;
         }
-        t.screen_x = 0;
+        t[t_run].screen_x = 0;
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
-        if (t.screen_x)
-            --t.screen_x;
+        if (t[t_run].screen_x)
+            --t[t_run].screen_x;
         else {
             // do nothing if none
-            if (!t.screen_y) return;
-            --t.screen_y;
-            t.screen_x = NUM_COLS - 1;
+            if (!t[t_run].screen_y) return;
+            --t[t_run].screen_y;
+            t[t_run].screen_x = NUM_COLS - 1;
         }
-        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = ' ';
-        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1)) = ' ';
+        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1) + 1) = ATTRIB;
     } else {
-        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1)) = c;
-        *(uint8_t *)(t.video_mem + ((NUM_COLS * t.screen_y + t.screen_x) << 1) + 1) = ATTRIB;
-        ++t.screen_x;
+        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1)) = c;
+        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1) + 1) = ATTRIB;
+        ++t[t_run].screen_x;
     }
-    if (t.screen_x == NUM_COLS && t.screen_y < NUM_ROWS - 1) {
-        ++t.screen_y;
-        t.screen_x = 0;
-    } else if (t.screen_x == NUM_COLS && t.screen_y >= NUM_ROWS - 1) {
-        ++t.screen_y;
+    if (t[t_run].screen_x == NUM_COLS && t[t_run].screen_y < NUM_ROWS - 1) {
+        ++t[t_run].screen_y;
+        t[t_run].screen_x = 0;
+    } else if (t[t_run].screen_x == NUM_COLS && t[t_run].screen_y >= NUM_ROWS - 1) {
+        ++t[t_run].screen_y;
         scroll_up();
-        --t.screen_y;
-        t.screen_x = 0;
+        --t[t_run].screen_y;
+        t[t_run].screen_x = 0;
     }
     update_cursor();
 }
@@ -494,6 +494,6 @@ int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n) {
 void test_interrupts(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        t.video_mem[i << 1]++;
+        t[t_run].video_mem[i << 1]++;
     }
 }

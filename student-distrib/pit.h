@@ -5,6 +5,7 @@
 #include "filesys.h"
 #include "i8259.h"
 #include "paging.h"
+#include "terminal.h"
 
 /*
 PIT Mode/Command register
@@ -40,6 +41,9 @@ Bits         Usage
 
 #define HIGH_8_BIT_MASK         0xFF00
 #define LOW_8_BIT_MASK          0xFF
+
+
+int shell_init;
 
 /* initializes PIT */
 extern void pit_init(void);

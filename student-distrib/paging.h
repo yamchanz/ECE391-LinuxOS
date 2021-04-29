@@ -23,25 +23,33 @@
 #include "x86_desc.h"
 #include "filesys.h"
 #include "system_calls.h"
+#include "terminal.h"
 
 #define VIDEO_MEM_ADDR      184
+#define TERMINAL0_BUFF      VIDEO_MEM_ADDR + 1
+#define TERMINAL1_BUFF      VIDEO_MEM_ADDR + 2
+#define TERMINAL2_BUFF      VIDEO_MEM_ADDR + 3
+
 #define K_VIDEO_IDX         0
 #define KERNEL_IDX          1
 #define PROGRAM_IDX         32
 #define U_VIDEO_IDX         35
+
 #define PR                  0x01
 #define RW                  0x02
 #define USR                 0x04
 #define PAGE_4MB            0x80
 
 /* maps running program to virutal address 128MB */
-extern void map_program(uint32_t pid);
+extern void map_program(int32_t pid);
 /* initializes pages */
 extern void paging_init(void);
 /* helps user program write to video memory */
 extern void map_video(void);
 /* unmaps page after program is finished writing */
 extern void unmap_video(void);
+/* switches terminal displayed when pressing ALT F# */
+extern void terminal_switch(int32_t tid);
 /* flushes TLB when memory map altered */
 void flush(void);
 

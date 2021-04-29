@@ -2,7 +2,7 @@
 # Assembly linkage for interrupt handlers (RTC, system call, keyboard, etc.)
 # used to save registers before calling handler
 
-.globl rtc_handler_link, keyboard_handler_link
+.globl rtc_handler_link, keyboard_handler_link, pit_handler_link
 
 # rtc_handler_link
 # DESCRIPTION: assembly linkage for RTC interrupt handler
@@ -26,7 +26,7 @@ keyboard_handler_link:
     popal
     iret
 
-pit_handler_linK:
+pit_handler_link:
     pushal
     pushfl
     call pit_handler

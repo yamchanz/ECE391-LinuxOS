@@ -4,7 +4,6 @@ uint32_t video_page_table[_1_KB] __attribute__((aligned(_4_KB)));
 uint32_t page_table[_1_KB] __attribute__((aligned(_4_KB)));
 uint32_t page_dir[_1_KB] __attribute__((aligned(_4_KB)));
 
-
 /* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
  * the first 4MB page, the 4MB Kernal page, as well as 1022 "not present"
@@ -18,17 +17,22 @@ void paging_init(void) {
         page_dir[i] = RW;
         page_table[i] = i * _4_KB | RW;
     }
+    // 4KB page mapped to physical video memory
     page_table[VIDEO_MEM_ADDR] |= RW | PR;
-    // kernel space video
+    // preceding 3 pages reserved for terminal buffers
+    page_table[TERMINAL0_BUFF] |= RW | PR;
+    page_table[TERMINAL1_BUFF] |= RW | PR;
+    page_table[TERMINAL2_BUFF] |= RW | PR;
+
+    // first page is reserved for 4KB video
     page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) | RW | PR;
+    // second page is reserved for 4MB Kernel page
     page_dir[KERNEL_IDX] = _4_MB | PAGE_4MB | RW | PR;
     
-    // to turn on paging:
-    // - set CR3 using mask 0xFFFFFC00 for address of page_directory,
-    // (we want top 20 bits)
+    // - set CR3 using address of page_directory
     // - set CR4.PSE bit (to enable 4MB pages)
     // - set CR0.PG bit, CR0.PE bit?
-    asm volatile("                                               \n\
+    asm volatile("                                                \n\
         movl $page_dir, %%eax                                     \n\
         movl %%eax, %%cr3                                         \n\
         movl %%cr4, %%eax                                         \n\
@@ -49,7 +53,7 @@ void paging_init(void) {
  *                   8MB, 12MB, ... and so on depending on the process.
  * return - none
  */
-void map_program(uint32_t pid) {
+void map_program(int32_t pid) {
     uint32_t addr = _8_MB + _4_MB * pid;
     page_dir[PROGRAM_IDX] = addr | PAGE_4MB | USR | RW | PR;
     flush();
@@ -57,11 +61,12 @@ void map_program(uint32_t pid) {
 
 /* map_video - CP4
  * maps video memory page in virtual address
- * parameter - void
+ * parameter - none
  * return - none
  */
-void map_video(void){
+void map_video(void) {
     page_dir[U_VIDEO_IDX] = (uint32_t)video_page_table | USR | RW | PR;
+    // VIDEO_MEM_ADDR = 184 = 0xB8, VIDEO_MEM_ADDR << 12 = 0xB8000 = VID_MEM
     video_page_table[0] = (VIDEO_MEM_ADDR << 12) | USR | RW | PR;
 }
 
@@ -70,13 +75,28 @@ void map_video(void){
  * parameter - void
  * return - none
  */
-void unmap_video(void){
+void unmap_video(void) {
     page_dir[U_VIDEO_IDX] = 0;
     video_page_table[0] = 0;
 
     flush();
 }
 
+/* terminal_switch - CP5
+ * 
+ * parameter - none
+ * return - none
+ */
+void terminal_switch(int32_t tid) {
+    // if current process is process to be outputted
+    if(tid == t_visible) {
+        page_table[VIDEO_MEM_ADDR] = (uint32_t)VID_MEM | RW | PR;
+    // if current process should not be outputted to screen, write to buffer
+    } else {
+        page_table[VIDEO_MEM_ADDR] = (uint32_t)(VID_MEM + (tid + 1) * _4_KB) | RW | PR;
+    }
+    flush();
+}
 
 /* flush - CP2
  * Flushes TLB when altering paging

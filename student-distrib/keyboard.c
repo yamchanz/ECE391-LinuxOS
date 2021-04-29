@@ -128,11 +128,11 @@ static uint8_t enter_flag;
  *  RETURN VALUE: none
  *  SIDE EFFECTS: none */
 uint8_t get_enter_flag(void) {
-    return enter_flag;
+    return enter_flag & (1 << t_visible);
 }
 
 void release_enter(void) {
-    enter_flag = 0;
+    enter_flag &= ~(1 << t_visible);
 }
 
 /*  keyboard_init
@@ -198,14 +198,15 @@ void keyboard_handler(void) {
             return;
 
         case ENTER_PRS:
-            enter_flag = 1;
+            // from LSB, t[0], t[1], t[2]
+            enter_flag |= 1 << t_visible;
             putc('\n');
             send_eoi(KEYBOARD_IRQ);
             return;
             
         case BACKSPACE_PRS:
-            if (t.buffer_idx) {
-                t.buffer[--t.buffer_idx] = BUF_END_CHAR;
+            if (t[t_visible].buffer_idx) {
+                t[t_visible].buffer[--t[t_visible].buffer_idx] = BUF_END_CHAR;
                 putc('\b');
             }
             send_eoi(KEYBOARD_IRQ);
@@ -224,17 +225,41 @@ void keyboard_handler(void) {
         send_eoi(KEYBOARD_IRQ);
         return;
     }
+    // check for terminal switch
+    if (keyboard_flag & ALT_MASK) {
+        switch (scan_code) {
+            // switch to terminal 0
+            case F1:
+                terminal_switch(0);
+                t_visible = 0;
+                break;
+            // switch to terminal 1
+            case F2:
+                terminal_switch(1);
+                t_visible = 1;
+                break;
+            // switch to terminal 2
+            case F3:
+                terminal_switch(2);
+                t_visible = 2;
+                break;
+            default: ;
+        }
+        send_eoi(KEYBOARD_IRQ);
+        return;
+    }
+
     // if not release, update the line buffer and echo the ascii character
     if (key_ascii && scan_code < REL_MASK) {
         // go to the next line if the line gets longer than the buffer
-        if (t.buffer_idx < BUF_SIZE - 2) {
-            t.buffer[t.buffer_idx++] = key_ascii;
-            t.buffer[t.buffer_idx] = '\0';  // line limiter
-        } else if (t.buffer_idx == BUF_SIZE - 2) {
-            t.buffer[t.buffer_idx++] = '\n';
-            t.buffer[t.buffer_idx] = '\0';  // line limiter
+        if (t[t_visible].buffer_idx < BUF_SIZE - 2) {
+            t[t_visible].buffer[t[t_visible].buffer_idx++] = key_ascii;
+            t[t_visible].buffer[t[t_visible].buffer_idx] = '\0';  // line limiter
+        } else if (t[t_visible].buffer_idx == BUF_SIZE - 2) {
+            t[t_visible].buffer[t[t_visible].buffer_idx++] = '\n';
+            t[t_visible].buffer[t[t_visible].buffer_idx] = '\0';  // line limiter
         } else
-            t.buffer_idx = 0;
+            t[t_visible].buffer_idx = 0;
         putc(key_ascii);
     }
     send_eoi(KEYBOARD_IRQ);

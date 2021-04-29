@@ -16,7 +16,14 @@ void clear_buffer(void) {
  * Return Value: none
  * Function: Clear the screen and put the cursor at the top */
 void terminal_init(void) {
-    t[t_run].video_mem = (char *)VIDEO;
+    int32_t i, p;
+    for (i = 0; i < TERMINAL_COUNT; ++i) {
+        t[i].video_mem = (char *)(VIDEO + _4_KB * (i + 1));
+               
+        for (p = 0; p < MAX_PROCESS_PER_TERMINAL; ++p){
+            t[i].pid_[p] = -1;
+        }
+    }
     terminal_reset();
 }
 
@@ -118,12 +125,12 @@ void scroll_up(void) {
     }
 }
 
-int32_t get_parent_pid(void) {
-    int32_t i;
-    for (i = pid - 1; i >= 0; --i) {
-        if (t[t_run].pid[i])
-            return i;
-    }
-    // return itself when there isn't a parent process running
-    return pid;
-}
+// int32_t get_parent_pid(void) {
+//     int32_t i;
+//     for (i = pid - 1; i >= 0; --i) {
+//         if (t[t_run].pid[i])
+//             return i;
+//     }
+//     // return itself when there isn't a parent process running
+//     return pid;
+// }

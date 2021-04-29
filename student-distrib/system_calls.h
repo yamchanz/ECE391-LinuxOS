@@ -7,6 +7,7 @@
 #include "x86_desc.h"
 #include "paging.h"
 #include "system_calls_wrapper.h"
+#include "pit.h"
 
 #define PCB_ADDR_MASK   0xFFFFE000
 #define PROG_IMG_ADDR   0x8048000
@@ -45,13 +46,30 @@ typedef struct __attribute__((packed)){
     // get ESP and EBP from address
     uint32_t esp;
     uint32_t ebp;
-    uint32_t pid;
     uint32_t parent_pid; // we may need this?
     uint16_t ss0;
     uint32_t esp0;
+
+    uint32_t cur_esp;
+    uint32_t cur_ebp;
+    int32_t pid;
     uint8_t arg[MAX_KBUFF_LEN];
 } pcb_t;
 
+// for CP5, parent's pid is not so simple
+// arr[i] gives the parent's pid of child process i
+// -1 means process is free
+// arr[0], arr[1], arr[2] should all be base shells after startup.
+// example:
+//  index  0, 1, 2, 3, 4, 5 
+//  val    0, 1, 2, 0, 1, 2   all shells runs 1 process
+//  val    0, 1, 2, 1, 3, 4   shell 2 runs 3 processes
+//  val    0, 1, 2, 1, 3, 2   shell 2 runs 2 processes, shell 3 runs 1
+// int parent_pid_arr[MAX_PROCESSES];
+// int num_processes;
+
+// global process id
+int pid;
 
 extern file_ops_t fops_rtc;
 extern file_ops_t fops_dir;
@@ -60,6 +78,7 @@ extern file_ops_t std_in;
 extern file_ops_t std_out;
 
 extern pcb_t* get_pcb(int pid_in);
+extern int find_base_terminal(int pid);
 extern int32_t bad_call();
 extern int32_t halt (uint8_t status);
 extern int32_t execute (const uint8_t* command);

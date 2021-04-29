@@ -13,6 +13,8 @@
 #define BUF_SIZE        128
 #define BUF_END_CHAR    0x10    // ascii line limiter
 #define TERMINAL_COUNT  3
+#define MAX_PROCESS_PER_TERMINAL    4
+
 typedef struct __attribute__((packed)) terminal {
     uint32_t screen_x;
     uint32_t screen_y;
@@ -22,16 +24,16 @@ typedef struct __attribute__((packed)) terminal {
     uint8_t buffer[BUF_SIZE];
     uint32_t buffer_idx;
 
-    // uint8_t pid_[6], set nth to 1 if the terminal has nth pid
-    uint8_t pid_[6];
-    // int pid;
+    // list that contains pids that this terminal is using (indices don't matter)
+    int32_t pid_[4];
+    uint8_t cur_pid_idx;
 } terminal_t;
 
-int32_t pid;
 // Terminal variable
 terminal_t t[TERMINAL_COUNT];
 // active terminal index
 int32_t t_run;
+int32_t t_visible;
 
 // Clear the screen and put the cursor at the top
 void terminal_reset(void);
@@ -55,5 +57,5 @@ void scroll_up(void);
 // Update the cursor position
 void update_cursor(void);
 // get the parent pid within a terminal
-int32_t get_parent_pid(void);
+// int32_t get_parent_pid(void);
 #endif
