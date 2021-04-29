@@ -11,6 +11,15 @@
 #define NAME_SIZE        32
 #define DENTRY_RESERVE   24
 #define MAX_INODE_BLOCK  1023
+#define _1_KB            0x400
+#define _4_KB            0x1000
+#define _8_KB            0x2000
+#define _4_MB            0x400000
+#define _8_MB            0x800000
+#define _128_MB          0x8000000
+#define _132_MB          0x8400000
+#define _140_MB          0X8C00000
+#define VID_MEM          0xB8000
 
 // single 64B directory entry within the boot block
 typedef struct __attribute__((packed)) {

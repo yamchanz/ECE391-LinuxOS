@@ -198,15 +198,14 @@ void keyboard_handler(void) {
             return;
 
         case ENTER_PRS:
-            // from LSB, t[0], t[1], t[2]
-            enter_flag = 1 << t_run;
+            enter_flag = 1;
             putc('\n');
             send_eoi(KEYBOARD_IRQ);
             return;
             
         case BACKSPACE_PRS:
-            if (t[t_run].buffer_idx) {
-                t[t_run].buffer[--t[t_run].buffer_idx] = BUF_END_CHAR;
+            if (t.buffer_idx) {
+                t.buffer[--t.buffer_idx] = BUF_END_CHAR;
                 putc('\b');
             }
             send_eoi(KEYBOARD_IRQ);
@@ -221,36 +220,21 @@ void keyboard_handler(void) {
 
     // check for CTRL-L 
     if (keyboard_flag & CTRL_MASK && (key_ascii == 'L' || key_ascii == 'l')) {
-        terminal_reset(t_run);
+        terminal_reset();
         send_eoi(KEYBOARD_IRQ);
         return;
-    }
-    // check for terminal switch
-    if (keyboard_flag & ALT_MASK) {
-        switch (scan_code) {
-            case F1:
-                terminal_switch(0);
-                break;
-            case F2:
-                terminal_switch(1);
-                break;
-            case F3:
-                terminal_switch(2);
-                break;
-            default: ;
-        }
     }
     // if not release, update the line buffer and echo the ascii character
     if (key_ascii && scan_code < REL_MASK) {
         // go to the next line if the line gets longer than the buffer
-        if (t[t_run].buffer_idx < BUF_SIZE - 2) {
-            t[t_run].buffer[t[t_run].buffer_idx++] = key_ascii;
-            t[t_run].buffer[t[t_run].buffer_idx] = '\0';  // line limiter
-        } else if (t[t_run].buffer_idx == BUF_SIZE - 2) {
-            t[t_run].buffer[t[t_run].buffer_idx++] = '\n';
-            t[t_run].buffer[t[t_run].buffer_idx] = '\0';  // line limiter
+        if (t.buffer_idx < BUF_SIZE - 2) {
+            t.buffer[t.buffer_idx++] = key_ascii;
+            t.buffer[t.buffer_idx] = '\0';  // line limiter
+        } else if (t.buffer_idx == BUF_SIZE - 2) {
+            t.buffer[t.buffer_idx++] = '\n';
+            t.buffer[t.buffer_idx] = '\0';  // line limiter
         } else
-            t[t_run].buffer_idx = 0;
+            t.buffer_idx = 0;
         putc(key_ascii);
     }
     send_eoi(KEYBOARD_IRQ);
