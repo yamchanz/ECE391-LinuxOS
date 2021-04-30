@@ -142,9 +142,10 @@ void entry(unsigned long magic, unsigned long addr) {
         tss.esp0 = 0x800000;
         ltr(KERNEL_TSS);
     }
+    int p;
+    for(p = 0; p < PROCESS_COUNT; p++)
+        process_status[p] = -1;
 
-    pid = -1;
-    
     initialize_idt();
 
     /* Init the PIC */

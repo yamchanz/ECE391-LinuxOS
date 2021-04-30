@@ -23,13 +23,10 @@ void clear_buffer(void) {
  * Return Value: none
  * Function: Clear the screen and put the cursor at the top */
 void terminal_init(void) {
-    int32_t i, p;
+    int32_t i;
     for (i = 0; i < TERMINAL_COUNT; ++i) {
         t[i].video_mem = (char *)(VIDEO + _4_KB * i);
-               
-        for (p = 0; p < MAX_PROCESS_PER_TERMINAL; ++p){
-            t[i].pid_[p] = -1;
-        }
+        t[i].status = 0;   
         terminal_reset(i);
     }
 }
@@ -104,11 +101,11 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 
     clear_buffer();
     sti();
-    while(t[t_run].buffer_idx < BUF_SIZE - 1 && !get_enter_flag());
+    while(t[t_visible].buffer_idx < BUF_SIZE - 1 && !get_enter_flag());
     cli();
-    size = nbytes > t[t_run].buffer_idx ? t[t_run].buffer_idx : nbytes;
+    size = nbytes > t[t_visible].buffer_idx ? t[t_visible].buffer_idx : nbytes;
     for (i = 0; i < size; ++i) {
-        ((int8_t*)buf)[i] = t[t_run].buffer[i];
+        ((int8_t*)buf)[i] = t[t_visible].buffer[i];
     }
     release_enter();
     clear_buffer();

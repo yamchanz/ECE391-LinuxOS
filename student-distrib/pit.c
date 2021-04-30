@@ -1,24 +1,24 @@
 #include "pit.h"
 
-int32_t t_next;
-int32_t t_cur;
 
 /* schedule - CP5
  * reference http://www.jamesmolloy.co.uk/tutorial_html/9.-Multitasking.html
  * parameters - none
  * returns - none
  */
-static int i = 0;
+// static int i = 0;
 
 void schedule() {
     t_next = (t_cur + 1) % TERMINAL_COUNT;
     // first bootup - start the three terminals
-    if(t[t_cur].pid_[0] == -1 /* maybe use -1 for nothing */) {
+    if(t[t_cur].status == 0 /* maybe use -1 for nothing */) {
 
-        shell_init = 1;
+        // shell_init = 1;
         // for pid 0 to 2,  assign to each terminal and init
-        t[t_cur].pid_[0] = i++;
-        t[t_cur].cur_pid_idx = 0;
+        // t[t_cur].pid_[0] = i++;
+
+        // process_status[t_cur] = 1; /* in the future set to terminal id  */
+        t[t_cur].cur_pid = t_cur;
         
         // parent pid of base is parent
         // parent_pid_arr[i] = i;
@@ -41,8 +41,8 @@ void schedule() {
     // all other schedule calls
     
     // get next process pcb
-    pcb_t* old_pcb = get_pcb(t[t_cur].pid_[t[t_cur].cur_pid_idx]);
-    pcb_t* cur_pcb = get_pcb(t[t_next].pid_[t[t_next].cur_pid_idx]);
+    pcb_t* old_pcb = get_pcb(t[t_cur].cur_pid);
+    pcb_t* cur_pcb = get_pcb(t[t_next].cur_pid);
     // switch ESP/EBP to next process' kernel stack
     tss.ss0 = KERNEL_DS;
     tss.esp0 = _8_MB - _8_KB * cur_pcb->pid - 4;

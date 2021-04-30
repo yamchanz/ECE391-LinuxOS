@@ -25,8 +25,9 @@ typedef struct __attribute__((packed)) terminal {
     uint32_t buffer_idx;
 
     // list that contains pids that this terminal is using (indices don't matter)
-    int32_t pid_[4];
-    uint8_t cur_pid_idx;
+    //int32_t pid_[4];
+    uint8_t cur_pid;
+    uint8_t status;
 } terminal_t;
 
 // Terminal variable

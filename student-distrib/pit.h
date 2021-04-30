@@ -42,8 +42,10 @@ Bits         Usage
 #define HIGH_8_BIT_MASK         0xFF00
 #define LOW_8_BIT_MASK          0xFF
 
-
 int shell_init;
+
+int32_t t_next;
+int32_t t_cur;
 
 /* initializes PIT */
 extern void pit_init(void);
