@@ -18,6 +18,8 @@
 
 #define RUN_TESTS   0
 
+int p;
+
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags, bit)   ((flags) & (1 << (bit)))
@@ -143,7 +145,9 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
-    pid = -1;
+    num_processes = -1;
+    for(p = 0; p < PROCESS_COUNT; p++)
+        process_status[p] = -1;
     /* Init the IDT */
     initialize_idt();
     /* Init the PIC */

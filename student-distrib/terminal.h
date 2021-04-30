@@ -14,6 +14,7 @@
 #define BUF_END_CHAR    0x10    // ascii line limiter
 
 #define TERMINAL_COUNT  3
+#define PROCESS_COUNT   6
 
 typedef struct __attribute__((packed)) terminal {
     uint32_t screen_x;
@@ -24,7 +25,7 @@ typedef struct __attribute__((packed)) terminal {
     uint8_t buffer[BUF_SIZE];
     uint32_t buffer_idx;
 
-    int cur_pid_idx;
+    int running_process;
 } terminal_t;
 
 // Terminal array

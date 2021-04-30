@@ -42,8 +42,8 @@ void pcb_init(pcb_t *pcb) {
     pcb->fd_table[1] = stdout;
 
     //pid from 0 - 5
-    pcb->pid = pid;
-    // check if current process is base shell
+    pcb->pid = t[t_visible].running_process;
+// FIX! check if current process is base shell
     if(!pcb->pid) pcb->parent_pid = pcb->pid;
     else pcb->parent_pid = pcb->pid - 1;
     pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
@@ -68,8 +68,18 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
-    if (pid > 5)
-        return -1;
+    // if all processes are filled, return -1
+    //if (num_processes > 5)
+    int p, found;
+    for(p = 0, found = 0; p < PROCESS_COUNT; ++p){
+        if(process_status[p] == -1){
+            found = 1;
+            break;
+        }
+    }
+    if(!found) return -1;
+
+    // clear interrupts
     cli();
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
@@ -80,31 +90,25 @@ int32_t execute (const uint8_t* command) {
     if (command == NULL){
         return -1;
     }
-
     // to account for spaces before the executable
     while (command[cmd_start] == ' '){
         cmd_start++;
     }
-
     cmd_idx = cmd_start;
-
     // loop through the command until we reach the end of the executable
     while (command[cmd_idx] != ' ' && command[cmd_idx] != '\0' && command[cmd_idx] != '\n') {
         cmd_idx++;
     }
-
     // if the executable is larger than the limit
     if(cmd_idx > CMD_MAX_LEN){
         return -1;
     }
-
     // copy the executable from the user typed in command
     for(i = cmd_start; i <cmd_idx; i++) {
         exec[i-cmd_start] = command[i];
     }
     // set end NULL byte
     exec[cmd_idx] = '\0';
-
     // to account for spaces between the executable and the arguments
     while(command[cmd_idx] == ' '){
         cmd_idx++;
@@ -114,19 +118,15 @@ int32_t execute (const uint8_t* command) {
     while (command[arg_idx] != '\0' && command[arg_idx] != '\n') {
         arg_idx++;
     }
-
     // if over the limit then return
     if(arg_idx > MAX_KBUFF_LEN){
         return -1;
     }
-
     // copying the argument into argument buffer to be stored in pcb later
     for(i = cmd_idx ; i < arg_idx; i++) {
         argb[i-cmd_idx] = command[i];
     }
-
     argb[arg_idx-cmd_idx] = '\0';
-
     // checking the magic number to make sure its executable.
     dentry_t search;
     if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
@@ -139,13 +139,17 @@ int32_t execute (const uint8_t* command) {
     } else {
         return -1;
     }
-
     // getting the entry point from 24 - 27
     read_data(search.inode, ENTRY_POINT_START, buffer, FOUR_BYTE);
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
+    // update running process in terminal
+    t[t_visible].running_process = p;
+    process_status[t[t_visible].running_process] = 1;
+
     //set up paging
-    map_program(++pid);
+    // map_program(++num_processes);
+    map_program(t[t_visible].running_process);
 
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
@@ -153,7 +157,8 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t *pcb;
-    pcb = get_pcb(pid);
+    // pcb = get_pcb(num_processes);
+    pcb = get_pcb(t[t_visible].running_process);
     pcb_init(pcb);
 
     // storing the argument to a buffer in pcb for getargs fn
@@ -185,13 +190,17 @@ int32_t halt (uint8_t status) {
     pcb_t *pcb;
 
     // get current process block and current process' parent block
-    pcb = get_pcb(pid);
+    pcb = get_pcb(t[t_visible].running_process);
 
     // clear all file descriptors
     for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
-    --pid;
+    // free up process, set running process back to parent
+    // --num_processes;
+    process_status[t[t_visible].running_process] = -1;
+    t[t_visible].running_process = pcb->parent_pid;
+
     // if current process block is base shell, re-execute shell
     if (!pcb->pid)
         execute((uint8_t*)"shell");
@@ -221,7 +230,7 @@ int32_t halt (uint8_t status) {
  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
-    pcb_t *pcb = get_pcb(pid);
+    pcb_t *pcb = get_pcb(t[t_visible].running_process);
 
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
@@ -240,7 +249,7 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *pcb = get_pcb(pid);
+    pcb_t *pcb = get_pcb(t[t_visible].running_process);
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
@@ -256,7 +265,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t open (const uint8_t* filename) {
-    pcb_t *pcb = get_pcb(pid);
+    pcb_t *pcb = get_pcb(t[t_visible].running_process);
 
     // input error handling
     if(filename == NULL || strlen((int8_t*)filename) == 0) {
@@ -322,7 +331,7 @@ int32_t close (int32_t fd) {
     if(fd >= FD_MAX || fd < FD_START) {
         return -1;
     }
-    pcb_t* pcb = get_pcb(pid);
+    pcb_t* pcb = get_pcb(t[t_visible].running_process);
 
     //already not in use we dont need to close
     if(pcb->fd_table[fd].flags == 0){
@@ -343,7 +352,7 @@ int32_t close (int32_t fd) {
  * return - 0 on success, -1 on failure
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
-    pcb_t* pcb = get_pcb(pid);
+    pcb_t* pcb = get_pcb(t[t_visible].running_process);
 
     if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
         return -1;

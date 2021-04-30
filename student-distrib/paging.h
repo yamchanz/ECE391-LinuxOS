@@ -26,10 +26,15 @@
 #include "terminal.h"
 
 #define VIDEO_MEM_ADDR      184
+#define TERMINAL0_BUFF      VIDEO_MEM_ADDR + 1
+#define TERMINAL1_BUFF      VIDEO_MEM_ADDR + 2
+#define TERMINAL2_BUFF      VIDEO_MEM_ADDR + 3
+
 #define K_VIDEO_IDX         0
 #define KERNEL_IDX          1
 #define PROGRAM_IDX         32
 #define U_VIDEO_IDX         35
+
 #define PR                  0x01
 #define RW                  0x02
 #define USR                 0x04
@@ -43,6 +48,8 @@ extern void paging_init(void);
 extern void map_video(void);
 /* unmaps page after program is finished writing */
 extern void unmap_video(void);
+/* maps virtual memory video to visible terminal */
+extern void terminal_switch(int32_t tid);
 /* flushes TLB when memory map altered */
 void flush(void);
 

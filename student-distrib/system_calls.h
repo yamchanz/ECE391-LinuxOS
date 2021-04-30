@@ -9,19 +9,23 @@
 #include "system_calls_wrapper.h"
 #include "scheduler.h"
 
-#define PCB_ADDR_MASK   0xFFFFE000
-#define PROG_IMG_ADDR   0x8048000
-#define ONETE           0X8000001
-#define BOTTOM_USER_STACK 0x8400000 - 4
-#define ENTRY_POINT_START   24
-#define CMD_MAX_LEN     32
-#define FOUR_BYTE       4
-#define FD_START        2
-#define FD_MAX          8
-#define RTC_FTYPE       0
-#define DIR_FTYPE       1
-#define FILE_FTYPE      2
-#define MAX_KBUFF_LEN   128
+#define PCB_ADDR_MASK        0xFFFFE000
+#define PROG_IMG_ADDR        0x8048000
+#define ONETE                0x8000001
+#define BOTTOM_USER_STACK    0x8400000 - 4
+
+#define ENTRY_POINT_START    24
+#define CMD_MAX_LEN          32
+
+#define FOUR_BYTE            4
+#define MAX_KBUFF_LEN        128
+
+#define FD_START             2
+#define FD_MAX               8
+
+#define RTC_FTYPE            0
+#define DIR_FTYPE            1
+#define FILE_FTYPE           2
 
 // file operations containing pointers to functions for that type of file
 typedef struct __attribute__((packed)) {
@@ -53,7 +57,10 @@ typedef struct __attribute__((packed)){
     uint8_t arg[MAX_KBUFF_LEN];
 } pcb_t;
 
-int pid;
+// count of processes running (previously pid)
+int num_processes;
+// array of free processes. -1 if free, otherwise stores terminal id (only 1 for now)
+int process_status[PROCESS_COUNT];
 
 extern file_ops_t fops_rtc;
 extern file_ops_t fops_dir;
