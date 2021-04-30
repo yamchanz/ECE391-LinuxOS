@@ -164,7 +164,7 @@ int32_t execute (const uint8_t* command) {
     pcb = get_pcb(term[executing_term].cur_pid_idx);
     pcb_init(pcb);
     term[executing_term].cur_pid_idx++;
-    
+
     // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
 
@@ -191,19 +191,24 @@ int32_t execute (const uint8_t* command) {
  */
 int32_t halt (uint8_t status) {
     int i;
-    pcb_t *pcb;
+    pcb_t *pcb, *p_pcb;
 
     // get current process block and current process' parent block
-    pcb = get_pcb(t.pid);
+    pcb = get_pcb(term[cur_ter].cur_pid_idx);
+    p_pcb = get_pcb(pcb->parent_pid);
 
+    term[cur_ter].cur_pid_idx--;   //--t.pid;
     // clear all file descriptors
     for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
-    --t.pid;
+  
     // if current process block is base shell, re-execute shell
-    if (!pcb->pid)
+    if (!pcb->pid){
+        term[cur_ter].t_status = 0;
         execute((uint8_t*)"shell");
+    }
+        
 
     if (vidmap_page_flag) {
         unmap_video();
