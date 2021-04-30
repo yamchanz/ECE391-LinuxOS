@@ -15,8 +15,8 @@
 void clear(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        *(uint8_t *)(t[t_run].video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(t[t_run].video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[t_visible].video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(t[t_visible].video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
 
@@ -167,36 +167,36 @@ int32_t puts(int8_t* s) {
 void putc(uint8_t c) {
     if (!c) return;
     if(c == '\n' || c == '\r') {
-        if (++t[t_run].screen_y >= NUM_ROWS) {
+        if (++t[t_visible].screen_y >= NUM_ROWS) {
             scroll_up();
-            t[t_run].screen_y--;
+            t[t_visible].screen_y--;
         }
-        t[t_run].screen_x = 0;
+        t[t_visible].screen_x = 0;
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
-        if (t[t_run].screen_x)
-            --t[t_run].screen_x;
+        if (t[t_visible].screen_x)
+            --t[t_visible].screen_x;
         else {
             // do nothing if none
-            if (!t[t_run].screen_y) return;
-            --t[t_run].screen_y;
-            t[t_run].screen_x = NUM_COLS - 1;
+            if (!t[t_visible].screen_y) return;
+            --t[t_visible].screen_y;
+            t[t_visible].screen_x = NUM_COLS - 1;
         }
-        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1)) = ' ';
-        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = ' ';
+        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
     } else {
-        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1)) = c;
-        *(uint8_t *)(t[t_run].video_mem + ((NUM_COLS * t[t_run].screen_y + t[t_run].screen_x) << 1) + 1) = ATTRIB;
-        ++t[t_run].screen_x;
+        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = c;
+        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
+        ++t[t_visible].screen_x;
     }
-    if (t[t_run].screen_x == NUM_COLS && t[t_run].screen_y < NUM_ROWS - 1) {
-        ++t[t_run].screen_y;
-        t[t_run].screen_x = 0;
-    } else if (t[t_run].screen_x == NUM_COLS && t[t_run].screen_y >= NUM_ROWS - 1) {
-        ++t[t_run].screen_y;
+    if (t[t_visible].screen_x == NUM_COLS && t[t_visible].screen_y < NUM_ROWS - 1) {
+        ++t[t_visible].screen_y;
+        t[t_visible].screen_x = 0;
+    } else if (t[t_visible].screen_x == NUM_COLS && t[t_visible].screen_y >= NUM_ROWS - 1) {
+        ++t[t_visible].screen_y;
         scroll_up();
-        --t[t_run].screen_y;
-        t[t_run].screen_x = 0;
+        --t[t_visible].screen_y;
+        t[t_visible].screen_x = 0;
     }
     update_cursor();
 }
@@ -494,6 +494,6 @@ int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n) {
 void test_interrupts(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        t[t_run].video_mem[i << 1]++;
+        t[t_visible].video_mem[i << 1]++;
     }
 }
