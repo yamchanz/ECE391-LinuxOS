@@ -27,6 +27,7 @@
 #define RTC_FTYPE            0
 #define DIR_FTYPE            1
 #define FILE_FTYPE           2
+#define PROCESS_COUNT       6
 
 // file operations containing pointers to functions for that type of file
 typedef struct __attribute__((packed)) {
@@ -51,6 +52,8 @@ typedef struct __attribute__((packed)){
     // get ESP and EBP from address
     uint32_t esp;
     uint32_t ebp;
+    uint32_t cur_esp;
+    uint32_t cur_ebp;
     uint32_t pid;
     uint32_t parent_pid; // we may need this?
     uint16_t ss0;

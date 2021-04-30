@@ -3,6 +3,7 @@
 
 #include "lib.h"
 #include "keyboard.h"
+#include "paging.h"
 
 // cursor related macros (VGA registers)
 #define CURSOR_LOW      0x0F
@@ -32,7 +33,7 @@ typedef struct __attribute__((packed)) terminal {
 // Terminal array
 terminal_t t[TERMINAL_COUNT];
 // active terminal index
-int32_t t_run;
+int32_t t_cur;
 int32_t t_visible;
 
 // Clear the screen and put the cursor at the top

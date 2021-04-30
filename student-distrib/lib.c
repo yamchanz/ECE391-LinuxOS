@@ -58,7 +58,7 @@ format_char_switch:
                     switch (*buf) {
                         /* Print a literal '%' character */
                         case '%':
-                            putc('%');
+                            putc('%', t_cur);
                             break;
 
                         /* Use alternate formatting */
@@ -120,7 +120,7 @@ format_char_switch:
 
                         /* Print a single character */
                         case 'c':
-                            putc((uint8_t) *((int32_t *)esp));
+                            putc((uint8_t) *((int32_t *)esp), t_cur);
                             esp++;
                             break;
 
@@ -138,7 +138,7 @@ format_char_switch:
                 break;
 
             default:
-                putc(*buf);
+                putc(*buf, t_cur);
                 break;
         }
         buf++;
@@ -154,7 +154,7 @@ format_char_switch:
 int32_t puts(int8_t* s) {
     register int32_t index = 0;
     while (s[index] != '\0') {
-        putc(s[index]);
+        putc(s[index], t_cur);
         index++;
     }
     return index;
@@ -164,39 +164,39 @@ int32_t puts(int8_t* s) {
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */
-void putc(uint8_t c) {
+void putc(uint8_t c, int32_t tid) {
     if (!c) return;
     if(c == '\n' || c == '\r') {
-        if (++t[t_visible].screen_y >= NUM_ROWS) {
+        if (++t[tid].screen_y >= NUM_ROWS) {
             scroll_up();
-            t[t_visible].screen_y--;
+            t[tid].screen_y--;
         }
-        t[t_visible].screen_x = 0;
+        t[tid].screen_x = 0;
     // in case of backspace: move back a x or y if x == 0, move back a buffer
     } else if(c == '\b') {
-        if (t[t_visible].screen_x)
-            --t[t_visible].screen_x;
+        if (t[tid].screen_x)
+            --t[tid].screen_x;
         else {
             // do nothing if none
-            if (!t[t_visible].screen_y) return;
-            --t[t_visible].screen_y;
-            t[t_visible].screen_x = NUM_COLS - 1;
+            if (!t[tid].screen_y) return;
+            --t[tid].screen_y;
+            t[tid].screen_x = NUM_COLS - 1;
         }
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = ' ';
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[tid].video_mem + ((NUM_COLS * t[tid].screen_y + t[tid].screen_x) << 1)) = ' ';
+        *(uint8_t *)(t[tid].video_mem + ((NUM_COLS * t[tid].screen_y + t[tid].screen_x) << 1) + 1) = ATTRIB;
     } else {
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = c;
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
-        ++t[t_visible].screen_x;
+        *(uint8_t *)(t[tid].video_mem + ((NUM_COLS * t[tid].screen_y + t[tid].screen_x) << 1)) = c;
+        *(uint8_t *)(t[tid].video_mem + ((NUM_COLS * t[tid].screen_y + t[tid].screen_x) << 1) + 1) = ATTRIB;
+        ++t[tid].screen_x;
     }
-    if (t[t_visible].screen_x == NUM_COLS && t[t_visible].screen_y < NUM_ROWS - 1) {
-        ++t[t_visible].screen_y;
-        t[t_visible].screen_x = 0;
-    } else if (t[t_visible].screen_x == NUM_COLS && t[t_visible].screen_y >= NUM_ROWS - 1) {
-        ++t[t_visible].screen_y;
+    if (t[tid].screen_x == NUM_COLS && t[tid].screen_y < NUM_ROWS - 1) {
+        ++t[tid].screen_y;
+        t[tid].screen_x = 0;
+    } else if (t[tid].screen_x == NUM_COLS && t[tid].screen_y >= NUM_ROWS - 1) {
+        ++t[tid].screen_y;
         scroll_up();
-        --t[t_visible].screen_y;
-        t[t_visible].screen_x = 0;
+        --t[tid].screen_y;
+        t[tid].screen_x = 0;
     }
     update_cursor();
 }
@@ -494,6 +494,6 @@ int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n) {
 void test_interrupts(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        t[t_visible].video_mem[i << 1]++;
+        t[t_cur].video_mem[i << 1]++;
     }
 }

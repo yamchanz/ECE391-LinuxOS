@@ -42,11 +42,8 @@ void pcb_init(pcb_t *pcb) {
     pcb->fd_table[1] = stdout;
 
     //pid from 0 - 5
-    pcb->pid = t[t_visible].running_process;
-// FIX! check if current process is base shell
-    if(!pcb->pid) pcb->parent_pid = pcb->pid;
-    else pcb->parent_pid = pcb->pid - 1;
-    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
+    pcb->pid = t[t_cur].running_process;
+
     pcb->ss0 = KERNEL_DS;
 
     return;
@@ -78,7 +75,7 @@ int32_t execute (const uint8_t* command) {
     }
     if(!found) return -1;
 
-    // clear interrupts
+    // clear interrupts - t_run should not change from now
     cli();
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
@@ -143,11 +140,13 @@ int32_t execute (const uint8_t* command) {
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
     // update running process in terminal
-    t[t_visible].running_process = p;
-    process_status[t[t_visible].running_process] = 1;
+    t_cur = t_visible;
+    int32_t parent_process = t[t_cur].running_process;
+    t[t_cur].running_process = p;
+    process_status[t[t_cur].running_process] = 1;
 
     //set up paging
-    map_program(t[t_visible].running_process);
+    map_program(t[t_cur].running_process);
 
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
@@ -155,8 +154,16 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t *pcb;
-    pcb = get_pcb(t[t_visible].running_process);
+    pcb = get_pcb(t[t_cur].running_process);
     pcb_init(pcb);
+    // check if current process is base shell
+    if(t[t_cur].shell_flag == -1) {
+        t[t_cur].shell_flag = 0;
+        pcb->parent_pid = pcb->pid;
+    } else{
+        pcb->parent_pid = parent_process;
+    } 
+    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
 
     // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
@@ -187,18 +194,18 @@ int32_t halt (uint8_t status) {
     pcb_t *pcb;
 
     // get current process block and current process' parent block
-    pcb = get_pcb(t[t_visible].running_process);
+    pcb = get_pcb(t[t_cur].running_process);
 
     // clear all file descriptors
     for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
     // free up process, set running process back to parent
-    process_status[t[t_visible].running_process] = -1;
-    t[t_visible].running_process = pcb->parent_pid;
+    process_status[t[t_cur].running_process] = -1;
+    t[t_cur].running_process = pcb->parent_pid;
 
     // if current process block is base shell, re-execute shell
-    if (!pcb->pid)
+    if (pcb->parent_pid == pcb->pid)
         execute((uint8_t*)"shell");
 
     if (vidmap_page_flag) {
@@ -226,7 +233,7 @@ int32_t halt (uint8_t status) {
  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
-    pcb_t *pcb = get_pcb(t[t_visible].running_process);
+    pcb_t *pcb = get_pcb(t[t_cur].running_process);
 
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
@@ -245,7 +252,7 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *pcb = get_pcb(t[t_visible].running_process);
+    pcb_t *pcb = get_pcb(t[t_cur].running_process);
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
@@ -261,7 +268,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t open (const uint8_t* filename) {
-    pcb_t *pcb = get_pcb(t[t_visible].running_process);
+    pcb_t *pcb = get_pcb(t[t_cur].running_process);
 
     // input error handling
     if(filename == NULL || strlen((int8_t*)filename) == 0) {
@@ -327,7 +334,7 @@ int32_t close (int32_t fd) {
     if(fd >= FD_MAX || fd < FD_START) {
         return -1;
     }
-    pcb_t* pcb = get_pcb(t[t_visible].running_process);
+    pcb_t* pcb = get_pcb(t[t_cur].running_process);
 
     //already not in use we dont need to close
     if(pcb->fd_table[fd].flags == 0){
@@ -348,7 +355,7 @@ int32_t close (int32_t fd) {
  * return - 0 on success, -1 on failure
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
-    pcb_t* pcb = get_pcb(t[t_visible].running_process);
+    pcb_t* pcb = get_pcb(t[t_cur].running_process);
 
     if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
         return -1;

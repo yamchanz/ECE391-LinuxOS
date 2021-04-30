@@ -16,6 +16,9 @@
 #define HIGH_8_BIT_MASK 0xFF00
 #define LOW_8_BIT_MASK  0xFF
 
+// global vars for keeping track of terminal round robin status
+// int32_t t_next;
+
 void pit_init(void);
 void schedule(void);
 

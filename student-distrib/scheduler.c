@@ -1,10 +1,10 @@
 #include "scheduler.h"
 
 volatile int schedule_init;
+int i;
 
 void pit_init(void) {
     // initialize PIT to interrupts at 10ms frequency (10ms = 100Hz)
-    schedule_init = 1;
     uint32_t freq = 100;
     uint32_t divisor = 1193182 / freq;
     // disable interrupts to set registers
@@ -19,21 +19,73 @@ void pit_init(void) {
 }
 
 void schedule(void) {
-    // first bootup - start the three terminals
-    if(schedule_init) {
-        int i;
-        for(i = 0; i < 3; i++) {
-                // clone directory
-                // clone page table
-                // execute((uint8_t*)"shell");
-        }
-        schedule_init = 0;
+    // round robin scheduling
+    int32_t t_next = (t_cur + 1) % TERMINAL_COUNT;
+
+    // first three bootup - start the three terminals
+    if(t[t_cur].shell_flag == -1 /* maybe use -1 for nothing */) {
+
+        // process_status[t_cur] = 1; /* in the future set to terminal id  */
+        t[t_cur].running_process = t_cur;
+        // t[t_cur].shell_flag = 0;
+        // parent pid of base is parent
+        // parent_pid_arr[i] = i;
+        // put current esp and ebp into pcb
+        pcb_t* pcb = get_pcb(t_cur);
+
+        asm volatile(
+            "movl %%esp, %0     \n"
+            "movl %%ebp, %1     \n"
+            :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+            : // input
+        );
+        ++i;
+
+        execute((uint8_t*)"shell");
+
+        // we will never get here
+        return;
     }
-    // second bootup
-    // printf("a");
+
+    // all other schedule calls
+    if(t[t_next].shell_flag == -1 || i == 3) {
+        t_cur = t_next;
+        send_eoi(IRQ_PIT);
+        if (i == 3) 
+            i = 0;
+        return;
+    }
+    // get next process pcb
+    pcb_t* old_pcb = get_pcb(t[t_cur].running_process);
+    pcb_t* cur_pcb = get_pcb(t[t_next].running_process);
+
     // switch ESP/EBP to next process' kernel stack
-    //tss.ss0 = KERNEL_DS;
-    //tss.esp0 = _8_MB - _8_KB * pcb->pid - FOUR_BYTE;
+    tss.ss0 = KERNEL_DS;
+    tss.esp0 = _8_MB - _8_KB * cur_pcb->pid - 4;
+
+    // remap + flush TLB 
+    map_program(cur_pcb->pid);
+    
+    
     // restore next process' TSS
-    // flush TLB on process switch
+    asm volatile(
+        "movl %%esp, %0\n\
+        movl %%ebp, %1"
+        :"=r"(old_pcb->cur_esp), "=r"(old_pcb->cur_ebp) // output
+        : // input
+    );
+
+    // process switch
+    asm volatile(
+        "movl %0, %%esp\n\
+        movl %1, %%ebp"
+        : //ouput
+        :"r"(cur_pcb->cur_esp), "r"(cur_pcb->cur_ebp) //input
+    );
+
+    t_cur = t_next;
+    return;
+
 }
+
+

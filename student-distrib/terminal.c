@@ -18,8 +18,8 @@ void clear_buffer(void) {
 void terminal_init(void) {
     // t[t_visible].video_mem = (char *)VID_MEM; //xb8000
     // terminal_reset();
-    int i;
-    for(i = 0; i < TERMINAL_COUNT; i++) {
+    int32_t i;
+    for(i = 0; i < TERMINAL_COUNT; ++i) {
         t[i].running_process = -1;
         t[i].shell_flag = -1;
     }
@@ -110,7 +110,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
 
     int32_t i;
     for (i = 0; i < nbytes; ++i)
-        putc(((uint8_t *)buf)[i]);
+        putc(((uint8_t *)buf)[i], t_cur);
 
     return nbytes;
 }
