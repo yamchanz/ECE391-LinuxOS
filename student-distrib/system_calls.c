@@ -69,7 +69,6 @@ pcb_t* get_pcb(int pid_in) {
  */
 int32_t execute (const uint8_t* command) {
     // if all processes are filled, return -1
-    //if (num_processes > 5)
     int p, found;
     for(p = 0, found = 0; p < PROCESS_COUNT; ++p){
         if(process_status[p] == -1){
@@ -148,7 +147,6 @@ int32_t execute (const uint8_t* command) {
     process_status[t[t_visible].running_process] = 1;
 
     //set up paging
-    // map_program(++num_processes);
     map_program(t[t_visible].running_process);
 
     // write file data into program image (virtual address)
@@ -157,7 +155,6 @@ int32_t execute (const uint8_t* command) {
 
     // create pcb for this process
     pcb_t *pcb;
-    // pcb = get_pcb(num_processes);
     pcb = get_pcb(t[t_visible].running_process);
     pcb_init(pcb);
 
@@ -197,7 +194,6 @@ int32_t halt (uint8_t status) {
         close(i);
 
     // free up process, set running process back to parent
-    // --num_processes;
     process_status[t[t_visible].running_process] = -1;
     t[t_visible].running_process = pcb->parent_pid;
 
