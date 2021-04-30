@@ -1,4 +1,6 @@
 #include "keyboard.h"
+#include "paging.h"
+#include "system_calls.h"
 
 // format copied from https://stackoverflow.com/questions/61124564/convert-scancodes-to-ascii
 // 0: none 1: shift 2: caps_lock 3: caps_lock && shift
@@ -228,20 +230,24 @@ void keyboard_handler(void) {
     // check for terminal switch
     if (keyboard_flag & ALT_MASK) {
         switch (scan_code) {
+            int old_video_idx = ((int)t[t_visible].video_mem >> 12);
+            page_table[old_video_idx] = (uint32_t)((VID_MEM + (t_visible + 1) * _4_KB) | RW | PR);
+            memcpy((uint8_t*)(VID_MEM + (t_visible + 1) * _4_KB), (uint8_t*)VID_MEM, 4000);
+            flush();
             // switch to terminal 0
             case F1:
-                terminal_switch(0);
                 t_visible = 0;
+                switch_display(0);
                 break;
             // switch to terminal 1
             case F2:
-                terminal_switch(1);
                 t_visible = 1;
+                switch_display(1);
                 break;
             // switch to terminal 2
             case F3:
-                terminal_switch(2);
                 t_visible = 2;
+                switch_display(2);
                 break;
             default: ;
         }

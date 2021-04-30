@@ -28,9 +28,6 @@ void schedule(void) {
                 // execute((uint8_t*)"shell");
         }
         schedule_init = 0;
-// temporary
-t_run = 0;
-t_visible = 0;
     }
     // second bootup
     // printf("a");

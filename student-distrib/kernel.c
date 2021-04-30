@@ -145,7 +145,6 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
-    num_processes = -1;
     for(p = 0; p < PROCESS_COUNT; p++)
         process_status[p] = -1;
     /* Init the IDT */

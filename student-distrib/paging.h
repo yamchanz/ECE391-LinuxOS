@@ -25,10 +25,10 @@
 #include "system_calls.h"
 #include "terminal.h"
 
-#define VIDEO_MEM_ADDR      184
-#define TERMINAL0_BUFF      VIDEO_MEM_ADDR + 1
-#define TERMINAL1_BUFF      VIDEO_MEM_ADDR + 2
-#define TERMINAL2_BUFF      VIDEO_MEM_ADDR + 3
+#define VID_MEM_IDX         184
+#define TERM0_BUFF          VID_MEM_IDX + 1
+#define TERM1_BUFF          VID_MEM_IDX + 2
+#define TERM2_BUFF          VID_MEM_IDX + 3
 
 #define K_VIDEO_IDX         0
 #define KERNEL_IDX          1
@@ -40,6 +40,10 @@
 #define USR                 0x04
 #define PAGE_4MB            0x80
 
+uint32_t video_page_table[_1_KB] __attribute__((aligned(_4_KB)));
+uint32_t page_table[_1_KB] __attribute__((aligned(_4_KB)));
+uint32_t page_dir[_1_KB] __attribute__((aligned(_4_KB)));
+
 /* maps running program to virutal address 128MB */
 extern void map_program(uint32_t pid);
 /* initializes pages */
@@ -49,7 +53,7 @@ extern void map_video(void);
 /* unmaps page after program is finished writing */
 extern void unmap_video(void);
 /* maps virtual memory video to visible terminal */
-extern void terminal_switch(int32_t tid);
+extern void switch_display(int32_t tid);
 /* flushes TLB when memory map altered */
 void flush(void);
 

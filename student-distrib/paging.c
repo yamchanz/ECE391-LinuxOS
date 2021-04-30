@@ -1,9 +1,5 @@
 #include "paging.h"
 
-uint32_t video_page_table[_1_KB] __attribute__((aligned(_4_KB)));
-uint32_t page_table[_1_KB] __attribute__((aligned(_4_KB)));
-uint32_t page_dir[_1_KB] __attribute__((aligned(_4_KB)));
-
 /* paging_init - CP1
  * Initializes and enables paging. This includes the 4KB video memory inside
  * the first 4MB page, the 4MB Kernal page, as well as 1022 "not present"
@@ -18,11 +14,11 @@ void paging_init(void) {
         page_table[i] = i * _4_KB | RW;
     }
     // 4KB page mapped to physical video memory
-    page_table[VIDEO_MEM_ADDR] |= RW | PR;
+    page_table[VID_MEM_IDX] |= RW | PR;
     // preceding 3 pages reserved for terminal buffers
-    page_table[TERMINAL0_BUFF] |= RW | PR;
-    page_table[TERMINAL1_BUFF] |= RW | PR;
-    page_table[TERMINAL2_BUFF] |= RW | PR;
+    page_table[TERM0_BUFF] |= RW | PR;
+    page_table[TERM1_BUFF] |= RW | PR;
+    page_table[TERM2_BUFF] |= RW | PR;
     // first page is reserved for video and buffers
     page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) | RW | PR;
     // second page is reserved for 4MB Kernel page
@@ -65,7 +61,7 @@ void map_program(uint32_t pid) {
  */
 void map_video(void){
     page_dir[U_VIDEO_IDX] = (uint32_t)video_page_table | USR | RW | PR;
-    video_page_table[0] = (VIDEO_MEM_ADDR << 12) | USR | RW | PR;
+    video_page_table[0] = (VID_MEM_IDX << 12) | USR | RW | PR;
 }
 
 /* unmap_video - CP4
@@ -80,19 +76,40 @@ void unmap_video(void){
     flush();
 }
 
-/* terminal_switch - CP5
+/* switch_display - CP5
  *
- * parameter - none
+ * parameter - tid : terminal number to display to screen.
  * return - none
  */
-void terminal_switch(int32_t tid) {
+void switch_display(int32_t tid) {
     // if current process is process to be outputted
-    if(tid == t_visible) {
-        page_table[VIDEO_MEM_ADDR] = (uint32_t)VID_MEM | RW | PR;
+    //if(tid == t_visible) {
+    //    page_table[VID_MEM_IDX] = (uint32_t)VID_MEM | RW | PR;
     // if current process should not be outputted to screen, write to buffer
-    } else {
-        page_table[VIDEO_MEM_ADDR] = (uint32_t)(VID_MEM + (tid + 1) * _4_KB) | RW | PR;
-    }
+    //} else {
+    //    page_table[VID_MEM_IDX] = (uint32_t)(VID_MEM + (tid + 1) * _4_KB) | RW | PR;
+    //}
+    // sanity check
+    if (tid < 0 || tid > 2) return -1;
+    int video_idx = ((int)t[tid].video_mem >> 12);
+    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, 4000);
+    page_table[video_idx] = (uint32_t)(VID_MEM | RW | PR);
+    /* switch(tid) {
+        case 0:
+            page_table[video_idx + 1] = (uint32_t)((VID_MEM + _8_KB) | RW | PR);
+            page_table[video_idx + 2] = (uint32_t)((VID_MEM + 3 * _4_KB) | RW | PR);
+            memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, 4000);
+            break;
+        case 1:
+            page_table[video_idx - 1] = (uint32_t)((VID_MEM + _4_KB) | RW | PR);
+            page_table[video_idx + 1] = (uint32_t)((VID_MEM + 3 * _4_KB) | RW | PR);
+            memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, 4000);
+            break;
+        case 2:
+            page_table[video_idx - 2] = (uint32_t)((VID_MEM + _4_KB) | RW | PR);
+            page_table[video_idx - 1] = (uint32_t)((VID_MEM + _8_KB) | RW | PR);
+            break;
+    } */
     flush();
 }
 

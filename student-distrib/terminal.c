@@ -16,7 +16,18 @@ void clear_buffer(void) {
  * Return Value: none
  * Function: Clear the screen and put the cursor at the top */
 void terminal_init(void) {
-    t[t_visible].video_mem = (char *)VIDEO;
+    // t[t_visible].video_mem = (char *)VID_MEM; //xb8000
+    // terminal_reset();
+    int i;
+    for(i = 0; i < TERMINAL_COUNT; i++) {
+        t[i].running_process = -1;
+        t[i].shell_flag = -1;
+    }
+    t[0].video_mem = (char*)(VID_MEM + _4_KB); // xb9000
+    t[1].video_mem = (char*)(VID_MEM + _8_KB); // xba000
+    t[2].video_mem = (char*)(VID_MEM + 3 * _4_KB); // xbb000
+    t_visible = 0;
+    switch_display(0);
     terminal_reset();
 }
 

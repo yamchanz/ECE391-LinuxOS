@@ -58,8 +58,6 @@ typedef struct __attribute__((packed)){
     uint8_t arg[MAX_KBUFF_LEN];
 } pcb_t;
 
-// count of processes running (previously pid)
-int num_processes;
 // array of free processes. -1 if free, otherwise stores terminal id (only 1 for now)
 int process_status[PROCESS_COUNT];
 
