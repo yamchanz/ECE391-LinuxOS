@@ -84,18 +84,21 @@ void unmap_video(void) {
 
 /* terminal_switch - CP5
  * 
- * parameter - none
+ * parameter - tid - the terminal id we want to switch to
  * return - none
  */
 void terminal_switch(int32_t tid) {
-    // if current process is process to be outputted
-    if(tid == t_visible) {
-        page_table[VIDEO_MEM_ADDR] = (uint32_t)VID_MEM | RW | PR;
-    // if current process should not be outputted to screen, write to buffer
-    } else {
-        page_table[VIDEO_MEM_ADDR] = (uint32_t)(VID_MEM + (tid + 1) * _4_KB) | RW | PR;
-    }
-    flush();
+    //if(t[tid].status == 1){
+        // if current process is process to be outputted
+        if(tid == t_visible) {
+            page_table[VIDEO_MEM_ADDR] = (uint32_t)VID_MEM | RW | PR;
+        // if current process should not be outputted to screen, write to buffer
+        } else {
+            page_table[VIDEO_MEM_ADDR] = (uint32_t)(VID_MEM + (tid + 1) * _4_KB) | RW | PR;
+        }
+        flush();
+    //}
+    
 }
 
 /* flush - CP2

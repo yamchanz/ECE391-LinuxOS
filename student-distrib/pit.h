@@ -51,6 +51,7 @@ int32_t t_cur;
 extern void pit_init(void);
 /* scheduler for PIT interrupt */
 extern void schedule(void);
+extern int32_t get_terminal();
 
 
 #endif

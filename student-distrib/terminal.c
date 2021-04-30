@@ -26,10 +26,17 @@ void terminal_init(void) {
     int32_t i;
     for (i = 0; i < TERMINAL_COUNT; ++i) {
         t[i].video_mem = (char *)(VIDEO + _4_KB * i);
-        t[i].status = 0;   
+        t[i].status = 0;
+     
         terminal_reset(i);
     }
 }
+
+//int32_t set_visible(int32_t ter_id){
+ //   if(term[ter_id].t_status == 1){
+
+    //}
+//}
 
 /* int32_t terminal_open;
  * Inputs: filename -- unused

@@ -157,7 +157,7 @@ void keyboard_handler(void) {
     uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
 
     char* video_mem_cpy = t[t_visible].video_mem;
-    t[t_visible].video_mem = (char*)0xb8000;
+    t[t_visible].video_mem = (char*)VIDEO;
 
     scan_code = inb(KEYBOARD_PORT);
     // check special cases

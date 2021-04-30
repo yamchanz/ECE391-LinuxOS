@@ -152,11 +152,7 @@ int32_t execute (const uint8_t* command) {
     read_data(search.inode, ENTRY_POINT_START, buffer, FOUR_BYTE);
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
-    if (p < 3) 
-        t_run = (t_cur + 2) % 3;
-    else {
-        t_run = t_visible;
-    }
+    t_run = get_terminal();
 
     // update running process in terminal
     t[t_run].cur_pid = p;

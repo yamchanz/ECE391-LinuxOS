@@ -26,6 +26,7 @@ typedef struct __attribute__((packed)) terminal {
 
     // list that contains pids that this terminal is using (indices don't matter)
     //int32_t pid_[4];
+    //int32_t tid;
     uint8_t cur_pid;
     uint8_t status;
 } terminal_t;

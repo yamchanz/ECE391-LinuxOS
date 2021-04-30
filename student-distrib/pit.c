@@ -70,6 +70,9 @@ void schedule() {
 
     return;
 }
+int32_t get_terminal(){
+    return t_cur;
+}
 
 /* pit_init - CP5
  * Initializes PIT (programmable interrupt controller) for scheduling.
