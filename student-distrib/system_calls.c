@@ -45,7 +45,7 @@ void pcb_init(pcb_t *pcb) {
     pcb->pid = term[cur_pid].cur_pid_idx;
 
     // check if current process is base shell
-    if(term[cur_pid].t_status == 0){
+    if(term[executing_term].t_status == 0){
         cur_ter = executing_term;
         pcb->parent_pid = pcb->pid;
         term[executing_term].t_status = 1;  
