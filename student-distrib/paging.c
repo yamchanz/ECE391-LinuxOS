@@ -82,35 +82,25 @@ void unmap_video(void){
  * return - none
  */
 void switch_display(int32_t tid) {
-    // if current process is process to be outputted
-    //if(tid == t_visible) {
-    //    page_table[VID_MEM_IDX] = (uint32_t)VID_MEM | RW | PR;
-    // if current process should not be outputted to screen, write to buffer
-    //} else {
-    //    page_table[VID_MEM_IDX] = (uint32_t)(VID_MEM + (tid + 1) * _4_KB) | RW | PR;
-    //}
     // sanity check
-    if (tid < 0 || tid > 2) return -1;
-    int video_idx = ((int)t[tid].video_mem >> 12);
-    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, 4000);
-    page_table[video_idx] = (uint32_t)(VID_MEM | RW | PR);
-    /* switch(tid) {
-        case 0:
-            page_table[video_idx + 1] = (uint32_t)((VID_MEM + _8_KB) | RW | PR);
-            page_table[video_idx + 2] = (uint32_t)((VID_MEM + 3 * _4_KB) | RW | PR);
-            memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, 4000);
-            break;
-        case 1:
-            page_table[video_idx - 1] = (uint32_t)((VID_MEM + _4_KB) | RW | PR);
-            page_table[video_idx + 1] = (uint32_t)((VID_MEM + 3 * _4_KB) | RW | PR);
-            memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, 4000);
-            break;
-        case 2:
-            page_table[video_idx - 2] = (uint32_t)((VID_MEM + _4_KB) | RW | PR);
-            page_table[video_idx - 1] = (uint32_t)((VID_MEM + _8_KB) | RW | PR);
-            break;
-    } */
+    if (tid < 0 || tid > 2) return;
+
+    // copy current VID_MEM into correct background buffer
+    int old_video_idx = ((int)t[t_visible].video_mem >> 12);
+    page_table[old_video_idx] = (uint32_t)((VID_MEM + ((t_visible + 1) % 3) * _4_KB) | RW | PR);
     flush();
+    memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
+
+    // update t_visible to next process
+    t_visible = tid;
+
+    // copy next background buffer into VID_MEM so we can display
+    int video_idx = ((int)t[tid].video_mem >> 12);
+    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, _4_KB);
+    page_table[video_idx] = (uint32_t)(VID_MEM | RW | PR);
+    flush();
+
+    return;
 }
 
 /* flush - CP2

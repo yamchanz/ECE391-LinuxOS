@@ -230,24 +230,20 @@ void keyboard_handler(void) {
     // check for terminal switch
     if (keyboard_flag & ALT_MASK) {
         switch (scan_code) {
-            int old_video_idx = ((int)t[t_visible].video_mem >> 12);
-            page_table[old_video_idx] = (uint32_t)((VID_MEM + (t_visible + 1) * _4_KB) | RW | PR);
-            memcpy((uint8_t*)(VID_MEM + (t_visible + 1) * _4_KB), (uint8_t*)VID_MEM, 4000);
-            flush();
             // switch to terminal 0
             case F1:
-                t_visible = 0;
                 switch_display(0);
+                update_cursor();
                 break;
             // switch to terminal 1
             case F2:
-                t_visible = 1;
                 switch_display(1);
+                update_cursor();
                 break;
             // switch to terminal 2
             case F3:
-                t_visible = 2;
                 switch_display(2);
+                update_cursor();
                 break;
             default: ;
         }
