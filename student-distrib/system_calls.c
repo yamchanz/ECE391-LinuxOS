@@ -74,7 +74,7 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
-    int32_t t_run_cp;
+    t_run = t_visible;
     // don't execute if pid is out of range 0 - 5
     if (pid > 5)
         return -1;

@@ -36,10 +36,11 @@ int32_t t_run;
 int32_t t_visible;
 
 // Clear the screen and put the cursor at the top
-void terminal_reset(void);
+void terminal_reset(int32_t tid);
 // Initialize terminal
 void terminal_init(void);
 // Clears terminal buffer
+// void clear_buffer(int32_t tid);
 void clear_buffer(void);
 
 // Open the terminal and display it
@@ -53,9 +54,12 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes);
 int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes);
 
 // Delete the first line and move everything up a line
-void scroll_up(void);
+void scroll_up(int32_t tid);
+// void scroll_up(void);
 // Update the cursor position
-void update_cursor(void);
+void update_cursor(int32_t tid);
+// void update_cursor(void);
 // get the parent pid within a terminal
 // int32_t get_parent_pid(void);
 #endif
+

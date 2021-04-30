@@ -1,6 +1,8 @@
 #include "pit.h"
 
 int32_t t_next;
+int32_t t_cur;
+
 /* schedule - CP5
  * reference http://www.jamesmolloy.co.uk/tutorial_html/9.-Multitasking.html
  * parameters - none
@@ -9,19 +11,19 @@ int32_t t_next;
 static int i = 0;
 
 void schedule() {
-    t_next = (t_run + 1) % TERMINAL_COUNT;
+    t_next = (t_cur + 1) % TERMINAL_COUNT;
     // first bootup - start the three terminals
-    if(t[t_run].pid_[0] == -1 /* maybe use -1 for nothing */) {
+    if(t[t_cur].pid_[0] == -1 /* maybe use -1 for nothing */) {
 
         shell_init = 1;
         // for pid 0 to 2,  assign to each terminal and init
-        t[t_run].pid_[0] = i++;
-        t[t_run].cur_pid_idx = 0;
+        t[t_cur].pid_[0] = i++;
+        t[t_cur].cur_pid_idx = 0;
         
         // parent pid of base is parent
         // parent_pid_arr[i] = i;
         // put current esp and ebp into pcb
-        pcb_t* pcb = get_pcb(t_run);
+        pcb_t* pcb = get_pcb(t_cur);
 
         asm volatile(
             "movl %%esp, %0     \n"
@@ -29,7 +31,7 @@ void schedule() {
             :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
             : // input
         );
-        t_run = t_next;
+        t_cur = t_next;
         execute((uint8_t*)"shell");
 
         // we will never get here
@@ -39,7 +41,7 @@ void schedule() {
     // all other schedule calls
     
     // get next process pcb
-    pcb_t* old_pcb = get_pcb(t[t_run].pid_[t[t_run].cur_pid_idx]);
+    pcb_t* old_pcb = get_pcb(t[t_cur].pid_[t[t_cur].cur_pid_idx]);
     pcb_t* cur_pcb = get_pcb(t[t_next].pid_[t[t_next].cur_pid_idx]);
     // switch ESP/EBP to next process' kernel stack
     tss.ss0 = KERNEL_DS;
@@ -48,7 +50,7 @@ void schedule() {
     // remap + flush TLB 
     map_program(cur_pcb->pid);
     
-    t_run = t_next;
+    t_cur = t_next;
 
     // restore next process' TSS
     asm volatile(

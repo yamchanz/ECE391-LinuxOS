@@ -156,8 +156,8 @@ void keyboard_init(void) {
 void keyboard_handler(void) {
     uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
 
-    char* video_mem_cpy = t[t_run].video_mem;
-    t[t_run].video_mem = (char*)0xb8000;
+    char* video_mem_cpy = t[t_visible].video_mem;
+    t[t_visible].video_mem = (char*)0xb8000;
 
     scan_code = inb(KEYBOARD_PORT);
     // check special cases
@@ -203,14 +203,14 @@ void keyboard_handler(void) {
         case ENTER_PRS:
             // from LSB, t[0], t[1], t[2]
             enter_flag |= 1 << t_visible;
-            putc('\n');
+            putc('\n', t_visible);
             send_eoi(KEYBOARD_IRQ);
             return;
             
         case BACKSPACE_PRS:
             if (t[t_visible].buffer_idx) {
                 t[t_visible].buffer[--t[t_visible].buffer_idx] = BUF_END_CHAR;
-                putc('\b');
+                putc('\b', t_visible);
             }
             send_eoi(KEYBOARD_IRQ);
             return;
@@ -224,7 +224,7 @@ void keyboard_handler(void) {
 
     // check for CTRL-L 
     if (keyboard_flag & CTRL_MASK && (key_ascii == 'L' || key_ascii == 'l')) {
-        terminal_reset();
+        terminal_reset(t_visible);
         send_eoi(KEYBOARD_IRQ);
         return;
     }
@@ -263,10 +263,10 @@ void keyboard_handler(void) {
             t[t_visible].buffer[t[t_visible].buffer_idx] = '\0';  // line limiter
         } else
             t[t_visible].buffer_idx = 0;
-        putc(key_ascii);
+        putc(key_ascii, t_visible);
     }
 
-    t[t_run].video_mem = video_mem_cpy;
+    t[t_visible].video_mem = video_mem_cpy;
 
     send_eoi(KEYBOARD_IRQ);
     return;

@@ -160,7 +160,7 @@ int rtc_freq_test() {
 	*freq = 2;
 	int amt_ints = 1;
 	while(*freq <= HIGH_LIMIT_FREQ) {
-		terminal_reset();
+		terminal_reset(t_run);
 		// error checking for NULL case or non-log2 number
 		if(rtc_write(rtc, freq, INT_BYTES) < 0) {
 			return FAIL;
@@ -222,7 +222,7 @@ int read_file_test(){
 		return FAIL;
 	}
 	for(i = 0; i < FRAME1_SIZE;i++){
-			putc(buf[i]);
+			// putc(buf[i]);
 	}
 	file_close(fd);
 	return PASS;
@@ -244,7 +244,7 @@ int read_file_offset_test(){
 	read_dentry_by_name((uint8_t*)"frame1.txt", &dentry);
 	read_data(dentry.inode, FRAME1_SIZE - 10, buf, 5);
 	for(i = 0; i < 5;i++){
-			putc(buf[i]);
+			// putc(buf[i]);
 	}
 	file_close(fd);
 	return PASS;
@@ -270,7 +270,7 @@ int read_file_large(){
 	}
 	
 	for(i = 0; i < FRAME2_SIZE-1; i++){
-			putc(buf[i]);
+			// putc(buf[i]);
 	}
 	return PASS;
 }
