@@ -77,9 +77,11 @@ void unmap_video(void){
 }
 
 /* switch_display - CP5
- *
+ * Switches visible terminal from one to the other. First copies contents of
+ * current video memory to the correct terminal video buffer,  and then
  * parameter - tid : terminal number to display to screen.
  * return - none
+ * side-effect - global t_visible is changed to new visible terminal.
  */
 void switch_display(int32_t tid) {
     // sanity check
@@ -87,7 +89,7 @@ void switch_display(int32_t tid) {
 
     // copy current VID_MEM into correct background buffer
     int old_video_idx = ((int)t[t_visible].video_mem >> 12);
-    page_table[old_video_idx] = (uint32_t)((VID_MEM + ((t_visible + 1) % 3) * _4_KB) | RW | PR);
+    page_table[old_video_idx] = (uint32_t)t[t_visible].video_mem | RW | PR;
     flush();
     memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
 
@@ -99,8 +101,6 @@ void switch_display(int32_t tid) {
     memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, _4_KB);
     page_table[video_idx] = (uint32_t)(VID_MEM | RW | PR);
     flush();
-
-    return;
 }
 
 /* flush - CP2

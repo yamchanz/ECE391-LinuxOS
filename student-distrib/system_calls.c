@@ -44,10 +44,10 @@ void pcb_init(pcb_t *pcb) {
     //pid from 0 - 5
     pcb->pid = t[t_visible].running_process;
 // FIX! check if current process is base shell
-    if(!pcb->pid) pcb->parent_pid = pcb->pid;
-    else pcb->parent_pid = pcb->pid - 1;
-    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
-    pcb->ss0 = KERNEL_DS;
+//    if(!pcb->pid) pcb->parent_pid = pcb->pid;
+//    else pcb->parent_pid = pcb->pid - 1;
+//    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
+//    pcb->ss0 = KERNEL_DS;
 
     return;
 }
@@ -142,13 +142,14 @@ int32_t execute (const uint8_t* command) {
     read_data(search.inode, ENTRY_POINT_START, buffer, FOUR_BYTE);
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
+    // save currently running process as parent
+    int32_t parent_process = t[t_visible].running_process;
     // update running process in terminal
     t[t_visible].running_process = p;
     process_status[t[t_visible].running_process] = 1;
 
     //set up paging
     map_program(t[t_visible].running_process);
-
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
     read_data(search.inode,0,(uint8_t *)PROG_IMG_ADDR, inode->length); // get length here
@@ -157,6 +158,16 @@ int32_t execute (const uint8_t* command) {
     pcb_t *pcb;
     pcb = get_pcb(t[t_visible].running_process);
     pcb_init(pcb);
+
+    // check if current process is base shell
+    if(t[t_visible].shell_flag == -1) {
+        t[t_visible].shell_flag = 0;
+        pcb->parent_pid = pcb->pid;
+    } else{
+        pcb->parent_pid = parent_process;
+    }
+    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
+    pcb->ss0 = KERNEL_DS;
 
     // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
@@ -198,7 +209,7 @@ int32_t halt (uint8_t status) {
     t[t_visible].running_process = pcb->parent_pid;
 
     // if current process block is base shell, re-execute shell
-    if (!pcb->pid)
+    if (pcb->parent_pid == pcb->pid)
         execute((uint8_t*)"shell");
 
     if (vidmap_page_flag) {
