@@ -43,11 +43,6 @@ void pcb_init(pcb_t *pcb) {
 
     //pid from 0 - 5
     pcb->pid = t[t_visible].running_process;
-// FIX! check if current process is base shell
-//    if(!pcb->pid) pcb->parent_pid = pcb->pid;
-//    else pcb->parent_pid = pcb->pid - 1;
-//    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
-//    pcb->ss0 = KERNEL_DS;
 
     return;
 }
