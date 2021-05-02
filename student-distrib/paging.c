@@ -78,13 +78,25 @@ void switch_display(int32_t tid) {
         
     int32_t prev_tid = t_visible;
 
+    int old_video_idx = ((int)t[t_visible].video_mem >> 12);
+    page_table[old_video_idx] = (uint32_t)t[t_visible].video_mem | RW | PR;
+    flush();
     memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
+    update_cursor();
+
+    // memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
     // update t_visible to next process
     t_visible = tid;
 
     // copy next background buffer into VID_MEM so we can display
-    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[t_visible].video_mem, _4_KB);
+    // memcpy((uint8_t*)VID_MEM, (uint8_t*)t[t_visible].video_mem, _4_KB);
+    // update_cursor();
+    int video_idx = ((int)t[tid].video_mem >> 12);
+    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, _4_KB);
+    page_table[video_idx] = (uint32_t)(VID_MEM | RW | PR);
+    flush();
     update_cursor();
+
 
     if(t[prev_tid].shell_flag == 0 && t[t_visible].shell_flag == 0)  {
         pcb_t *pcb = get_pcb(t[prev_tid].running_process); //old
