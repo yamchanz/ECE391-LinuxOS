@@ -156,6 +156,8 @@ void keyboard_init(void) {
  *  RETURN VALUE: none
  *  SIDE EFFECTS: modifies terminal */
 void keyboard_handler(void) {
+
+    send_eoi(KEYBOARD_IRQ);
     uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
 
     scan_code = inb(KEYBOARD_PORT);
@@ -164,46 +166,38 @@ void keyboard_handler(void) {
         case CAPS_LOCK_PRS:
             keyboard_flag = (keyboard_flag & CAPS_LOCK_MASK) ?
                 (keyboard_flag & ~CAPS_LOCK_MASK) : (keyboard_flag | CAPS_LOCK_MASK);
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case L_SHIFT_PRS:
         case R_SHIFT_PRS:
             keyboard_flag |= SHIFT_MASK;
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case L_SHIFT_REL:
         case R_SHIFT_REL:
             keyboard_flag &= ~SHIFT_MASK;
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case ALT_PRS:
             keyboard_flag |= ALT_MASK;
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case ALT_REL:
             keyboard_flag &= ~ALT_MASK;
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case CTRL_PRS:
             keyboard_flag |= CTRL_MASK;
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case CTRL_REL:
             keyboard_flag &= ~CTRL_MASK;
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case ENTER_PRS:
             // from LSB, t[0], t[1], t[2]
             enter_flag |= 1 << t_visible;
             putc('\n');
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         case BACKSPACE_PRS:
@@ -211,7 +205,6 @@ void keyboard_handler(void) {
                 t[t_visible].buffer[--t[t_visible].buffer_idx] = BUF_END_CHAR;
                 putc('\b');
             }
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         default: ;
@@ -224,7 +217,6 @@ void keyboard_handler(void) {
     // check for CTRL-L
     if (keyboard_flag & CTRL_MASK && (key_ascii == 'L' || key_ascii == 'l')) {
         terminal_reset();
-        send_eoi(KEYBOARD_IRQ);
         return;
     }
     // check for terminal switch
@@ -239,15 +231,18 @@ void keyboard_handler(void) {
             case F2:
                 switch_display(1);
                 update_cursor();
+                if(t[t_visible].shell_flag == -1)
+                    execute((uint8_t*)"shell");
                 break;
             // switch to terminal 2
             case F3:
                 switch_display(2);
                 update_cursor();
+                if(t[t_visible].shell_flag == -1)
+                    execute((uint8_t*)"shell");
                 break;
             default: ;
         }
-        send_eoi(KEYBOARD_IRQ);
         return;
     }
 
@@ -264,6 +259,5 @@ void keyboard_handler(void) {
             t[t_visible].buffer_idx = 0;
         putc(key_ascii);
     }
-    send_eoi(KEYBOARD_IRQ);
     return;
 }
