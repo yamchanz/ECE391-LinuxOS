@@ -43,6 +43,8 @@ void pcb_init(pcb_t *pcb) {
 
     //pid from 0 - 5
     pcb->pid = t[t_visible].running_process;
+
+    return;
 }
 
 /* get_pcb - CP3
@@ -204,7 +206,7 @@ int32_t halt (uint8_t status) {
     t[t_visible].running_process = pcb->parent_pid;
 
     // if current process block is base shell, re-execute shell
-    if (pcb->parent_pid == pcb->pid) {
+    if (pcb->parent_pid == pcb->pid){
         t[t_visible].running_process = -1;
         t[t_visible].shell_flag = -1;
         execute((uint8_t*)"shell");
