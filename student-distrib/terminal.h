@@ -29,6 +29,9 @@ typedef struct __attribute__((packed)) terminal {
     int process_ct;
     int running_process;
     int shell_flag;
+    int32_t flags;
+    //uint32_t esp;
+    
 } terminal_t;
 
 // Terminal array

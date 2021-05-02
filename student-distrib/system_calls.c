@@ -206,6 +206,7 @@ int32_t halt (uint8_t status) {
     // free up process, set running process back to parent
     process_status[t[t_visible].running_process] = -1;
     t[t_visible].running_process = pcb->parent_pid;
+    t[t_visible].process_ct--;
 
     // if current process block is base shell, re-execute shell
     if (pcb->parent_pid == pcb->pid){

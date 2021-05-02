@@ -112,7 +112,25 @@ void switch_display(int32_t tid) {
     //         :"r"(n_pcb->cur_esp), "r"(n_pcb->cur_ebp) //input
     //     );
     // }
+    if(t[t_visible].running_process != 0 && t[t_visible].running_process != 1 && t[t_visible].running_process != 2 ){
+        asm volatile (
+          "pushfl \n"          
+          "popl %%eax\n"      
+          "movl %%eax, %0 \n"
+     
+            :"=r" (t[t_visible].flags)
+            :
+            );
 
+        asm volatile (
+           "movl %0, %%eax \n" 
+            "pushl %%eax\n"
+            "popfl\n"
+            
+          :
+           :"r" (t[tid].flags)
+            );
+    }
 
     // copy current VID_MEM into correct background buffer
     int old_video_idx = ((int)t[t_visible].video_mem >> 12);
