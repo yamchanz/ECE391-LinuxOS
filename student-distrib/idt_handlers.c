@@ -21,7 +21,7 @@ void coprocess_seg_ex();
 void invalid_tss_ex();
 void seg_not_pres_ex();
 void stack_fault_ex();
-void gen_prot_ex();
+void gen_prot_ex();;
 void page_fault_ex();
 // 15 reserved by intel
 void reserved();
@@ -162,13 +162,13 @@ void rtc_handler() {
     RETURN VALUE: none
     SIDE EFFECTS: none
 */
-void sys_call_handler() {
-    clear();
-    printf("System call was handled");
-    // freeze with while loop
-    while(1) {
+void sys_call_handler() { // no longer used
+    // clear();
+    // printf("System call was handled");
+    // // freeze with while loop
+    // while(1) {
 
-    }
+    // }
 }
 
 /* Exception handler functions
@@ -182,12 +182,9 @@ void sys_call_handler() {
     SIDE EFFECTS: freezes the kernel
 */
 void divide_error_ex() {
-    clear();
     printf("Divide Error Exception (#DE)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  debug_ex
     DESCRIPTION: handler functions for debug exception
@@ -197,12 +194,9 @@ void divide_error_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void debug_ex() {
-    clear();
     printf("Debug Exception (#DB)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  nmi_interrupt_ex
     DESCRIPTION: handler functions for NMI interrupt exception
@@ -212,12 +206,9 @@ void debug_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void nmi_interrupt_ex() {
-    clear();
     printf("NMI Interrupt");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  breakpoint_ex
     DESCRIPTION: handler functions for breakpoint exception
@@ -227,12 +218,9 @@ void nmi_interrupt_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void breakpoint_ex() {
-    clear();
     printf("Breakpoint Exception (#BP)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  overflow_ex
     DESCRIPTION: handler functions for overflow exception
@@ -242,12 +230,9 @@ void breakpoint_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void overflow_ex() {
-    clear();
     printf("Overflow Exception (#OF)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  bound_range_ex
     DESCRIPTION: handler functions for bound range exceeded exception
@@ -257,12 +242,9 @@ void overflow_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void bound_range_ex() {
-    clear();
     printf("BOUND Range Exceeded Exception (#BR)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  invalid_opcode_ex
     DESCRIPTION: handler functions for invalid opcode exception
@@ -272,12 +254,9 @@ void bound_range_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void invalid_opcode_ex() {
-    clear();
     printf("Invalid Opcode Exception (#UD)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  device_not_avail_ex()
     DESCRIPTION: handler functions for device not available exception
@@ -287,12 +266,9 @@ void invalid_opcode_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void device_not_avail_ex() {
-    clear();
     printf("Device Not Available Exception (#NM)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  double_fault_ex
     DESCRIPTION: handler functions for double fault exception
@@ -302,12 +278,9 @@ void device_not_avail_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void double_fault_ex() {
-    clear();
     printf("Double Fault Exception (#DF)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  coprocess_seg_ex
     DESCRIPTION: handler functions for coprocessor segment overrun exception
@@ -317,12 +290,9 @@ void double_fault_ex() {
     SIDE EFFECTS: freezes the kernel
 */
 void coprocess_seg_ex() {
-    clear();
     printf("Coprocessor Segment Overrun");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  invalid_tss_ex
     DESCRIPTION: handler functions for invalid TSS exception
@@ -334,10 +304,8 @@ void coprocess_seg_ex() {
 void invalid_tss_ex() {
     clear();
     printf("Invalid TSS Exception (#TS)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  seg_not_pres_ex
     DESCRIPTION: handler functions for segment not present exception
@@ -349,10 +317,8 @@ void invalid_tss_ex() {
 void seg_not_pres_ex() {
     clear();
     printf("Segment Not Present (#NP)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  stack_fault_ex
     DESCRIPTION: handler functions for stack fault exception
@@ -364,10 +330,8 @@ void seg_not_pres_ex() {
 void stack_fault_ex() {
     clear();
     printf("Stack Fault Exception (#SS)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  gen_prot_ex
     DESCRIPTION: handler functions for general protection exception
@@ -379,10 +343,8 @@ void stack_fault_ex() {
 void gen_prot_ex() {
     clear();
     printf("General Protection Exception (#GP)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  page_fault_ex
     DESCRIPTION: handler functions for page fault exception
@@ -394,11 +356,8 @@ void gen_prot_ex() {
 void page_fault_ex() {
     clear();
     printf("Page-Fault Exception (#PF)");
-    // freeze with while loop
-
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  reserved
     DESCRIPTION: general handler function for interrupts reserved by Intel
@@ -410,10 +369,8 @@ void page_fault_ex() {
 void reserved(){
     clear();
     printf("Reserved by Intel");
-    // freeze with while looop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  fpu_fp_ex
     DESCRIPTION: handler functions for FPU floating point error exception
@@ -425,10 +382,8 @@ void reserved(){
 void fpu_fp_ex() {
     clear();
     printf("FPU Floating-Point Error (#MF)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  align_check_ex
     DESCRIPTION: handler functions for alignment check exception
@@ -440,10 +395,8 @@ void fpu_fp_ex() {
 void align_check_ex() {
     clear();
     printf("Alignment Check Exception (#AC)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  machine_check_ex
     DESCRIPTION: handler functions for machine-check exception
@@ -455,10 +408,8 @@ void align_check_ex() {
 void machine_check_ex() {
     clear();
     printf("Machine-Check Exception (#MC)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /*  simd_fp_ex
     DESCRIPTION: handler functions for SIMD floating point exception
@@ -470,10 +421,8 @@ void machine_check_ex() {
 void simd_fp_ex() {
     clear();
     printf("SIMD Floating-Point Exception (#XF)");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }
 /* undefined_handler
     DESCRIPTION: handler function for interrupts not yet defined otherwise
@@ -485,8 +434,6 @@ void simd_fp_ex() {
 void undefined_handler() {
     clear();
     printf("General handler implemented");
-    // freeze with while loop
-    while(1) {
-
-    }
+    exception_flag = 1;
+    halt(1);
 }

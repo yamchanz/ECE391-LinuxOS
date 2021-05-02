@@ -67,7 +67,7 @@ void terminal_reset(void) {
  * function implementation copied from https://wiki.osdev.org/Text_Mode_Cursor
  * description from https://stackoverflow.com/questions/25321608/moving-text-mode-cursor-not-working */
 void update_cursor(void) {
-    uint16_t position = t[t_visible].screen_y * NUM_COLS + t[t_visible].screen_x; // hold two 8 bits -> 16 bits
+    uint16_t position = t[t_cur].screen_y * NUM_COLS + t[t_cur].screen_x; // hold two 8 bits -> 16 bits
     outb(CURSOR_LOW, VGA_CTRL);
     outb((uint8_t)(position & 0xFF), VGA_DATA);
     outb(CURSOR_HIGH, VGA_CTRL);
@@ -87,13 +87,13 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 
     clear_buffer();
     sti();
-    while(t[t_visible].buffer_idx < BUF_SIZE - 1 && !get_enter_flag());
+    while(t[t_cur].buffer_idx < BUF_SIZE - 1 && !get_enter_flag(t_cur));
     cli();
-    size = nbytes > t[t_visible].buffer_idx ? t[t_visible].buffer_idx : nbytes;
+    size = nbytes > t[t_cur].buffer_idx ? t[t_cur].buffer_idx : nbytes;
     for (i = 0; i < size; ++i) {
-        ((int8_t*)buf)[i] = t[t_visible].buffer[i];
+        ((int8_t*)buf)[i] = t[t_cur].buffer[i];
     }
-    release_enter();
+    release_enter(t_cur);
     clear_buffer();
     return size;
 }
@@ -122,9 +122,9 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
 void scroll_up(void) {
     int32_t i;
 
-    memmove(t[t_visible].video_mem, t[t_visible].video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
+    memmove(t[t_cur].video_mem, t[t_cur].video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
     for (i = (NUM_ROWS - 1) * NUM_COLS; i < NUM_ROWS * NUM_COLS; ++i) {
-        *(uint8_t *)(t[t_visible].video_mem + (i << 1))     = ' ';
-        *(uint8_t *)(t[t_visible].video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(t[t_cur].video_mem + (i << 1))     = ' ';
+        *(uint8_t *)(t[t_cur].video_mem + (i << 1) + 1) = ATTRIB;
     }
 }

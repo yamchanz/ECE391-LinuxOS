@@ -36,8 +36,8 @@
 #define F2              0x3C
 #define F3              0x3D
 
-extern uint8_t get_enter_flag(void);
-extern void release_enter(void);
+extern uint8_t get_enter_flag(int32_t tid);
+extern void release_enter(int32_t tid);
 // initializes keyboard by setting the default flag and enabling on the PIC
 extern void keyboard_init(void);
 // installs the interrupt handler for the RTC

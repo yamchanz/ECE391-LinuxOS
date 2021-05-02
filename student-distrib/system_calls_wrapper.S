@@ -63,7 +63,7 @@ context_switch:
     iret
 
 halt_ret:
-    movl 4(%esp), %eax # status
+    movb 4(%esp), %al # status - 8 byte (b/c uint_8)
     movl 8(%esp), %ebp # parent_pcb->ebp
     movl 12(%esp), %esp # parent_pcb->esp
     leave

@@ -10,6 +10,7 @@
 #define KEYBOARD_IDX 0x21
 #define PIT_IDX 0x20
 
+uint8_t     exception_flag;
 // initialize IDT at bootup
 extern void initialize_idt();
 

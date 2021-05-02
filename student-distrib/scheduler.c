@@ -20,8 +20,9 @@ void pit_init(void) {
 
 void schedule(void) {
     // round robin scheduling
+    cli();
     int32_t t_next = (t_cur + 1) % TERMINAL_COUNT;
-
+    
     // first three bootup - start the three terminals
     if(t[t_cur].shell_flag == -1 /* maybe use -1 for nothing */) {
 
@@ -40,7 +41,7 @@ void schedule(void) {
             : // input
         );
         ++i;
-
+        
         execute((uint8_t*)"shell");
 
         // we will never get here
@@ -84,6 +85,7 @@ void schedule(void) {
     );
 
     t_cur = t_next;
+    sti();
     return;
 
 }

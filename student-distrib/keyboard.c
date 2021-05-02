@@ -121,7 +121,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
 
 // MSB to LSB: caps_lock, shift, alt, ctrl, nul, nul, nul, nul
 static uint8_t keyboard_flag;
-static uint8_t enter_flag;
+static uint8_t enter_flag[3];
 
 /*  enter_pressed
  *  DESCRIPTION: return if enter is pressed
@@ -129,12 +129,12 @@ static uint8_t enter_flag;
  *  OUTPUTS: 1 (true) if pressed 0 if not
  *  RETURN VALUE: none
  *  SIDE EFFECTS: none */
-uint8_t get_enter_flag(void) {
-    return enter_flag & (1 << t_visible);
+uint8_t get_enter_flag(int32_t tid) {
+    return enter_flag[tid];
 }
 
-void release_enter(void) {
-    enter_flag &= ~(1 << t_visible);
+void release_enter(int32_t tid) {
+    enter_flag[tid] = 0;
 }
 
 /*  keyboard_init
@@ -145,7 +145,9 @@ void release_enter(void) {
  *  SIDE EFFECTS: none */
 void keyboard_init(void) {
     keyboard_flag = 0;
-    enter_flag = 0;
+    int i;
+    for(i = 0; i < 3;++i)
+        enter_flag[i] = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -201,7 +203,7 @@ void keyboard_handler(void) {
 
         case ENTER_PRS:
             // from LSB, t[0], t[1], t[2]
-            enter_flag |= 1 << t_visible;
+            enter_flag[t_visible] = 1;
             putc('\n', t_visible);
             send_eoi(KEYBOARD_IRQ);
             return;

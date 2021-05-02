@@ -66,6 +66,7 @@ pcb_t* get_pcb(int pid_in) {
  */
 int32_t execute (const uint8_t* command) {
     // if all processes are filled, return -1
+    cli();
     int p, found;
     for(p = 0, found = 0; p < PROCESS_COUNT; ++p){
         if(process_status[p] == -1){
@@ -76,7 +77,7 @@ int32_t execute (const uint8_t* command) {
     if(!found) return -1;
 
     // clear interrupts - t_run should not change from now
-    cli();
+    
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
     uint8_t arg_idx, cmd_start = 0;
@@ -140,7 +141,7 @@ int32_t execute (const uint8_t* command) {
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
     // update running process in terminal
-    t_cur = t_visible;
+    //t_cur = t_visible;
     int32_t parent_process = t[t_cur].running_process;
     t[t_cur].running_process = p;
     process_status[t[t_cur].running_process] = 1;
@@ -156,6 +157,11 @@ int32_t execute (const uint8_t* command) {
     pcb_t *pcb;
     pcb = get_pcb(t[t_cur].running_process);
     pcb_init(pcb);
+
+    
+    // storing the argument to a buffer in pcb for getargs fn
+    strcpy((int8_t*)pcb->arg, (int8_t*)argb);
+
     // check if current process is base shell
     if(t[t_cur].shell_flag == -1) {
         t[t_cur].shell_flag = 0;
@@ -165,8 +171,6 @@ int32_t execute (const uint8_t* command) {
     } 
     pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
 
-    // storing the argument to a buffer in pcb for getargs fn
-    strcpy((int8_t*)pcb->arg, (int8_t*)argb);
 
     asm volatile(
         "movl %%esp, %0   \n\
@@ -180,6 +184,7 @@ int32_t execute (const uint8_t* command) {
 
     context_switch(entry_point);
 
+    // we don't get here
     return 0;
 }
 
@@ -205,8 +210,12 @@ int32_t halt (uint8_t status) {
     t[t_cur].running_process = pcb->parent_pid;
 
     // if current process block is base shell, re-execute shell
-    if (pcb->parent_pid == pcb->pid)
+    if (pcb->parent_pid == pcb->pid){
+        t[t_cur].running_process = -1;
+        t[t_cur].shell_flag = -1;
         execute((uint8_t*)"shell");
+    }
+        
 
     if (vidmap_page_flag) {
         unmap_video();
@@ -219,7 +228,12 @@ int32_t halt (uint8_t status) {
     tss.esp0 = pcb->esp0;
     tss.ss0 = KERNEL_DS;
 
-    halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
+    if (exception_flag) {
+        exception_flag = 0;
+        printf("returning 256");
+        halt_ret((uint32_t)256, pcb->ebp, pcb->esp);
+    }
+    halt_ret(status, pcb->ebp, pcb->esp);
 
     return 0; // doesn't reach here
 }
@@ -354,19 +368,19 @@ int32_t close (int32_t fd) {
  *             nbytes : number of bytes to be copied (sometimes more than the size of the buffer)
  * return - 0 on success, -1 on failure
  */
-int32_t getargs (uint8_t* buf, int32_t nbytes) {
-    pcb_t* pcb = get_pcb(t[t_cur].running_process);
+ int32_t getargs (uint8_t* buf, int32_t nbytes) {
+     pcb_t* pcb = get_pcb(t[t_cur].running_process);
 
-    if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
-        return -1;
-    }
+     if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
+         return -1;
+     }
 
-    // copy into our user buffer from pcb arg
-    strncpy((int8_t*)buf, (int8_t*)pcb->arg, nbytes);
-    buf[strlen((int8_t*)pcb->arg)] = '\0';
-    return 0;
+     // copy into our user buffer from pcb arg
+     strncpy((int8_t*)buf, (int8_t*)pcb->arg, nbytes);
+     buf[strlen((int8_t*)pcb->arg)] = '\0';
+     return 0;
+ }
 
-}
 
 /* vidmap - CP3
  * maps text mode video memory into user space at virtual address 140MB. Creates page

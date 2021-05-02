@@ -87,7 +87,7 @@ void switch_display(int32_t tid) {
 
     // copy current VID_MEM into correct background buffer
     int old_video_idx = ((int)t[t_visible].video_mem >> 12);
-    page_table[old_video_idx] = (uint32_t)((VID_MEM + ((t_visible + 1) % 3) * _4_KB) | RW | PR);
+    page_table[old_video_idx] = ((uint32_t)t[t_visible].video_mem | RW | PR);
     flush();
     memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
 

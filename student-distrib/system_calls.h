@@ -9,6 +9,7 @@
 #include "paging.h"
 #include "system_calls_wrapper.h"
 #include "scheduler.h"
+#include "idt_handlers.h"
 
 #define PCB_ADDR_MASK        0xFFFFE000
 #define PROG_IMG_ADDR        0x8048000
