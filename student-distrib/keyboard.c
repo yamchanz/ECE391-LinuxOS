@@ -231,15 +231,44 @@ void keyboard_handler(void) {
             case F2:
                 switch_display(1);
                 update_cursor();
-                if(t[t_visible].shell_flag == -1)
+                if(t[1].shell_flag == -1) {
+                    t[1].running_process = 1;
+                    // t[t_cur].shell_flag = 0;
+                    // parent pid of base is parent
+                    // parent_pid_arr[i] = i;
+                    // put current esp and ebp into pcb
+                    pcb_t* pcb = get_pcb(1);
+
+                    asm volatile(
+                        "movl %%esp, %0     \n"
+                        "movl %%ebp, %1     \n"
+                        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+                        : // input
+                    );
                     execute((uint8_t*)"shell");
+                }
+
                 break;
             // switch to terminal 2
             case F3:
                 switch_display(2);
                 update_cursor();
-                if(t[t_visible].shell_flag == -1)
+                if(t[2].shell_flag == -1) {
+                    t[2].running_process = 2;
+                    // t[t_cur].shell_flag = 0;
+                    // parent pid of base is parent
+                    // parent_pid_arr[i] = i;
+                    // put current esp and ebp into pcb
+                    pcb_t* pcb = get_pcb(2);
+
+                    asm volatile(
+                        "movl %%esp, %0     \n"
+                        "movl %%ebp, %1     \n"
+                        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+                        : // input
+                    );
                     execute((uint8_t*)"shell");
+                }
                 break;
             default: ;
         }

@@ -26,6 +26,7 @@ typedef struct __attribute__((packed)) terminal {
     uint8_t buffer[BUF_SIZE];
     uint32_t buffer_idx;
 
+    int process_ct;
     int running_process;
     int shell_flag;
 } terminal_t;

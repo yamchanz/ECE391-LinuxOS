@@ -71,7 +71,7 @@ int32_t execute (const uint8_t* command) {
             break;
         }
     }
-    if(!found) return -1;
+    if(!found || t[t_visible].process_ct > 3) return -1;
 
     // clear interrupts
     cli();
@@ -150,6 +150,8 @@ int32_t execute (const uint8_t* command) {
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
     read_data(search.inode,0,(uint8_t *)PROG_IMG_ADDR, inode->length); // get length here
+
+    t[t_visible].process_ct++;
 
     // create pcb for this process
     pcb_t *pcb;
