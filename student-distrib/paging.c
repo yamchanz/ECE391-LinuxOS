@@ -87,31 +87,31 @@ void switch_display(int32_t tid) {
     // sanity check
     if (tid < 0 || tid > 2) return;
 
-    // if(t[t_visible].shell_flag == 0 && t[tid].shell_flag == 0 && tid != t_visible)  {
-    //     pcb_t *pcb = get_pcb(t[t_visible].running_process); //old
-    //     pcb_t *n_pcb = get_pcb(t[tid].running_process);  // new
+    if(t[t_visible].shell_flag == 0 && t[tid].shell_flag == 0 && tid != t_visible)  {
+        pcb_t *pcb = get_pcb(t[t_visible].running_process); //old
+        pcb_t *n_pcb = get_pcb(t[tid].running_process);  // new
 
-    //     tss.ss0 = KERNEL_DS;
-    //     tss.esp0 = _8_MB - _8_KB * n_pcb->pid - 4;
+        tss.ss0 = KERNEL_DS;
+        tss.esp0 = _8_MB - _8_KB * n_pcb->pid - 4;
 
-    //     // remap + flush TLB 
-    //     map_program(n_pcb->pid);
+        // remap + flush TLB 
+        map_program(n_pcb->pid);
 
-    //     asm volatile(
-    //         "movl %%esp, %0     \n"
-    //         "movl %%ebp, %1     \n"
-    //         :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
-    //         : // input
-    //     );
+        asm volatile(
+            "movl %%esp, %0     \n"
+            "movl %%ebp, %1     \n"
+            :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+            : // input
+        );
 
-    //         // process switch
-    //     asm volatile(
-    //         "movl %0, %%esp\n\
-    //         movl %1, %%ebp"
-    //         : //ouput
-    //         :"r"(n_pcb->cur_esp), "r"(n_pcb->cur_ebp) //input
-    //     );
-    // }
+            // process switch
+        asm volatile(
+            "movl %0, %%esp\n\
+            movl %1, %%ebp"
+            : //ouput
+            :"r"(n_pcb->cur_esp), "r"(n_pcb->cur_ebp) //input
+        );
+    }
 
 
     // copy current VID_MEM into correct background buffer

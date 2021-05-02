@@ -171,6 +171,16 @@ void entry(unsigned long magic, unsigned long addr) {
     //launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
+    t[0].running_process = 0;
+    // t[t_cur].shell_flag = 0;
+    pcb_t* pcb = get_pcb(0);
+
+    asm volatile(
+        "movl %%esp, %0     \n"
+        "movl %%ebp, %1     \n"
+        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+        : // input
+    );
     execute((uint8_t*)"shell");
 
     /* Spin (nicely, so we don't chew up cycles) */

@@ -156,10 +156,8 @@ void keyboard_init(void) {
  *  RETURN VALUE: none
  *  SIDE EFFECTS: modifies terminal */
 void keyboard_handler(void) {
-
     send_eoi(KEYBOARD_IRQ);
     uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
-
     scan_code = inb(KEYBOARD_PORT);
     // check special cases
     switch(scan_code) {
@@ -247,7 +245,6 @@ void keyboard_handler(void) {
                     );
                     execute((uint8_t*)"shell");
                 }
-
                 break;
             // switch to terminal 2
             case F3:
