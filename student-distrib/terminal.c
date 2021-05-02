@@ -1,4 +1,5 @@
 #include "terminal.h"
+static char* video_mem = (char *)VID_MEM;
 
 /* void clear_buffer(void);
  * Inputs: void
@@ -120,9 +121,9 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
 void scroll_up(void) {
     int32_t i;
 
-    memmove(t[t_visible].video_mem, t[t_visible].video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
+    memmove(video_mem, video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
     for (i = (NUM_ROWS - 1) * NUM_COLS; i < NUM_ROWS * NUM_COLS; ++i) {
-        *(uint8_t *)(t[t_visible].video_mem + (i << 1))     = ' ';
-        *(uint8_t *)(t[t_visible].video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_mem + (i << 1))     = ' ';
+        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
 }

@@ -40,7 +40,6 @@
 #define USR                 0x04
 #define PAGE_4MB            0x80
 
-uint32_t video_page_table[_1_KB] __attribute__((aligned(_4_KB)));
 uint32_t page_table[_1_KB] __attribute__((aligned(_4_KB)));
 uint32_t page_dir[_1_KB] __attribute__((aligned(_4_KB)));
 
@@ -56,5 +55,6 @@ extern void unmap_video(void);
 extern void switch_display(int32_t tid);
 /* flushes TLB when memory map altered */
 void flush(void);
+void get_vidmem(void);
 
 #endif

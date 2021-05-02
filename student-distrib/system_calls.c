@@ -1,8 +1,5 @@
 #include "system_calls.h"
 
-// flag to remove vidmap page
-int vidmap_page_flag = 0;
-
 // static tables with function pointers for each file type
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
 file_ops_t fops_dir = {dir_open, dir_close, dir_read, dir_write};
@@ -214,11 +211,6 @@ int32_t halt (uint8_t status) {
         t[t_visible].shell_flag = -1;
         execute((uint8_t*)"shell");
     }
-
-    if (vidmap_page_flag) {
-        unmap_video();
-        vidmap_page_flag = 0;
-    }
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
 
@@ -393,9 +385,6 @@ int32_t vidmap (uint8_t** screen_start) {
     // create page and set screen start to 140MB pointer
     map_video();
     *screen_start = (uint8_t*) _140_MB;
-
-    // set vidmap_page flag
-    vidmap_page_flag = 1;
 
     return 0;
 

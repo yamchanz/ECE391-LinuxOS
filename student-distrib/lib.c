@@ -6,7 +6,7 @@
 // static int screen_x;
 // static int screen_y;
 
-// static char* video_mem = (char *)VIDEO;
+static char* video_mem = (char *)VID_MEM;
 
 /* void clear(void);
  * Inputs: void
@@ -15,8 +15,8 @@
 void clear(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        *(uint8_t *)(t[t_visible].video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(t[t_visible].video_mem + (i << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_mem + (i << 1)) = ' ';
+        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
 }
 
@@ -182,11 +182,11 @@ void putc(uint8_t c) {
             --t[t_visible].screen_y;
             t[t_visible].screen_x = NUM_COLS - 1;
         }
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = ' ';
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = ' ';
+        *(uint8_t *)(video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
     } else {
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = c;
-        *(uint8_t *)(t[t_visible].video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
+        *(uint8_t *)(video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1)) = c;
+        *(uint8_t *)(video_mem + ((NUM_COLS * t[t_visible].screen_y + t[t_visible].screen_x) << 1) + 1) = ATTRIB;
         ++t[t_visible].screen_x;
     }
     if (t[t_visible].screen_x == NUM_COLS && t[t_visible].screen_y < NUM_ROWS - 1) {
@@ -494,6 +494,6 @@ int8_t* strncpy(int8_t* dest, const int8_t* src, uint32_t n) {
 void test_interrupts(void) {
     int32_t i;
     for (i = 0; i < NUM_ROWS * NUM_COLS; i++) {
-        t[t_visible].video_mem[i << 1]++;
+        video_mem[i << 1]++;
     }
 }

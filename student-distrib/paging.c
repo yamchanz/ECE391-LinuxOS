@@ -14,13 +14,13 @@ void paging_init(void) {
         page_table[i] = i * _4_KB | RW;
     }
     // 4KB page mapped to physical video memory
-    page_table[VID_MEM_IDX] |= RW | PR;
+    page_table[VID_MEM_IDX] |= USR | RW | PR;
     // preceding 3 pages reserved for terminal buffers
-    page_table[TERM0_BUFF] |= RW | PR;
-    page_table[TERM1_BUFF] |= RW | PR;
-    page_table[TERM2_BUFF] |= RW | PR;
+    page_table[TERM0_BUFF] |= USR | RW | PR;
+    page_table[TERM1_BUFF] |= USR | RW | PR;
+    page_table[TERM2_BUFF] |= USR | RW | PR;
     // first page is reserved for video and buffers
-    page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) | RW | PR;
+    page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) | USR | RW | PR;
     // second page is reserved for 4MB Kernel page
     page_dir[KERNEL_IDX] = _4_MB | PAGE_4MB | RW | PR;
 
@@ -60,20 +60,8 @@ void map_program(uint32_t pid) {
  * return - none
  */
 void map_video(void){
-    page_dir[U_VIDEO_IDX] = (uint32_t)video_page_table | USR | RW | PR;
-    video_page_table[0] = (VID_MEM_IDX << 12) | USR | RW | PR;
-}
-
-/* unmap_video - CP4
- * Unmaps the video memory page. Called in halt when the video memory flag is set
- * parameter - void
- * return - none
- */
-void unmap_video(void){
-    page_dir[U_VIDEO_IDX] = 0;
-    video_page_table[0] = 0;
-
-    flush();
+    page_dir[U_VIDEO_IDX] = (uint32_t)page_table | USR | RW | PR;
+    page_table[0] = (uint32_t)VID_MEM | USR | RW | PR;
 }
 
 /* switch_display - CP5
@@ -85,66 +73,48 @@ void unmap_video(void){
  */
 void switch_display(int32_t tid) {
     // sanity check
-    if (tid < 0 || tid > 2) return;
+    if (tid < 0 || tid > 2 || tid == t_visible) 
+        return;
+        
+    int32_t prev_tid = t_visible;
 
-    // if(t[t_visible].shell_flag == 0 && t[tid].shell_flag == 0 && tid != t_visible)  {
-    //     pcb_t *pcb = get_pcb(t[t_visible].running_process); //old
-    //     pcb_t *n_pcb = get_pcb(t[tid].running_process);  // new
-
-    //     tss.ss0 = KERNEL_DS;
-    //     tss.esp0 = _8_MB - _8_KB * n_pcb->pid - 4;
-
-    //     // remap + flush TLB 
-    //     map_program(n_pcb->pid);
-
-    //     asm volatile(
-    //         "movl %%esp, %0     \n"
-    //         "movl %%ebp, %1     \n"
-    //         :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
-    //         : // input
-    //     );
-
-    //         // process switch
-    //     asm volatile(
-    //         "movl %0, %%esp\n\
-    //         movl %1, %%ebp"
-    //         : //ouput
-    //         :"r"(n_pcb->cur_esp), "r"(n_pcb->cur_ebp) //input
-    //     );
-    // }
-    if(t[t_visible].running_process != 0 && t[t_visible].running_process != 1 && t[t_visible].running_process != 2 ){
-        asm volatile (
-          "pushfl \n"          
-          "popl %%eax\n"      
-          "movl %%eax, %0 \n"
-     
-            :"=r" (t[t_visible].flags)
-            :
-            );
-
-        asm volatile (
-           "movl %0, %%eax \n" 
-            "pushl %%eax\n"
-            "popfl\n"
-            
-          :
-           :"r" (t[tid].flags)
-            );
-    }
-
-    // copy current VID_MEM into correct background buffer
-    int old_video_idx = ((int)t[t_visible].video_mem >> 12);
-    page_table[old_video_idx] = (uint32_t)t[t_visible].video_mem | RW | PR;
-    flush();
     memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
-
     // update t_visible to next process
     t_visible = tid;
 
     // copy next background buffer into VID_MEM so we can display
-    int video_idx = ((int)t[tid].video_mem >> 12);
-    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[tid].video_mem, _4_KB);
-    page_table[video_idx] = (uint32_t)(VID_MEM | RW | PR);
+    memcpy((uint8_t*)VID_MEM, (uint8_t*)t[t_visible].video_mem, _4_KB);
+    update_cursor();
+
+    if(t[prev_tid].shell_flag == 0 && t[t_visible].shell_flag == 0)  {
+        pcb_t *pcb = get_pcb(t[prev_tid].running_process); //old
+        pcb_t *n_pcb = get_pcb(t[t_visible].running_process);  // new
+
+        tss.ss0 = KERNEL_DS;
+        tss.esp0 = _8_MB - _8_KB * n_pcb->pid - 4;
+
+        // remap + flush TLB 
+        map_program(n_pcb->pid);
+
+        asm volatile(
+            "movl %%esp, %0     \n"
+            "movl %%ebp, %1     \n"
+            :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+            : // input
+        );
+
+            // process switch
+        asm volatile(
+            "movl %0, %%esp\n\
+            movl %1, %%ebp"
+            : //ouput
+            :"r"(n_pcb->cur_esp), "r"(n_pcb->cur_ebp) //input
+        );
+    }
+}
+
+void get_vidmem(void) {
+    page_table[VID_MEM_IDX] = (uint32_t)VID_MEM | USR | RW | PR;
     flush();
 }
 
