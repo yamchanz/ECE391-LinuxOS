@@ -14,6 +14,7 @@
 #define PROG_IMG_ADDR        0x8048000
 #define ONETE                0x8000001
 #define BOTTOM_USER_STACK    0x8400000 - 4
+#define PROCESS_COUNT 6
 
 #define ENTRY_POINT_START    24
 #define CMD_MAX_LEN          32
@@ -51,6 +52,8 @@ typedef struct __attribute__((packed)){
     // get ESP and EBP from address
     uint32_t esp;
     uint32_t ebp;
+    uint32_t cur_esp;
+    uint32_t cur_ebp;
     uint32_t pid;
     uint32_t parent_pid; // we may need this?
     uint16_t ss0;

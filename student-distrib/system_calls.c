@@ -121,6 +121,8 @@ int32_t execute (const uint8_t* command) {
         argb[i-cmd_idx] = command[i];
     }
     argb[arg_idx-cmd_idx] = '\0';
+
+    if(argb[0] == '\0' && exec[0] == 'g' && exec[1] == 'r' && exec[2] == 'e' && exec[3] == 'p') return -1;    
     // checking the magic number to make sure its executable.
     dentry_t search;
     if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
@@ -221,7 +223,12 @@ int32_t halt (uint8_t status) {
     tss.esp0 = pcb->esp0;
     tss.ss0 = KERNEL_DS;
 
-    halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
+    if(status == 255) {
+        halt_ret((uint32_t)status+1, pcb->ebp, pcb->esp);   
+    }
+    else {
+        halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
+    }
 
     return 0; // doesn't reach here
 }

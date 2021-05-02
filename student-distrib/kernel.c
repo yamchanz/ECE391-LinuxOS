@@ -156,7 +156,7 @@ void entry(unsigned long magic, unsigned long addr) {
     keyboard_init();
     paging_init();
     initialize_rtc();
-    pit_init();
+    // pit_init();
     // initialize the terminal
     terminal_init();
     /* Enable interrupts */
