@@ -10,6 +10,11 @@ void clear_buffer(void) {
         t[t_visible].buffer[i] = '\0';
     t[t_visible].buffer_idx = 0;
 }
+/*
+int32_t save_term(uint8_t tid){
+    t[tid].buffer_idx = buffer_idx;
+    t[tid].screen_x = screen
+}*/
 
 /* void terminal_init(void);
  * Inputs: void

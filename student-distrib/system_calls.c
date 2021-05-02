@@ -43,13 +43,6 @@ void pcb_init(pcb_t *pcb) {
 
     //pid from 0 - 5
     pcb->pid = t[t_visible].running_process;
-// FIX! check if current process is base shell
-//    if(!pcb->pid) pcb->parent_pid = pcb->pid;
-//    else pcb->parent_pid = pcb->pid - 1;
-//    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
-//    pcb->ss0 = KERNEL_DS;
-
-    return;
 }
 
 /* get_pcb - CP3
@@ -126,6 +119,8 @@ int32_t execute (const uint8_t* command) {
         argb[i-cmd_idx] = command[i];
     }
     argb[arg_idx-cmd_idx] = '\0';
+
+    if(argb[0] == '\0' && exec[0] == 'g' && exec[1] == 'r' && exec[2] == 'e' && exec[3] == 'p') return -1;    
     // checking the magic number to make sure its executable.
     dentry_t search;
     if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
@@ -209,8 +204,11 @@ int32_t halt (uint8_t status) {
     t[t_visible].running_process = pcb->parent_pid;
 
     // if current process block is base shell, re-execute shell
-    if (pcb->parent_pid == pcb->pid)
+    if (pcb->parent_pid == pcb->pid) {
+        t[t_visible].running_process = -1;
+        t[t_visible].shell_flag = -1;
         execute((uint8_t*)"shell");
+    }
 
     if (vidmap_page_flag) {
         unmap_video();
@@ -222,8 +220,11 @@ int32_t halt (uint8_t status) {
     // write parent process' info back to TSS(esp0)
     tss.esp0 = pcb->esp0;
     tss.ss0 = KERNEL_DS;
-
-    halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
+    
+    //if(status == 255)
+    //    halt_ret((uint32_t)status+1, pcb->ebp, pcb->esp);
+    //else
+        halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
 
     return 0; // doesn't reach here
 }
@@ -369,8 +370,7 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
     strncpy((int8_t*)buf, (int8_t*)pcb->arg, nbytes);
     buf[strlen((int8_t*)pcb->arg)] = '\0';
     return 0;
-
-}
+} 
 
 /* vidmap - CP3
  * maps text mode video memory into user space at virtual address 140MB. Creates page
@@ -390,7 +390,6 @@ int32_t vidmap (uint8_t** screen_start) {
     vidmap_page_flag = 1;
 
     return 0;
-
 }
 
 /* set_handler - CP3

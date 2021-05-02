@@ -3,6 +3,7 @@
 
 #include "lib.h"
 #include "keyboard.h"
+#include "paging.h"
 
 // cursor related macros (VGA registers)
 #define CURSOR_LOW      0x0F
