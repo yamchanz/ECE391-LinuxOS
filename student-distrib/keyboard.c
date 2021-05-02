@@ -231,15 +231,15 @@ void keyboard_handler(void) {
             case F2:
                 switch_display(1);
                 update_cursor();
-                if(t[t_visible].shell_flag == -1)
-                    execute((uint8_t*)"shell");
+                // if(t[t_visible].shell_flag == -1)
+                //     execute((uint8_t*)"shell");
                 break;
             // switch to terminal 2
             case F3:
                 switch_display(2);
                 update_cursor();
-                if(t[t_visible].shell_flag == -1)
-                    execute((uint8_t*)"shell");
+                // if(t[t_visible].shell_flag == -1)
+                //     execute((uint8_t*)"shell");
                 break;
             default: ;
         }

@@ -18,5 +18,6 @@
 
 void pit_init(void);
 void schedule(void);
+void launch_shells(void);
 
 #endif

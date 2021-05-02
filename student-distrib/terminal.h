@@ -36,6 +36,7 @@ terminal_t t[TERMINAL_COUNT];
 int32_t t_run;
 int32_t t_cur;
 int32_t t_visible;
+int init_flag;
 
 // Clear the screen and put the cursor at the top
 void terminal_reset(void);

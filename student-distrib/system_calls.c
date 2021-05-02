@@ -166,6 +166,10 @@ int32_t execute (const uint8_t* command) {
     pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
     pcb->ss0 = KERNEL_DS;
 
+    if(shell_count < 3) {
+        t_visible = (t_visible + 1) % 3;
+    }
+
     // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
 

@@ -4,7 +4,7 @@ volatile int schedule_init;
 
 void pit_init(void) {
     // initialize PIT to interrupts at 10ms frequency (10ms = 100Hz)
-    uint32_t freq = 100;
+    uint32_t freq = 440;
     uint32_t divisor = 1193182 / freq;
     // disable interrupts to set registers
     cli();
@@ -13,7 +13,7 @@ void pit_init(void) {
     // set high and low byte using outb (1 byte at a time)
     outb(divisor & LOW_8_BIT_MASK, CHANNEL_0);
     outb((divisor & HIGH_8_BIT_MASK) >> 8, CHANNEL_0);
-    sti();
+    // sti();
     enable_irq(IRQ_PIT);
 }
 
@@ -88,4 +88,20 @@ void schedule(void) {
     sti();
     return;
 
+}
+
+void launch_shells(void) {
+    shell_count++;
+    pcb_t* pcb = get_pcb(t_visible);
+
+    asm volatile(
+        "movl %%esp, %0     \n"
+        "movl %%ebp, %1     \n"
+        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+        : // input
+    );
+
+    execute((uint8_t*)"shell");
+
+    return; // we will never get here
 }

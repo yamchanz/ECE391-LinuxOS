@@ -63,6 +63,7 @@ typedef struct __attribute__((packed)){
 
 // array of free processes. -1 if free, otherwise stores terminal id (only 1 for now)
 int process_status[PROCESS_COUNT];
+int shell_count;
 
 extern file_ops_t fops_rtc;
 extern file_ops_t fops_dir;

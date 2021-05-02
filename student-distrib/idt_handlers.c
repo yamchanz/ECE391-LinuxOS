@@ -122,6 +122,9 @@ void pit_handler() {
     send_eoi(IRQ_PIT);
     // begin scheduling
     // schedule();
+    if(shell_count < 3){
+        launch_shells();
+    }
 }
 
 /* rtc_handler

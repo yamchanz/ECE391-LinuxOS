@@ -3,6 +3,7 @@
 
 #include "x86_desc.h"
 #include "system_calls.h"
+#include "scheduler.h"
 
 #define EX_ARR_SIZE 20
 #define SYS_CALL_IDX 0x80
