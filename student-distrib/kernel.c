@@ -178,7 +178,7 @@ void entry(unsigned long magic, unsigned long addr) {
         :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
         : // input
     );
-    t[t_visible].running_process = 1;
+    t[t_visible].running_process = 0;
     execute((uint8_t*)"shell");
 
     /* Spin (nicely, so we don't chew up cycles) */

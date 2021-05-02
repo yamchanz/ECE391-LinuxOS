@@ -14,13 +14,13 @@ void paging_init(void) {
         page_table[i] = i * _4_KB | RW;
     }
     // 4KB page mapped to physical video memory
-    page_table[VID_MEM_IDX] |= USR | RW | PR;
+    page_table[VID_MEM_IDX] |= RW | PR;
     // preceding 3 pages reserved for terminal buffers
-    page_table[TERM0_BUFF] |= USR | RW | PR;
-    page_table[TERM1_BUFF] |= USR | RW | PR;
-    page_table[TERM2_BUFF] |= USR | RW | PR;
+    page_table[TERM0_BUFF] |= RW | PR;
+    page_table[TERM1_BUFF] |= RW | PR;
+    page_table[TERM2_BUFF] |= RW | PR;
     // first page is reserved for video and buffers
-    page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) | USR | RW | PR;
+    page_dir[K_VIDEO_IDX] = ((uint32_t)page_table) |RW | PR;
     // second page is reserved for 4MB Kernel page
     page_dir[KERNEL_IDX] = _4_MB | PAGE_4MB | RW | PR;
 
@@ -62,6 +62,7 @@ void map_program(uint32_t pid) {
 void map_video(void){
     page_dir[U_VIDEO_IDX] = (uint32_t)page_table | USR | RW | PR;
     page_table[0] = (uint32_t)VID_MEM | USR | RW | PR;
+    flush();
 }
 
 /* switch_display - CP5
@@ -81,7 +82,6 @@ void switch_display(int32_t tid) {
     memcpy((uint8_t*)(t[t_visible].video_mem), (uint8_t*)VID_MEM, _4_KB);
     // update t_visible to next process
     t_visible = tid;
-
     // copy next background buffer into VID_MEM so we can display
     memcpy((uint8_t*)VID_MEM, (uint8_t*)t[t_visible].video_mem, _4_KB);
     update_cursor();
@@ -111,11 +111,6 @@ void switch_display(int32_t tid) {
             :"r"(n_pcb->cur_esp), "r"(n_pcb->cur_ebp) //input
         );
     }
-}
-
-void get_vidmem(void) {
-    page_table[VID_MEM_IDX] = (uint32_t)VID_MEM | USR | RW | PR;
-    flush();
 }
 
 /* flush - CP2
