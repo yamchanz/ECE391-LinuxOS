@@ -25,8 +25,6 @@ void terminal_init(void) {
     t[0].video_mem = (char*)(VID_MEM + _4_KB); // xb9000
     t[1].video_mem = (char*)(VID_MEM + _8_KB); // xba000
     t[2].video_mem = (char*)(VID_MEM + 3 * _4_KB); // xbb000
-    t_visible = 0;
-    switch_display(0);
     terminal_reset();
 }
 

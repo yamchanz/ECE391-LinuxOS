@@ -117,7 +117,7 @@ int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes) {
         // set index again
         outb(NMI_REG_A, SELECT_REG);
         // set rate based on offset from 2Hz rate
-        outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow+2), DATA_REG);
+        outb((prev & HIGH_BIT_MASK) | (TWO_HZ_FREQ - pow + FREQ_OFFSET), DATA_REG);
 
         // sti();
     } else {

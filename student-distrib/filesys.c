@@ -148,8 +148,7 @@ int32_t file_write(int32_t fd, const void* buf, int32_t nbytes) {
 }
 
 /* file_open - CP2
- * Finds the file by name if it exists, then stores the inode number of
- * the file and filesize as globals
+ * Finds the file by name if it exists.
  * parameters: filename
  * returns : 0 (success), -1 (failure)
  */
@@ -159,24 +158,17 @@ int32_t file_open(const uint8_t* filename) {
         return -1;
     }
     if(read_dentry_by_name(filename, &entry_info) != -1) {
-        // inode_num = entry_info.inode;
-        // file_pos = 0;
-        // inode_t* inode_blk = &(inode_arr[inode_num]);
-        // filesize = inode_blk->length;
         return 0;
     }
     return -1;
 }
 
 /* file_close - CP2
- * Invalidates variables related to the current file and closes it.
+ * Does nothing.
  * parameters: fd
  * returns : 0 (success)
  */
 int32_t file_close(int32_t fd) {
-    // inode_num = 0;
-    // file_pos = 0;
-    // filesize = 0;
     return 0;
 }
 
@@ -200,7 +192,6 @@ int32_t dir_read(int32_t fd, void* buf, int32_t nbytes) {
         uint32_t name_length = strlen((int8_t*)entry_info.file_name);
         if(name_length > NAME_SIZE) name_length = NAME_SIZE;
         memcpy((char*)buf, (char*)entry_info.file_name, name_length);
-        //buf += name_length;
         dir_offset++;
         return name_length;
     }

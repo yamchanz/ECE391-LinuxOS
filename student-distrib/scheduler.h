@@ -1,6 +1,8 @@
 #ifndef _SCHEDULER_H
 #define _SCHEDULER_H
 
+// SCHEDULAR IS NOT IN USE!!!
+
 #include "system_calls.h"
 #include "filesys.h"
 #include "i8259.h"
@@ -16,7 +18,9 @@
 #define HIGH_8_BIT_MASK 0xFF00
 #define LOW_8_BIT_MASK  0xFF
 
+// initialize the pit
 void pit_init(void);
+// schedular that runs the scheduling
 void schedule(void);
 
 #endif

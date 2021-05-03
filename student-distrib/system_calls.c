@@ -35,6 +35,7 @@ void pcb_init(pcb_t *pcb) {
     stdout.file_pos = NULL;
     stdout.flags = 1;
 
+    // first two tables are reserved for terminal read and write
     pcb->fd_table[0] = stdin;
     pcb->fd_table[1] = stdout;
 
@@ -60,7 +61,7 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
-    // if all processes are filled, return -1
+    // if all processes from 0 to 5 are filled, return -1
     int p, found;
     for(p = 0, found = 0; p < PROCESS_COUNT; ++p){
         if(process_status[p] == -1){
@@ -68,7 +69,7 @@ int32_t execute (const uint8_t* command) {
             break;
         }
     }
-    if(!found || t[t_visible].process_ct > 3) return -1;
+    if(!found || t[t_visible].process_ct > MAX_PROC_PER_TERM) return -1;
 
     // clear interrupts
     cli();
@@ -218,7 +219,7 @@ int32_t halt (uint8_t status) {
     tss.esp0 = pcb->esp0;
     tss.ss0 = KERNEL_DS;
 
-    if(status == 255) {
+    if(status == USER_PROG_CODE) {
         halt_ret((uint32_t)status+1, pcb->ebp, pcb->esp);   
     }
     else {

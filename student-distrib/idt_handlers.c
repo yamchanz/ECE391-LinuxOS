@@ -117,11 +117,11 @@ void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sy
     RETURN VALUE: none
     SIDE EFFECTS: none
 */
-void pit_handler() {
+void pit_handler(void) {
     // issue EOI to PIC at end of interrupt
-    send_eoi(IRQ_PIT);
+    // send_eoi(IRQ_PIT);
     // begin scheduling
-    // schedule();
+    schedule();
 }
 
 /* rtc_handler
@@ -151,7 +151,7 @@ void rtc_handler() {
     send_eoi(IRQ_RTC);
 }
 
-/* sys_call_handler
+/* sys_call_handler - NO LONGER IN USE AS OF CP3
     DESCRIPTION: installs the system call handler (0x80) (will have functionality implemented later CPs)
     INPUTS: none
     OUTPUTS: none
@@ -160,7 +160,7 @@ void rtc_handler() {
 */
 void sys_call_handler() {
     printf("System call was handled\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 
 /* Exception handler functions
@@ -176,7 +176,7 @@ void sys_call_handler() {
 void divide_error_ex() {
     //clear();
     printf("Divide Error Exception (#DE)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  debug_ex
     DESCRIPTION: handler functions for debug exception
@@ -187,7 +187,7 @@ void divide_error_ex() {
 */
 void debug_ex() {
     printf("Debug Exception (#DB)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  nmi_interrupt_ex
     DESCRIPTION: handler functions for NMI interrupt exception
@@ -198,7 +198,7 @@ void debug_ex() {
 */
 void nmi_interrupt_ex() {
     printf("NMI Interrupt\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  breakpoint_ex
     DESCRIPTION: handler functions for breakpoint exception
@@ -209,7 +209,7 @@ void nmi_interrupt_ex() {
 */
 void breakpoint_ex() {
     printf("Breakpoint Exception (#BP)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  overflow_ex
     DESCRIPTION: handler functions for overflow exception
@@ -220,7 +220,7 @@ void breakpoint_ex() {
 */
 void overflow_ex() {
     printf("Overflow Exception (#OF)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  bound_range_ex
     DESCRIPTION: handler functions for bound range exceeded exception
@@ -231,7 +231,7 @@ void overflow_ex() {
 */
 void bound_range_ex() {
     printf("BOUND Range Exceeded Exception (#BR)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  invalid_opcode_ex
     DESCRIPTION: handler functions for invalid opcode exception
@@ -242,7 +242,7 @@ void bound_range_ex() {
 */
 void invalid_opcode_ex() {
     printf("Invalid Opcode Exception (#UD)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  device_not_avail_ex()
     DESCRIPTION: handler functions for device not available exception
@@ -253,7 +253,7 @@ void invalid_opcode_ex() {
 */
 void device_not_avail_ex() {
     printf("Device Not Available Exception (#NM)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  double_fault_ex
     DESCRIPTION: handler functions for double fault exception
@@ -264,7 +264,7 @@ void device_not_avail_ex() {
 */
 void double_fault_ex() {
     printf("Double Fault Exception (#DF)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  coprocess_seg_ex
     DESCRIPTION: handler functions for coprocessor segment overrun exception
@@ -275,7 +275,7 @@ void double_fault_ex() {
 */
 void coprocess_seg_ex() {
     printf("Coprocessor Segment Overrun\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  invalid_tss_ex
     DESCRIPTION: handler functions for invalid TSS exception
@@ -286,7 +286,7 @@ void coprocess_seg_ex() {
 */
 void invalid_tss_ex() {
     printf("Invalid TSS Exception (#TS)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  seg_not_pres_ex
     DESCRIPTION: handler functions for segment not present exception
@@ -297,7 +297,7 @@ void invalid_tss_ex() {
 */
 void seg_not_pres_ex() {
     printf("Segment Not Present (#NP)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  stack_fault_ex
     DESCRIPTION: handler functions for stack fault exception
@@ -308,7 +308,7 @@ void seg_not_pres_ex() {
 */
 void stack_fault_ex() {
     printf("Stack Fault Exception (#SS)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  gen_prot_ex
     DESCRIPTION: handler functions for general protection exception
@@ -319,7 +319,7 @@ void stack_fault_ex() {
 */
 void gen_prot_ex() {
     printf("General Protection Exception (#GP)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  page_fault_ex
     DESCRIPTION: handler functions for page fault exception
@@ -330,7 +330,7 @@ void gen_prot_ex() {
 */
 void page_fault_ex() {
     printf("Page-Fault Exception (#PF)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  reserved
     DESCRIPTION: general handler function for interrupts reserved by Intel
@@ -341,7 +341,7 @@ void page_fault_ex() {
 */
 void reserved(){
     printf("Reserved by Intel\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  fpu_fp_ex
     DESCRIPTION: handler functions for FPU floating point error exception
@@ -352,7 +352,7 @@ void reserved(){
 */
 void fpu_fp_ex() {
     printf("FPU Floating-Point Error (#MF)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  align_check_ex
     DESCRIPTION: handler functions for alignment check exception
@@ -363,7 +363,7 @@ void fpu_fp_ex() {
 */
 void align_check_ex() {
     printf("Alignment Check Exception (#AC)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  machine_check_ex
     DESCRIPTION: handler functions for machine-check exception
@@ -374,7 +374,7 @@ void align_check_ex() {
 */
 void machine_check_ex() {
     printf("Machine-Check Exception (#MC)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /*  simd_fp_ex
     DESCRIPTION: handler functions for SIMD floating point exception
@@ -385,7 +385,7 @@ void machine_check_ex() {
 */
 void simd_fp_ex() {
     printf("SIMD Floating-Point Exception (#XF)\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }
 /* undefined_handler
     DESCRIPTION: handler function for interrupts not yet defined otherwise
@@ -396,5 +396,5 @@ void simd_fp_ex() {
 */
 void undefined_handler() {
     printf("General handler implemented\n");
-    halt(255);
+    halt(USER_PROG_CODE);
 }

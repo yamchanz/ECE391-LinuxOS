@@ -23,13 +23,9 @@
 #define CTRL_REL        (CTRL_PRS | REL_MASK)
 #define ENTER_PRS       0x1C
 #define BACKSPACE_PRS   0x0E
-
-// MSB to LSB: caps_lock, shift, alt, ctrl, enter, nul, nul, nul; 1: on, 0: off
-#define CAPS_LOCK_MASK  0x80
-#define SHIFT_MASK      0x40
-#define ALT_MASK        0x20
-#define CTRL_MASK       0x10
-#define ENTER_MASK      0x08
+#define terminal_1      0
+#define terminal_2      1
+#define terminal_3      2
 
 // function keys for changing terminals
 #define F1              0x3B

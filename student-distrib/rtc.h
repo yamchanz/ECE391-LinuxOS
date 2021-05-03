@@ -16,6 +16,7 @@
 #define HIGH_LIMIT_FREQ 1024
 #define NUM_READ_INTS   10
 #define INTS_ROW_LIMIT  30
+#define FREQ_OFFSET     2
     
 
 volatile int rtc_int_received;

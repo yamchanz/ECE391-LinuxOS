@@ -56,12 +56,15 @@ context_switch:
     movw $0x23, %ax
     pushl %eax
 
-    # push entry point
+    # push entry point (parameter now 5th below the stack pointer -> 20)
     pushl 20(%esp)
 
     # push IRET context to kernel stack
     iret
 
+# halt_ret
+# DESCRIPTION: return for halt
+# FUNCTION: restores the output, ebp, esp
 halt_ret:
     movl 4(%esp), %eax # status
     movl 8(%esp), %ebp # parent_pcb->ebp
@@ -69,8 +72,10 @@ halt_ret:
     leave
     ret
 
+# system call table entries
 sys_call_table:
     .long 0x0, halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn
 
+# local variable to save the output (since we are using popal)
 save_eax:
     .long 0x0

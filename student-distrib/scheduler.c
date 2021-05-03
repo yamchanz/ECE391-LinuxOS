@@ -1,7 +1,12 @@
 #include "scheduler.h"
-
+// SCHEDULAR.C IS NOT IN USE!!!
 volatile int schedule_init;
 
+/* pit_init - CP5
+ * description - initialize the pit
+ * parameters - none
+ * returns - none
+ */
 void pit_init(void) {
     // initialize PIT to interrupts at 10ms frequency (10ms = 100Hz)
     uint32_t freq = 100;
@@ -17,6 +22,11 @@ void pit_init(void) {
     enable_irq(IRQ_PIT);
 }
 
+/* schedule - CP5
+ * description - schedular that runs the scheduling
+ * parameters - none
+ * returns - none
+ */
 void schedule(void) {
     // round robin scheduling
     cli();
@@ -83,7 +93,7 @@ void schedule(void) {
         : //ouput
         :"r"(cur_pcb->cur_esp), "r"(cur_pcb->cur_ebp) //input
     );
-
+    // update the terminal id and enable interrupt again
     t_cur = t_next;
     sti();
     return;

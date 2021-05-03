@@ -34,6 +34,7 @@
 #define KERNEL_IDX          1
 #define PROGRAM_IDX         32
 #define U_VIDEO_IDX         35
+#define VID_OFFSET          12
 
 #define PR                  0x01
 #define RW                  0x02
@@ -55,6 +56,5 @@ extern void unmap_video(void);
 extern void switch_display(int32_t tid);
 /* flushes TLB when memory map altered */
 void flush(void);
-void get_vidmem(void);
 
 #endif
