@@ -14,8 +14,11 @@
 #include "paging.h"
 #include "filesys.h"
 #include "system_calls.h"
+#include "scheduler.h"
 
 #define RUN_TESTS   0
+
+int p;
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -142,20 +145,20 @@ void entry(unsigned long magic, unsigned long addr) {
         ltr(KERNEL_TSS);
     }
 
+    for(p = 0; p < PROCESS_COUNT; p++)
+        process_status[p] = -1;
+    /* Init the IDT */
     initialize_idt();
-
     /* Init the PIC */
     i8259_init();
-
     /* Initialize devices, memory, filesystem, enable device interrupts on the
      * PIC, any other initialization stuff... */
     keyboard_init();
     paging_init();
     initialize_rtc();
-
+    // pit_init();
     // initialize the terminal
     terminal_init();
-
     /* Enable interrupts */
     /* Do not enable the following until after you have set up your
      * IDT correctly otherwise QEMU will triple fault and simple close
@@ -168,7 +171,13 @@ void entry(unsigned long magic, unsigned long addr) {
     //launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
-    t.pid = -1;
+    pcb_t* pcb = get_pcb(0);
+    asm volatile(
+        "movl %%esp, %0     \n"
+        "movl %%ebp, %1     \n"
+        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+        : // input
+    );
     execute((uint8_t*)"shell");
 
     /* Spin (nicely, so we don't chew up cycles) */

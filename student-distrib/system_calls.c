@@ -1,8 +1,5 @@
 #include "system_calls.h"
 
-// flag to remove vidmap page
-int vidmap_page_flag = 0;
-
 // static tables with function pointers for each file type
 file_ops_t fops_rtc = {rtc_open, rtc_close, rtc_read, rtc_write};
 file_ops_t fops_dir = {dir_open, dir_close, dir_read, dir_write};
@@ -38,16 +35,12 @@ void pcb_init(pcb_t *pcb) {
     stdout.file_pos = NULL;
     stdout.flags = 1;
 
+    // first two tables are reserved for terminal read and write
     pcb->fd_table[0] = stdin;
     pcb->fd_table[1] = stdout;
 
     //pid from 0 - 5
-    pcb->pid = t.pid;
-    // check if current process is base shell
-    if(!pcb->pid) pcb->parent_pid = pcb->pid;
-    else pcb->parent_pid = pcb->pid - 1;
-    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
-    pcb->ss0 = KERNEL_DS;
+    pcb->pid = t[t_visible].running_process;
 
     return;
 }
@@ -68,8 +61,17 @@ pcb_t* get_pcb(int pid_in) {
  * side effects - context switch from Kernel space to user space
  */
 int32_t execute (const uint8_t* command) {
-    if (t.pid > 5)
-        return -1;
+    // if all processes from 0 to 5 are filled, return -1
+    int p, found;
+    for(p = 0, found = 0; p < PROCESS_COUNT; ++p){
+        if(process_status[p] == -1){
+            found = 1;
+            break;
+        }
+    }
+    if(!found || t[t_visible].process_ct > MAX_PROC_PER_TERM) return -1;
+
+    // clear interrupts
     cli();
     uint8_t buffer[FOUR_BYTE], exec[CMD_MAX_LEN+1],argb[CMD_MAX_LEN+1];
     uint8_t cmd_idx = 0;
@@ -80,31 +82,25 @@ int32_t execute (const uint8_t* command) {
     if (command == NULL){
         return -1;
     }
-
     // to account for spaces before the executable
     while (command[cmd_start] == ' '){
         cmd_start++;
     }
-
     cmd_idx = cmd_start;
-
     // loop through the command until we reach the end of the executable
     while (command[cmd_idx] != ' ' && command[cmd_idx] != '\0' && command[cmd_idx] != '\n') {
         cmd_idx++;
     }
-
     // if the executable is larger than the limit
     if(cmd_idx > CMD_MAX_LEN){
         return -1;
     }
-
     // copy the executable from the user typed in command
     for(i = cmd_start; i <cmd_idx; i++) {
         exec[i-cmd_start] = command[i];
     }
     // set end NULL byte
-    exec[cmd_idx] = '\0';  
-
+    exec[cmd_idx] = '\0';
     // to account for spaces between the executable and the arguments
     while(command[cmd_idx] == ' '){
         cmd_idx++;
@@ -114,19 +110,17 @@ int32_t execute (const uint8_t* command) {
     while (command[arg_idx] != '\0' && command[arg_idx] != '\n') {
         arg_idx++;
     }
-
-    // if over the limit then return 
+    // if over the limit then return
     if(arg_idx > MAX_KBUFF_LEN){
         return -1;
     }
-
     // copying the argument into argument buffer to be stored in pcb later
     for(i = cmd_idx ; i < arg_idx; i++) {
         argb[i-cmd_idx] = command[i];
     }
-
     argb[arg_idx-cmd_idx] = '\0';
 
+    if(argb[0] == '\0' && exec[0] == 'g' && exec[1] == 'r' && exec[2] == 'e' && exec[3] == 'p') return -1;    
     // checking the magic number to make sure its executable.
     dentry_t search;
     if(read_dentry_by_name((uint8_t*)exec, &search) == 0){
@@ -139,22 +133,38 @@ int32_t execute (const uint8_t* command) {
     } else {
         return -1;
     }
-
     // getting the entry point from 24 - 27
     read_data(search.inode, ENTRY_POINT_START, buffer, FOUR_BYTE);
     entry_point = *((uint32_t*)buffer); //byte manipulation; shell val: 0x080482E8
 
-    //set up paging
-    map_program(++t.pid);
+    // save currently running process as parent
+    int32_t parent_process = t[t_visible].running_process;
+    // update running process in terminal
+    t[t_visible].running_process = p;
+    process_status[t[t_visible].running_process] = 1;
 
+    //set up paging
+    map_program(t[t_visible].running_process);
     // write file data into program image (virtual address)
     inode_t* inode = &(inode_arr[search.inode]);
     read_data(search.inode,0,(uint8_t *)PROG_IMG_ADDR, inode->length); // get length here
 
+    t[t_visible].process_ct++;
+
     // create pcb for this process
     pcb_t *pcb;
-    pcb = get_pcb(t.pid);
+    pcb = get_pcb(t[t_visible].running_process);
     pcb_init(pcb);
+
+    // check if current process is base shell
+    if(t[t_visible].shell_flag == -1) {
+        t[t_visible].shell_flag = 0;
+        pcb->parent_pid = pcb->pid;
+    } else{
+        pcb->parent_pid = parent_process;
+    }
+    pcb->esp0 = _8_MB - _8_KB * pcb->parent_pid - FOUR_BYTE;
+    pcb->ss0 = KERNEL_DS;
 
     // storing the argument to a buffer in pcb for getargs fn
     strcpy((int8_t*)pcb->arg, (int8_t*)argb);
@@ -183,31 +193,38 @@ int32_t execute (const uint8_t* command) {
 int32_t halt (uint8_t status) {
     int i;
     pcb_t *pcb;
-    
+
     // get current process block and current process' parent block
-    pcb = get_pcb(t.pid);
+    pcb = get_pcb(t[t_visible].running_process);
 
     // clear all file descriptors
-    for(i = 2; i < 8; ++i)
+    for(i = FD_START; i < FD_MAX; ++i)
         close(i);
 
-    --t.pid;
-    // if current process block is base shell, re-execute shell
-    if (!pcb->pid)
-        execute((uint8_t*)"shell");
+    // free up process, set running process back to parent
+    process_status[t[t_visible].running_process] = -1;
+    t[t_visible].running_process = pcb->parent_pid;
+    t[t_visible].process_ct--;
 
-    if (vidmap_page_flag) {
-        unmap_video();
-        vidmap_page_flag = 0;
+    // if current process block is base shell, re-execute shell
+    if (pcb->parent_pid == pcb->pid){
+        t[t_visible].running_process = -1;
+        t[t_visible].shell_flag = -1;
+        execute((uint8_t*)"shell");
     }
     // restore parent paging
     map_program(pcb->parent_pid); // flushes tlb
-    
+
     // write parent process' info back to TSS(esp0)
     tss.esp0 = pcb->esp0;
     tss.ss0 = KERNEL_DS;
 
-    halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
+    if(status == USER_PROG_CODE) {
+        halt_ret((uint32_t)status+1, pcb->ebp, pcb->esp);   
+    }
+    else {
+        halt_ret((uint32_t)status, pcb->ebp, pcb->esp);
+    }
 
     return 0; // doesn't reach here
 }
@@ -221,8 +238,8 @@ int32_t halt (uint8_t status) {
  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     // get a pcb to perform read operation
-    pcb_t *pcb = get_pcb(t.pid);
-    
+    pcb_t *pcb = get_pcb(t[t_visible].running_process);
+
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
@@ -240,13 +257,13 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    pcb_t *pcb = get_pcb(t.pid);
+    pcb_t *pcb = get_pcb(t[t_visible].running_process);
     // error handling - FD in array, buf not empty, nbytes >= 0
     if(fd >= FD_MAX || fd < 0 || buf == NULL || nbytes < 0 || pcb->fd_table[fd].flags == 0) {
         return -1;
     }
     // find fd in fd_table
-    
+
     return (int32_t)pcb->fd_table[fd].fops_ptr->write(fd, buf, nbytes);
 }
 
@@ -256,7 +273,7 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
  * return - 0 on success, 1 on failure
  */
 int32_t open (const uint8_t* filename) {
-    pcb_t *pcb = get_pcb(t.pid);
+    pcb_t *pcb = get_pcb(t[t_visible].running_process);
 
     // input error handling
     if(filename == NULL || strlen((int8_t*)filename) == 0) {
@@ -322,7 +339,7 @@ int32_t close (int32_t fd) {
     if(fd >= FD_MAX || fd < FD_START) {
         return -1;
     }
-    pcb_t* pcb = get_pcb(t.pid);
+    pcb_t* pcb = get_pcb(t[t_visible].running_process);
 
     //already not in use we dont need to close
     if(pcb->fd_table[fd].flags == 0){
@@ -343,12 +360,12 @@ int32_t close (int32_t fd) {
  * return - 0 on success, -1 on failure
  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
-    pcb_t* pcb = get_pcb(t.pid);
+    pcb_t* pcb = get_pcb(t[t_visible].running_process);
 
     if(buf == NULL || nbytes <= 0 || pcb->arg == '\0' || strlen((int8_t*)pcb->arg) + 1 > nbytes) {
         return -1;
     }
-    
+
     // copy into our user buffer from pcb arg
     strncpy((int8_t*)buf, (int8_t*)pcb->arg, nbytes);
     buf[strlen((int8_t*)pcb->arg)] = '\0';
@@ -369,9 +386,6 @@ int32_t vidmap (uint8_t** screen_start) {
     // create page and set screen start to 140MB pointer
     map_video();
     *screen_start = (uint8_t*) _140_MB;
-
-    // set vidmap_page flag
-    vidmap_page_flag = 1;
 
     return 0;
 

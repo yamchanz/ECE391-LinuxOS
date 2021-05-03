@@ -11,15 +11,6 @@
 #define NAME_SIZE        32
 #define DENTRY_RESERVE   24
 #define MAX_INODE_BLOCK  1023
-#define _1_KB            0x400
-#define _4_KB            0x1000
-#define _8_KB            0x2000
-#define _4_MB            0x400000
-#define _8_MB            0x800000
-#define _128_MB          0x8000000
-#define _132_MB          0x8400000
-#define _140_MB          0X8C00000
-#define VID_MEM          0xB8000
 
 // single 64B directory entry within the boot block
 typedef struct __attribute__((packed)) {
@@ -55,9 +46,6 @@ bootblk_t* boot;
 dentry_t* den_arr;
 inode_t* inode_arr;
 dblk_t* data_arr;
-// uint32_t inode_num;
-// uint32_t file_pos;
-// uint32_t filesize;
 uint32_t dir_offset;
 
 // init and helper functions
@@ -77,4 +65,3 @@ int32_t dir_open(const uint8_t* filename);
 int32_t dir_close(int32_t fd);
 
 #endif
-

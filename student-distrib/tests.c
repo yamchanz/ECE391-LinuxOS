@@ -339,7 +339,7 @@ int video_paging_test() {
 	uint8_t* ptr = (uint8_t*) 0X8C00000; // test at 140MB
 	uint8_t deref;
 	deref = *ptr;
-	unmap_video();
+	// unmap_video();
 	return PASS;
 }
 

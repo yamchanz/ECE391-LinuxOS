@@ -1,9 +1,11 @@
 #include "keyboard.h"
+#include "paging.h"
+#include "system_calls.h"
 
 // format copied from https://stackoverflow.com/questions/61124564/convert-scancodes-to-ascii
 // 0: none 1: shift 2: caps_lock 3: caps_lock && shift
 uint8_t scan_code_to_ascii[4][128] = {{
-    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0, 
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*',
@@ -32,9 +34,9 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* All other keys are undefined */
 }, {
     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
-    'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 
-    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|', 
-    'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 
+    'Q', 'W', 'E', 'R','T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0,
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|',
+    'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*',
     0,  /* Alt */
     ' ',  /* Space bar */
     0,  /* Caps lock */
@@ -60,7 +62,7 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* All other keys are undefined */
 }, {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0, 0,
-    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0, 
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', 0, 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0, '\\',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 0, '*',
     0,  /* Alt */
@@ -87,11 +89,11 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* F12 Key */
     0,  /* All other keys are undefined */
 }, {
-    
+
     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0,
-    'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0, 0, 
-    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0, '|', 
-    'z', 'x', 'c', 'v', 'b', 'n', 'm', '<', '>', '?', 0, '*', 
+    'q', 'w', 'e', 'r','t', 'y', 'u', 'i', 'o', 'p', '{', '}', 0, 0,
+    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':', '\"', '~', 0, '|',
+    'z', 'x', 'c', 'v', 'b', 'n', 'm', '<', '>', '?', 0, '*',
     0,  /* Alt */
     ' ',  /* Space bar */
     0,  /* Caps lock */
@@ -116,10 +118,13 @@ uint8_t scan_code_to_ascii[4][128] = {{
     0,  /* F12 Key */
     0,  /* All other keys are undefined */
 }};
- 
-// MSB to LSB: caps_lock, shift, alt, ctrl, nul, nul, nul, nul
-static uint8_t keyboard_flag;
-static uint8_t enter_flag;
+
+// caps_lock, shift, alt, ctrl, enter for each terminal flags
+static uint8_t caps_lock_flag;
+static uint8_t shift_flag;
+static uint8_t alt_flag;
+static uint8_t ctrl_flag;
+static uint8_t enter_flag[3];
 
 /*  enter_pressed
  *  DESCRIPTION: return if enter is pressed
@@ -128,11 +133,11 @@ static uint8_t enter_flag;
  *  RETURN VALUE: none
  *  SIDE EFFECTS: none */
 uint8_t get_enter_flag(void) {
-    return enter_flag;
+    return enter_flag[t_visible];
 }
 
 void release_enter(void) {
-    enter_flag = 0;
+    enter_flag[t_visible] = 0;
 }
 
 /*  keyboard_init
@@ -142,8 +147,13 @@ void release_enter(void) {
  *  RETURN VALUE: none
  *  SIDE EFFECTS: none */
 void keyboard_init(void) {
-    keyboard_flag = 0;
-    enter_flag = 0;
+    int32_t i;
+    caps_lock_flag = 0;
+    shift_flag = 0;
+    alt_flag = 0;
+    ctrl_flag = 0;
+    for (i = 0; i < TERMINAL_COUNT; ++i)
+        enter_flag[t_visible] = 0;
     enable_irq(KEYBOARD_IRQ);
 }
 
@@ -154,61 +164,56 @@ void keyboard_init(void) {
  *  RETURN VALUE: none
  *  SIDE EFFECTS: modifies terminal */
 void keyboard_handler(void) {
-    uint8_t scan_code, key_ascii;   // store scan code and translation to ascii
+    uint8_t scan_code, key_ascii, which_keys;   // store scan code and translation to ascii
 
+    send_eoi(KEYBOARD_IRQ);
     scan_code = inb(KEYBOARD_PORT);
     // check special cases
     switch(scan_code) {
         case CAPS_LOCK_PRS:
-            keyboard_flag = (keyboard_flag & CAPS_LOCK_MASK) ? 
-                (keyboard_flag & ~CAPS_LOCK_MASK) : (keyboard_flag | CAPS_LOCK_MASK);
-            send_eoi(KEYBOARD_IRQ);
+            if (caps_lock_flag)
+                caps_lock_flag = 0;
+            else 
+                caps_lock_flag = 1;
             return;
 
         case L_SHIFT_PRS:
         case R_SHIFT_PRS:
-            keyboard_flag |= SHIFT_MASK;
-            send_eoi(KEYBOARD_IRQ);
+            shift_flag = 1;
             return;
 
         case L_SHIFT_REL:
         case R_SHIFT_REL:
-            keyboard_flag &= ~SHIFT_MASK;
-            send_eoi(KEYBOARD_IRQ);
+            shift_flag = 0;
             return;
 
         case ALT_PRS:
-            keyboard_flag |= ALT_MASK;
-            send_eoi(KEYBOARD_IRQ);
+            alt_flag = 1;
             return;
 
         case ALT_REL:
-            keyboard_flag &= ~ALT_MASK;
-            send_eoi(KEYBOARD_IRQ);
+            alt_flag = 0;
             return;
 
         case CTRL_PRS:
-            keyboard_flag |= CTRL_MASK;
-            send_eoi(KEYBOARD_IRQ);
+            ctrl_flag = 1;
             return;
-            
+
         case CTRL_REL:
-            keyboard_flag &= ~CTRL_MASK;
-            send_eoi(KEYBOARD_IRQ);
+            ctrl_flag = 0;
             return;
 
         case ENTER_PRS:
-            enter_flag = 1;
+            // t[0], t[1], t[2]
+            enter_flag[t_visible] = 1;
             putc('\n');
-            send_eoi(KEYBOARD_IRQ);
             return;
-            
+
         case BACKSPACE_PRS:
-            if (t.buffer_idx) {
-                t.buffer[--t.buffer_idx] = BUF_END_CHAR;
+        if (t[t_visible].buffer_idx) {
+                t[t_visible].buffer[--t[t_visible].buffer_idx] = '\0';  // buffer limiter
                 putc('\b');
             }
-            send_eoi(KEYBOARD_IRQ);
             return;
 
         default: ;
@@ -216,27 +221,71 @@ void keyboard_handler(void) {
 
     // if not special, get the ascii character based on the flag status
     // 1st bit: caps lock flag, 2nd bit: shift flag after shift
-    key_ascii = scan_code_to_ascii[(keyboard_flag >> 6) & 0x03][scan_code];
+    which_keys = (caps_lock_flag << 1) + shift_flag;
+    key_ascii = scan_code_to_ascii[which_keys][scan_code];
 
-    // check for CTRL-L 
-    if (keyboard_flag & CTRL_MASK && (key_ascii == 'L' || key_ascii == 'l')) {
+    // check for terminal switch
+    if (alt_flag) {
+        switch (scan_code) {
+            // switch to terminal 1
+            case F1:
+                switch_display(terminal_1);
+                break;
+            // switch to terminal 2
+            case F2:
+                switch_display(terminal_2);
+                // if base shell is not executed in terminal 1
+                if(t[terminal_2].shell_flag == -1) {
+                    pcb_t* pcb = get_pcb(terminal_2);
+
+                    asm volatile(
+                        "movl %%esp, %0     \n"
+                        "movl %%ebp, %1     \n"
+                        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+                        : // input
+                    );
+                    t[t_visible].running_process = terminal_2;
+                    execute((uint8_t*)"shell");
+                }
+                break;
+            // switch to terminal 3
+            case F3:
+                switch_display(terminal_3);
+                // if base shell is not executed in terminal 2
+                if(t[terminal_3].shell_flag == -1) {
+                    pcb_t* pcb = get_pcb(terminal_3);
+
+                    asm volatile(
+                        "movl %%esp, %0     \n"
+                        "movl %%ebp, %1     \n"
+                        :"=r"(pcb->cur_esp), "=r"(pcb->cur_ebp) // output
+                        : // input
+                    );
+                    t[t_visible].running_process = terminal_3;
+                    execute((uint8_t*)"shell");
+                }
+                break;
+            default: ;
+        }
+        return;
+    }
+    // check for CTRL-L
+    if (ctrl_flag && (key_ascii == 'L' || key_ascii == 'l')) {
         terminal_reset();
-        send_eoi(KEYBOARD_IRQ);
         return;
     }
     // if not release, update the line buffer and echo the ascii character
     if (key_ascii && scan_code < REL_MASK) {
         // go to the next line if the line gets longer than the buffer
-        if (t.buffer_idx < BUF_SIZE - 2) {
-            t.buffer[t.buffer_idx++] = key_ascii;
-            t.buffer[t.buffer_idx] = '\0';  // line limiter
-        } else if (t.buffer_idx == BUF_SIZE - 2) {
-            t.buffer[t.buffer_idx++] = '\n';
-            t.buffer[t.buffer_idx] = '\0';  // line limiter
+        if (t[t_visible].buffer_idx < BUF_SIZE - 2) {
+            t[t_visible].buffer[t[t_visible].buffer_idx++] = key_ascii;
+            t[t_visible].buffer[t[t_visible].buffer_idx] = '\0';  // line limiter
+        } else if (t[t_visible].buffer_idx == BUF_SIZE - 2) {
+            t[t_visible].buffer[t[t_visible].buffer_idx++] = '\n';
+            t[t_visible].buffer[t[t_visible].buffer_idx] = '\0';  // line limiter
         } else
-            t.buffer_idx = 0;
+            t[t_visible].buffer_idx = 0;
         putc(key_ascii);
     }
-    send_eoi(KEYBOARD_IRQ);
     return;
 }

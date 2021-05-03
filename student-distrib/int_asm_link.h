@@ -4,5 +4,6 @@
 extern void rtc_handler_link();
 extern void sys_call_handler_link();
 extern void keyboard_handler_link();
+extern void pit_handler_link();
 
 #endif
