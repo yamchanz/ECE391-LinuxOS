@@ -9,6 +9,7 @@
 #define RTC_IDX 0x28
 #define KEYBOARD_IDX 0x21
 #define PIT_IDX 0x20
+#define USER_LEVEL  3
 
 #define USER_PROG_CODE 255
 

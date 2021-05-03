@@ -156,6 +156,7 @@ void entry(unsigned long magic, unsigned long addr) {
     keyboard_init();
     paging_init();
     initialize_rtc();
+    /* PIT has been written, but not fully debugged so initialization is commented out. */
     // pit_init();
     // initialize the terminal
     terminal_init();

@@ -14,6 +14,9 @@
 #define PIT_CMD         0x36
 #define CHANNEL_0       0x40
 #define CMD_REG         0x43
+#define TEN_MS          100
+#define MAX_FREQ        1193182
+#define TWO_BYTE        8
 
 #define HIGH_8_BIT_MASK 0xFF00
 #define LOW_8_BIT_MASK  0xFF

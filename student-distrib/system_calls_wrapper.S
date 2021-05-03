@@ -38,6 +38,9 @@ sys_call_done:
     popfl
     iret
 
+# context_switch
+# DESCRIPTION: sets up stack so that we can iret back into user space
+# FUNCTION: sets up by pushing ESP/EBP/EIP/flags onto the stack    
 context_switch:
     # push USER_DS  0x2B
     xorl %eax, %eax

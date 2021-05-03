@@ -13,6 +13,8 @@
 // Terminal related macro and data structure
 #define BUF_SIZE        128
 #define BUF_END_CHAR    0x10    // ascii line limiter
+#define TWO_BYTE_MASK   0xFF
+#define TWO_BYTE        8
 
 #define TERMINAL_COUNT  3
 #define PROCESS_COUNT   6

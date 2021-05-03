@@ -21,10 +21,9 @@ void terminal_init(void) {
     for(i = 0; i < TERMINAL_COUNT; i++) {
         t[i].running_process = -1;
         t[i].shell_flag = -1;
+        t[i].video_mem = (char*)(VID_MEM + (i+1) * _4_KB); //xb9000, xba000, xbb000
     }
-    t[0].video_mem = (char*)(VID_MEM + _4_KB); // xb9000
-    t[1].video_mem = (char*)(VID_MEM + _8_KB); // xba000
-    t[2].video_mem = (char*)(VID_MEM + 3 * _4_KB); // xbb000
+
     terminal_reset();
 }
 
@@ -65,10 +64,12 @@ void terminal_reset(void) {
  * description from https://stackoverflow.com/questions/25321608/moving-text-mode-cursor-not-working */
 void update_cursor(void) {
     uint16_t position = t[t_visible].screen_y * NUM_COLS + t[t_visible].screen_x; // hold two 8 bits -> 16 bits
+    // update lower 2 bytes
     outb(CURSOR_LOW, VGA_CTRL);
-    outb((uint8_t)(position & 0xFF), VGA_DATA);
+    outb((uint8_t)(position & TWO_BYTE_MASK), VGA_DATA);
+    // update higher 2 bytes
     outb(CURSOR_HIGH, VGA_CTRL);
-    outb((uint8_t)((position >> 8) & 0xFF), VGA_DATA);
+    outb((uint8_t)((position >> TWO_BYTE) & TWO_BYTE_MASK), VGA_DATA);
 }
 
 /* int32_t terminal_read;
@@ -84,12 +85,15 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes) {
 
     clear_buffer();
     sti();
+    // wait until the buffer reaches its max size or the enter is pressed
     while(t[t_visible].buffer_idx < BUF_SIZE - 1 && !get_enter_flag());
     cli();
+    // size should be the min of nbytes or the buffer_idx
     size = nbytes > t[t_visible].buffer_idx ? t[t_visible].buffer_idx : nbytes;
     for (i = 0; i < size; ++i) {
         ((int8_t*)buf)[i] = t[t_visible].buffer[i];
     }
+    // release the enter
     release_enter();
     clear_buffer();
     return size;
@@ -106,6 +110,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
         return -1;
 
     int32_t i;
+    // write on the terminal
     for (i = 0; i < nbytes; ++i)
         putc(((uint8_t *)buf)[i]);
 
@@ -118,8 +123,9 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes) {
  * Function: delete the first line and move everything up a line */
 void scroll_up(void) {
     int32_t i;
-
+    // move everything up a line
     memmove(video_mem, video_mem + (NUM_COLS << 1), (NUM_COLS * (NUM_ROWS - 1)) << 1);
+    // clear the last line
     for (i = (NUM_ROWS - 1) * NUM_COLS; i < NUM_ROWS * NUM_COLS; ++i) {
         *(uint8_t *)(video_mem + (i << 1))     = ' ';
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;

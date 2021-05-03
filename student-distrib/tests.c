@@ -203,6 +203,23 @@ int terminal_read_test() {
 	return size == 11 ? PASS : FAIL;
 }
 
+/* terminal_write_test - CP2
+ * DESCRIPTION: test the terminal write
+ * INPUTS: none
+ * OUTPUTS: none
+ * RETURN VALUE: none
+ * SIDE EFFECTS: none
+ */
+int terminal_write_test() {
+	TEST_HEADER;
+	int32_t size;
+	char *test1 = "Hello World";
+
+	// should only write first four characters
+	size = terminal_write(NULL, test1, 4);
+	return size == 4 ? PASS : FAIL;
+}
+
 /* read_file_test - CP2
  * DESCRIPTION: Reads frame1.txt and outputs it to the screen.
  * INPUTS: none

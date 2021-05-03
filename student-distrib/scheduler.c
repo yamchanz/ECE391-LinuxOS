@@ -1,5 +1,5 @@
 #include "scheduler.h"
-// SCHEDULAR.C IS NOT IN USE!!!
+// SCHEDULER.C IS NOT IN USE!!!
 volatile int schedule_init;
 
 /* pit_init - CP5
@@ -9,15 +9,15 @@ volatile int schedule_init;
  */
 void pit_init(void) {
     // initialize PIT to interrupts at 10ms frequency (10ms = 100Hz)
-    uint32_t freq = 100;
-    uint32_t divisor = 1193182 / freq;
+    uint32_t freq = TEN_MS;
+    uint32_t divisor = MAX_FREQ / freq;
     // disable interrupts to set registers
     cli();
     // set command register - select channel 0, lobyte/hibyte, and rate generator - 0011 0110
     outb(PIT_CMD, CMD_REG);
     // set high and low byte using outb (1 byte at a time)
     outb(divisor & LOW_8_BIT_MASK, CHANNEL_0);
-    outb((divisor & HIGH_8_BIT_MASK) >> 8, CHANNEL_0);
+    outb((divisor & HIGH_8_BIT_MASK) >> TWO_BYTE, CHANNEL_0);
     sti();
     enable_irq(IRQ_PIT);
 }
@@ -59,10 +59,10 @@ void schedule(void) {
     }
 
     // all other schedule calls
-    if(t[t_next].shell_flag == -1 || i == 3) {
+    if(t[t_next].shell_flag == -1 || i == TERMINAL_COUNT) {
         t_cur = t_next;
         send_eoi(IRQ_PIT);
-        if (i == 3) 
+        if (i == TERMINAL_COUNT) 
             i = 0;
         return;
     }
@@ -72,7 +72,7 @@ void schedule(void) {
 
     // switch ESP/EBP to next process' kernel stack
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = _8_MB - _8_KB * cur_pcb->pid - 4;
+    tss.esp0 = _8_MB - _8_KB * cur_pcb->pid - FOUR_BYTE;
 
     // remap + flush TLB 
     map_program(cur_pcb->pid);

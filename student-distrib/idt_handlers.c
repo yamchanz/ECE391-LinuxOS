@@ -102,7 +102,7 @@ void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sy
         idt[idt_offset].dpl = 0;
     } else {
         // accessible from use space space via int
-        idt[idt_offset].dpl = 3;
+        idt[idt_offset].dpl = USER_LEVEL;
     }
 
     SET_IDT_ENTRY(idt[idt_offset], handler);
@@ -119,7 +119,7 @@ void install_interrupt_handler(int idt_offset, void (*handler), int trap, int sy
 */
 void pit_handler(void) {
     // issue EOI to PIC at end of interrupt
-    // send_eoi(IRQ_PIT);
+    send_eoi(IRQ_PIT);
     // begin scheduling
     schedule();
 }
